@@ -38,6 +38,7 @@ Endpoints:
 
 Data Models:
 - User
+`
 {
   username: String,
   email: String,
@@ -50,10 +51,12 @@ Data Models:
   friends: [ObjectId],
   location: { city: String, coordinates: [Number] }
 }
+`
 
 - Artist (extends user)
 
-`{
+`
+{
   userId: ObjectId, // refs User
   artistName: String,
   bio: String,
@@ -61,10 +64,12 @@ Data Models:
   tracks: [ObjectId], // refs Track
   merchLinks: [String],
   profilePic: String
-}`
+}
+`
 
 - Track
-`{
+`
+{
   title: String,
   artistId: ObjectId, // refs Artist
   audioUrl: String,
@@ -73,20 +78,24 @@ Data Models:
   visibility: String, // public | demo | preview
   likes: [ObjectId], // refs User
   comments: [{ userId: ObjectId, content: String, timestamp: Date }]
-}`
+}
+`
 
 - Playlist
 
-`{
+`
+{
   userId: ObjectId,
   name: String,
   trackIds: [ObjectId],
   isPublic: Boolean
-}`
+}
+`
 
 - Event
 
-`{
+`
+{
   title: String,
   artistId: ObjectId,
   location: {
@@ -95,18 +104,21 @@ Data Models:
   },
   date: Date,
   description: String
-}`
+}
+`
 
 - MusicTasteGraph
 
-`{
+`
+{
   user1: ObjectId,
   user2: ObjectId,
   overlapScore: Number,
   sharedArtists: [String],
   differentGenres: [String],
   generatedAt: Date
-}`
+}
+`
 
 ## Setup
 
