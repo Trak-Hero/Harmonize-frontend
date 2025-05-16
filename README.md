@@ -123,7 +123,7 @@ cd project-music-and-memories
 npm install
 npm install react-router-dom tailwindcss postcss autoprefixer zustand
 
-## Setup backend
+### Setup backend
 npm install express mongoose dotenv cors
 
 ### Start servers in dev mode
