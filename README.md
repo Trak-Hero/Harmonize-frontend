@@ -1,4 +1,4 @@
-# PROJECT NAME: 
+# PROJECT NAME:
 
 - Possible ideas: *Reverberate*
 
@@ -6,6 +6,9 @@
 [*how?*](https://help.github.com/articles/about-readmes/#relative-links-and-image-paths-in-readme-files)
 
 TODO: short project description, some sample screenshots or mockups
+
+Reverberate is a music discovery platform designed for emerging music artists to be heard while also giving listeners a fun, intuitive way to stumble upon their next favorite track. 
+
 
 ## Architecture
 
@@ -112,9 +115,29 @@ Data Models:
 
 TODO: how to get the project dev environment up and running, npm install etc
 
+### Clone the repo
+git clone https://github.com/dartmouth-cs52-25s/project-music-and-memories.git
+cd project-music-and-memories
+
+### Install dependencies
+npm install
+npm install react-router-dom tailwindcss postcss autoprefixer zustand
+
+## Setup backend
+npm install express mongoose dotenv cors
+
+### Start servers in dev mode
+npm run dev
+
 ## Deployment
 
 TODO: how to deploy the project
+
+Frontend: Render
+
+Backend: Render
+
+MongoDB Atlas for persistent database
 
 ## Authors
 
@@ -125,6 +148,5 @@ TODO: list of authors
 - Rachael Huang
 - Giselle Wu
 - Evelyn Choi
-
 
 ## Acknowledgments
