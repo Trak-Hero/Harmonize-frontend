@@ -2,7 +2,7 @@
 
 - Possible ideas: *Reverberate*
 
-![Team Photo](Insert a Team Photo URL here)
+![ITeam Photo](https://hackmd.io/_uploads/H1fyF3I1ll.jpg)
 [*how?*](https://help.github.com/articles/about-readmes/#relative-links-and-image-paths-in-readme-files)
 
 TODO: short project description, some sample screenshots or mockups
