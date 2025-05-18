@@ -145,11 +145,9 @@ npm run dev
 
 TODO: how to deploy the project
 
-Frontend: Render
-
-Backend: Render
-
-MongoDB Atlas for persistent database
+- **Frontend**: Deployed via [Render](https://render.com), auto-deployed on push to `main` branch.
+- **Backend**: Also hosted on Render with environment variables set securely.
+- **Database**: MongoDB Atlas for managed NoSQL persistence.
 
 ## Authors
 
