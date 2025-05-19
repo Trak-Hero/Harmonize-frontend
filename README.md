@@ -21,14 +21,14 @@ Router: React Router
 Map: Mapbox/Leaflet
 
 #### Component Structure:
-- User Profile (Customizable)
-- Artist Profile (Mruno Bars)
-- Friends Page (Passport-style Cards)
-- Discover Page (Home Page) (Explore page)
-- Event / Artists Map View
-- Blend Mode comparison view (Graphs/Charts)
+- User Profile (Customizable) - Trak
+- Artist Profile (Mruno Bars) - Shisui
+- Friends Page (Passport-style Cards) - Evelyn
+- Discover Page (Home Page) (Explore page) - Rachael
+- Event / Artists Map View - Giselle
+- Blend Mode comparison view (Graphs/Charts) - TBD
 
-### Front-end: *reverberate-api*
+### Front-end: *reverberate-api* 
 
 Framework: Express.js
 Database: MongoDB (via Mongoose)
