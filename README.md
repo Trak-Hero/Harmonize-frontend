@@ -7,7 +7,7 @@
 
 TODO: short project description, some sample screenshots or mockups
 
-Reverberate is a music discovery platform designed for emerging music artists to be heard while also giving listeners a fun, intuitive way to stumble upon their next favorite track. 
+Reverberate is a music discovery social media platform that connects listeners with emerging artists, and with each other. It is a platform that allows music lovers to explore fresh, undiscovered tracks while engaging with a diverse community of users and supporting new artists.
 
 
 ## Architecture
@@ -22,11 +22,11 @@ Map: Mapbox/Leaflet
 
 #### Component Structure:
 - Homepage
-- User Profile
+- User Profile (Customizable)
 - Artist Profile (Mruno Bars)
-- Friends Page
+- Friends Page (Passport-style Cards)
 - Discover Page (Events / Artists Map View)
-- Blend Mode comparison view
+- Blend Mode comparison view (Graphs/Charts)
 
 ### Front-end: *reverberate-api*
 
@@ -157,6 +157,8 @@ TODO: list of authors
 - Shisui Torii
 - Rachael Huang
 - Giselle Wu
-- Evelyn Choi
+- Evelyn (Seoyoon) Choi
 
 ## Acknowledgments
+
+- Special thanks to our TAs, Bruno Mars and Spotify <3
