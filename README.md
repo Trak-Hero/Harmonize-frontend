@@ -21,11 +21,11 @@ Router: React Router
 Map: Mapbox/Leaflet
 
 #### Component Structure:
-- Homepage
 - User Profile (Customizable)
 - Artist Profile (Mruno Bars)
 - Friends Page (Passport-style Cards)
-- Discover Page (Events / Artists Map View)
+- Discover Page (Home Page) (Explore page)
+- Event / Artists Map View
 - Blend Mode comparison view (Graphs/Charts)
 
 ### Front-end: *reverberate-api*
