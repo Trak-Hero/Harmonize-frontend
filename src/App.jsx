@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/navbar';
+import ForYou from './pages/ForYou';
 import UserProfile from './pages/UserProfile';
 import './App.css';
 
@@ -23,6 +24,7 @@ function App() {
         <Navbar />
 
         <Routes>
+          <Route path="/foryou" element={<ForYou />} />
           <Route path="/profile" element={<UserProfile />} />
         </Routes>
       </div>

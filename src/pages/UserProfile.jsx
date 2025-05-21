@@ -29,8 +29,6 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
-
       <div className="max-w-screen-xl mx-auto px-6 py-10 grid grid-cols-12 gap-6">
         {/* Left/Main */}
         <div className="col-span-12 lg:col-span-9 space-y-10">

@@ -6,8 +6,8 @@ const Navbar = () => {
   return (
     <nav className="navbar flex justify-between items-center p-4 bg-black text-white">
       <div className="nav-left flex items-center gap-4">
-        <Link to="/" className="nav-logo font-bold text-lg">Logo goes here</Link>
-        <Link to="/" className="nav-link">Home</Link>
+        <Link to="/" className="nav-logo font-bold text-lg">Harmonize</Link>
+        <Link to="/foryou" className="nav-link">For You</Link>
         <Link to="/discover" className="nav-link">Discover</Link>
       </div>
 
