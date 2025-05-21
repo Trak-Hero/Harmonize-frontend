@@ -40,13 +40,11 @@ export default function ArtistProfile() {
     setLoading(true);
     (async () => {
       try {
-        /* 1️⃣ try Mongo */
         let res = await fetch(`${baseURL}/artists/${id}`);
         let a;
         if (res.ok) {
           a = await res.json();
         } else {
-          /* 2️⃣ on 404 or any error, hit live-Spotify endpoint */
           res = await fetch(`${baseURL}/artists/spotify/${id}`);
           if (!res.ok) throw new Error('Spotify lookup failed');
           a = await res.json();
@@ -106,7 +104,6 @@ export default function ArtistProfile() {
 
   const saveBio = async () => {
     try {
-      // Try the specific bio endpoint first
       let success = false;
       
       try {
@@ -140,13 +137,9 @@ export default function ArtistProfile() {
         }
       }
       
-      // If both API calls failed but we want to continue anyway for demo purposes
-      // Update the local state regardless of API success
+      
       setArtist(prev => prev ? { ...prev, bio: editedBio } : prev);
       setIsEditing(false);
-      
-      // For demo: comment this out if you want to test without a working backend
-      // if (!success) throw new Error('Failed to update bio');
       
     } catch (err) {
       console.error(err);

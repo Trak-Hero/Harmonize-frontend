@@ -133,7 +133,6 @@ body, html {
   margin-bottom: 0.5rem;
 }
 
-/* Songs section styling */
 .songs-grid {
   display: flex;
   flex-direction: column;
@@ -172,7 +171,6 @@ body, html {
 }
 
 
-/* Albums section styling */
 .album-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -217,7 +215,6 @@ body, html {
   margin-top: 0.2rem;
 }
 
-/* ── right sidebar (unchanged) ── */
 .friend-sidebar {
   max-height: 100%;
   overflow-y: auto;
