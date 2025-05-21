@@ -14,7 +14,9 @@ export default function Navbar() {
 
   return (
     <nav className="w-full flex items-center gap-4 px-6 py-3 bg-black/60 backdrop-blur text-white">
-      <Link to="/" className="text-2xl font-bold tracking-wide">Reverberate</Link>
+      <Link to="/" className="text-2xl font-bold tracking-wide">
+        Reverberate
+      </Link>
 
       <form onSubmit={search} className="ml-auto flex">
         <input
@@ -27,9 +29,19 @@ export default function Navbar() {
           Search
         </button>
       </form>
+
+      {/* NEW Dashboard button */}
+      <Link
+        to="/dashboard"
+        className="ml-4 px-4 py-1 rounded bg-blue-500 hover:bg-blue-600"
+      >
+        Dashboard
+      </Link>
+
+      {/* existing Sign-up / Connect button */}
       <Link
         to="/connect"
-        className="ml-4 px-4 py-1 rounded bg-green-500 hover:bg-green-600"
+        className="px-4 py-1 rounded bg-green-500 hover:bg-green-600"
       >
         Sign up
       </Link>
