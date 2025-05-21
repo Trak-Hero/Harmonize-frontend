@@ -1,11 +1,13 @@
-import Navbar from './components/navbar';
-import ArtistProfile from './pages/ArtistProfile';
-import { Routes, Route } from 'react-router-dom';
-import './App.css'
+import { Routes, Route }     from 'react-router-dom';
+import Navbar                from './components/navbar';
+import ArtistProfile         from './pages/ArtistProfile';
+import SearchResults         from './pages/SearchResults';
+import './App.css';
 
 function App() {
   return (
     <div className="relative w-full h-screen overflow-hidden">
+      {/* --- background looping video --- */}
       <video
         autoPlay
         loop
@@ -14,20 +16,32 @@ function App() {
         className="absolute top-0 left-0 w-full h-full object-cover z-0"
       >
         <source src="/bg-video.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
       </video>
-      <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-30 z-10" />
-      <div className="relative z-10">
+      <div className="absolute top-0 left-0 w-full h-full bg-black/30 z-10" />
+
+      {/* --- foreground app --- */}
+      <div className="relative z-10 flex flex-col h-full">
+        {/* 1️⃣  NAVBAR lives right here */}
         <Navbar />
-        <Routes>
-          <Route index element={
-            <div className="flex items-center justify-center h-screen text-4xl font-bold text-blue-500">
-              Hello from Reverberate
-            </div>} />
-          <Route path="/artist/:id" element={<ArtistProfile />} />
-        </Routes>
+
+        {/* 2️⃣  Main page area scrolls independently of the navbar */}
+        <div className="flex-1 overflow-auto">
+          <Routes>
+            <Route
+              index
+              element={
+                <div className="flex items-center justify-center h-full text-4xl font-bold text-blue-500">
+                  Hello from Reverberate
+                </div>
+              }
+            />
+            <Route path="/artist/:id" element={<ArtistProfile />} />
+            <Route path="/search"   element={<SearchResults />} />
+          </Routes>
+        </div>
       </div>
     </div>
   );
 }
+
 export default App;

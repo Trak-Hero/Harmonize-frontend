@@ -52,6 +52,14 @@ body, html {
   color: #000;
   padding: .5rem 1.2rem;
   border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background: #f0f0f0;
 }
 
 .btn-secondary {
@@ -59,6 +67,13 @@ body, html {
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: .5rem 1.2rem;
   border-radius: 9999px;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(85, 85, 85, 0.4);
 }
 
 /* avatar fixed size */
@@ -95,6 +110,27 @@ body, html {
   margin-top: 0;
   font-size: 1.3rem;
   margin-bottom: 1rem;
+}
+
+/* Bio editing styles */
+.bio-edit-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  color: #fff;
+  padding: 0.8rem;
+  font-size: 1rem;
+  resize: vertical;
+  font-family: inherit;
+  margin-bottom: 1rem;
+}
+
+.bio-edit-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
 }
 
 /* Songs section styling */

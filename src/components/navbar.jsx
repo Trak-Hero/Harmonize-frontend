@@ -1,28 +1,32 @@
-import React from 'react';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
-const Navbar = () => {
+export default function Navbar() {
+  const [q, setQ] = useState('');
+  const navigate  = useNavigate();
+
+  const search = e => {
+    e.preventDefault();
+    if (!q.trim()) return;
+    navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+    setQ('');
+  };
+
   return (
-    <nav className="navbar">
-      <div className="nav-left">
-        <a href="/" className="nav-logo">Logo goes here</a>
-        <a href="/" className="nav-link">Home</a>
-        <a href="/discover" className="nav-link">Discover</a>
-        <a href="/artist/682bf9f0d8dee0de66ba4825" className="nav-link">Demo Artist</a>
-      </div>
+    <nav className="w-full flex items-center gap-4 px-6 py-3 bg-black/60 backdrop-blur text-white">
+      <Link to="/" className="text-2xl font-bold tracking-wide">Reverberate</Link>
 
-      <div className="nav-search">
+      <form onSubmit={search} className="ml-auto flex">
         <input
-          type="text"
-          placeholder="Search artists, songs, or events"
-          className="search-input"
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          className="px-3 py-1 rounded-l bg-gray-800 placeholder-gray-400 w-56 focus:outline-none"
+          placeholder="Search artists"
         />
-      </div>
-
-      <div className="nav-right">
-        <a href="/profile" className="nav-link">Profile</a>
-      </div>
+        <button className="px-4 py-1 rounded-r bg-blue-500 hover:bg-blue-600">
+          Search
+        </button>
+      </form>
     </nav>
   );
-};
-
-export default Navbar;
+}

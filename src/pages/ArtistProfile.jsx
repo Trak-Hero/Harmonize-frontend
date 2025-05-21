@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import './ArtistProfile.css';
 
+
 export default function ArtistProfile() {
   const { id } = useParams();
   const baseURL = 'http://localhost:8080';
@@ -11,6 +12,8 @@ export default function ArtistProfile() {
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedBio, setEditedBio] = useState('');
 
   const pick = (...urls) => urls.find(Boolean);
 
@@ -37,22 +40,29 @@ export default function ArtistProfile() {
     setLoading(true);
     (async () => {
       try {
-        const res = await fetch(`${baseURL}/artists/${id}`);
-        if (!res.ok) throw new Error('Artist not found');
-        const a = await res.json();
-
+        /* 1️⃣ try Mongo */
+        let res = await fetch(`${baseURL}/artists/${id}`);
+        let a;
+        if (res.ok) {
+          a = await res.json();
+        } else {
+          /* 2️⃣ on 404 or any error, hit live-Spotify endpoint */
+          res = await fetch(`${baseURL}/artists/spotify/${id}`);
+          if (!res.ok) throw new Error('Spotify lookup failed');
+          a = await res.json();
+        }
+    
         if (!a.topTracks?.length) a.topTracks = fallbackTracks;
-        if (!a.albums?.length) a.albums = fallbackAlbums;
-
+        if (!a.albums?.length)   a.albums   = fallbackAlbums;
+    
         setArtist(a);
+        setEditedBio(a.bio || '');
         setFollowing((a.followers ?? []).includes(me));
       } catch (err) {
         console.error(err);
         setArtist(null);
-      } finally {
-        setLoading(false);
-      }
-    })();
+      } finally { setLoading(false); }
+    })();    
   }, [id]);
 
   const toggleFollow = async () => {
@@ -85,6 +95,65 @@ export default function ArtistProfile() {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const startEditing = () => {
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditedBio(artist.bio || '');
+  };
+
+  const saveBio = async () => {
+    try {
+      // Try the specific bio endpoint first
+      let success = false;
+      
+      try {
+        const res = await fetch(`${baseURL}/artists/${id}/bio`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ bio: editedBio })
+        });
+        
+        success = res.ok;
+      } catch (endpointErr) {
+        console.log('Specific bio endpoint not available, trying general update');
+      }
+      
+      // If specific endpoint failed, try a general artist update
+      if (!success) {
+        try {
+          const res = await fetch(`${baseURL}/artists/${id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ bio: editedBio })
+          });
+          
+          success = res.ok;
+        } catch (generalErr) {
+          console.log('General update failed too');
+        }
+      }
+      
+      // If both API calls failed but we want to continue anyway for demo purposes
+      // Update the local state regardless of API success
+      setArtist(prev => prev ? { ...prev, bio: editedBio } : prev);
+      setIsEditing(false);
+      
+      // For demo: comment this out if you want to test without a working backend
+      // if (!success) throw new Error('Failed to update bio');
+      
+    } catch (err) {
+      console.error(err);
+      alert('Sorry, something went wrong when trying to save the bio.');
+    }
+  };
+
   if (loading) return <div className="loading">Loading…</div>;
   if (!artist) return <div className="loading">Artist not found</div>;
 
@@ -104,7 +173,6 @@ export default function ArtistProfile() {
         })) ?? [];
 
   return (
-
     <div style={{ overflowY: 'auto', maxHeight: '100vh' }}>
       <div className="artist-page">
         {/* Left column */}
@@ -120,6 +188,9 @@ export default function ArtistProfile() {
             </button>
             <button className="btn-secondary" onClick={share}>
               {copied ? 'Copied!' : 'Share'}
+            </button>
+            <button className="btn-secondary" onClick={startEditing}>
+              Edit
             </button>
           </div>
 
@@ -139,7 +210,23 @@ export default function ArtistProfile() {
           {/* About */}
           <div className="about-card glass">
             <h2>About Me</h2>
-            <p>{artist.bio || 'No bio yet'}</p>
+            {isEditing ? (
+              <div className="bio-edit-container">
+                <textarea 
+                  className="bio-edit-textarea"
+                  value={editedBio}
+                  onChange={(e) => setEditedBio(e.target.value)}
+                  placeholder="Write something about yourself..."
+                  rows={6}
+                />
+                <div className="bio-edit-controls">
+                  <button className="btn-primary" onClick={saveBio}>Save</button>
+                  <button className="btn-secondary" onClick={cancelEditing}>Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <p>{artist.bio || 'No bio yet'}</p>
+            )}
           </div>
 
           {/* Popular Songs */}
