@@ -1,31 +1,19 @@
 import { useProfileStore } from '../state/profileStore';
 
 const TilePicker = () => {
-  const addTile = useProfileStore((state) => state.addTile);
+  const addTile = useProfileStore((s) => s.addTile);
 
-  const tileTypes = [
-    { type: 'artist', label: 'Artist' },
-    { type: 'song', label: 'Song' },
-    { type: 'text', label: 'Text' },
-    { type: 'picture', label: 'Picture' },
-    { type: 'spacer', label: 'Spacer' },
-  ];
+  const types = ['text', 'artist', 'song', 'picture', 'spacer'];
 
   return (
-    <div className="grid grid-cols-2 gap-2 mt-4">
-      {tileTypes.map((t) => (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {types.map((type) => (
         <button
-          key={t.type}
-          className="bg-neutral-800 p-3 rounded text-white"
-          onClick={() =>
-            addTile({
-              type: t.type,
-              bgColor: '#222',
-              content: t.type === 'text' ? 'New Text' : '',
-            })
-          }
+          key={type}
+          onClick={() => addTile({ type })}
+          className="flex items-center justify-center px-4 py-6 font-semibold text-white rounded-xl backdrop-blur-lg bg-white/10 border border-white/20 hover:bg-white/20 transition-shadow shadow-md"
         >
-          ➕ {t.label}
+          + {type.charAt(0).toUpperCase() + type.slice(1)}
         </button>
       ))}
     </div>

@@ -1,70 +1,91 @@
 import { create } from 'zustand';
 
-export const useProfileStore = create((set, get) => {
-  const loadTiles = () => {
-    const stored = JSON.parse(localStorage.getItem('tiles')) || [];
-    return stored.map(tile => ({
-      x: 0,
-      y: Infinity,
-      w: 1,
-      h: 1,
-      i: tile.id,
-      ...tile,
-    }));
-  };
+export const useProfileStore = create((set, get) => ({
+  tiles: [],
+  editorOpen: false,
+  editingTileId: null,
 
-  return {
-    tiles: loadTiles(),
+  // Auth-aware
+  currentUserId: null,
+  isOwner: false,
 
-    editorOpen: false,
-    editingTileId: null,
+  setEditorOpen: (isOpen, tileId = null) => {
+    set({ editorOpen: isOpen, editingTileId: tileId });
+  },
 
-    setEditorOpen: (isOpen, tileId = null) => {
-      set({ editorOpen: isOpen, editingTileId: tileId });
-    },
+  // 🔄 Fetch tiles from backend
+  fetchTiles: async (userId, currentUserId) => {
+    try {
+      const res = await fetch(`/tiles/${userId}`);
+      const data = await res.json();
+      set({
+        tiles: data,
+        currentUserId,
+        isOwner: userId === currentUserId,
+      });
+    } catch (err) {
+      console.error('Failed to load tiles', err);
+    }
+  },
 
-    setTiles: (tiles) => {
-      set({ tiles });
-      localStorage.setItem('tiles', JSON.stringify(tiles));
-    },
-
-    addTile: (tile) => {
-      const id = crypto.randomUUID();
+  // ➕ Add new tile
+  addTile: async (tile) => {
+    try {
       const newTile = {
-        id,
-        i: id,
-        type: 'text',
+        userId: get().currentUserId,
+        type: tile.type || 'text',
         bgColor: '#1e1e1e',
         font: 'sans-serif',
         x: 0,
-        y: Infinity, // auto-place at bottom
+        y: Infinity,
         w: 1,
         h: 1,
         ...tile,
       };
-      const updated = [...get().tiles, newTile];
-      set({ tiles: updated });
-      localStorage.setItem('tiles', JSON.stringify(updated));
-    },
-
-    updateLayout: (layout) => {
-      const tiles = get().tiles.map((tile) => {
-        const l = layout.find((item) => item.i === tile.id);
-        return l ? { ...tile, x: l.x, y: l.y, w: l.w, h: l.h } : tile;
+      const res = await fetch('/tiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTile),
       });
-      set({ tiles });
-      localStorage.setItem('tiles', JSON.stringify(tiles));
-    },
-
-    removeTile: (id) => {
-      const updated = get().tiles.filter((tile) => tile.id !== id);
-      set({ tiles: updated });
-      localStorage.setItem('tiles', JSON.stringify(updated));
-    },
-
-    resetTiles: () => {
-      set({ tiles: [] });
-      localStorage.removeItem('tiles');
+      const savedTile = await res.json();
+      set({ tiles: [...get().tiles, savedTile] });
+    } catch (err) {
+      console.error('Tile add failed', err);
     }
-  };
-});
+  },
+
+  // ✏️ Update tile (e.g., from editor or resize)
+  updateTile: async (id, updates) => {
+    try {
+      const res = await fetch(`/tiles/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      const updated = await res.json();
+      const tiles = get().tiles.map((t) => (t._id === id ? updated : t));
+      set({ tiles });
+    } catch (err) {
+      console.error('Tile update failed', err);
+    }
+  },
+
+  // 🔁 Update layout (drag or resize)
+  updateLayout: async (layout) => {
+    const updates = layout.map(({ i, x, y, w, h }) =>
+      get().updateTile(i, { x, y, w, h })
+    );
+    await Promise.all(updates);
+  },
+
+  // ❌ Delete tile
+  removeTile: async (id) => {
+    try {
+      await fetch(`/tiles/${id}`, { method: 'DELETE' });
+      const tiles = get().tiles.filter((t) => t._id !== id);
+      set({ tiles });
+    } catch (err) {
+      console.error('Tile delete failed', err);
+    }
+  },
+}));
