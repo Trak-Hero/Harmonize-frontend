@@ -1,13 +1,13 @@
-# PROJECT NAME:
+# HARMONIZE:
 
-- Possible ideas: *Reverberate*
+## Harmonize with your friends
 
 ![ITeam Photo](https://hackmd.io/_uploads/H1fyF3I1ll.jpg)
 [*how?*](https://help.github.com/articles/about-readmes/#relative-links-and-image-paths-in-readme-files)
 
 TODO: short project description, some sample screenshots or mockups
 
-Reverberate is a music discovery platform designed for emerging music artists to be heard while also giving listeners a fun, intuitive way to stumble upon their next favorite track. 
+Reverberate is a music discovery social media platform that connects listeners with emerging artists, and with each other. It is a platform that allows music lovers to explore fresh, undiscovered tracks while engaging with a diverse community of users and supporting new artists.
 
 
 ## Architecture
@@ -21,14 +21,14 @@ Router: React Router
 Map: Mapbox/Leaflet
 
 #### Component Structure:
-- Homepage
-- User Profile
-- Artist Profile (Mruno Bars)
-- Friends Page
-- Discover Page (Events / Artists Map View)
-- Blend Mode comparison view
+- User Profile (Customizable) - Trak
+- Artist Profile (Mruno Bars) - Shisui
+- Friends Page (Passport-style Cards) - Evelyn
+- Discover Page (Home Page) (Explore page) - Rachael
+- Event / Artists Map View - Giselle
+- Blend Mode comparison view (Graphs/Charts) - TBD
 
-### Front-end: *reverberate-api*
+### Front-end: *reverberate-api* 
 
 Framework: Express.js
 Database: MongoDB (via Mongoose)
@@ -157,6 +157,8 @@ TODO: list of authors
 - Shisui Torii
 - Rachael Huang
 - Giselle Wu
-- Evelyn Choi
+- Evelyn (Seoyoon) Choi
 
 ## Acknowledgments
+
+- Special thanks to our TAs, Bruno Mars and Spotify <3
