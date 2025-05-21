@@ -1,6 +1,11 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/navbar';
+import ArtistProfile from './pages/ArtistProfile';
+import SearchResults from './pages/SearchResults';
+import ConnectSpotify from './pages/ConnectSpotify';
+import SpotifyDashboard from './pages/SpotifyDashboard';
 import UserProfile from './pages/UserProfile';
+
 import './App.css';
 
 function App() {
@@ -17,12 +22,26 @@ function App() {
         <source src="/bg-video.mp4" type="video/mp4" />
       </video>
 
-      <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-30 z-10" />
+      {/* Overlay */}
+      <div className="absolute top-0 left-0 w-full h-full bg-black/30 z-10" />
 
-      <div className="relative z-20 h-full overflow-auto">
+      {/* App content */}
+      <div className="relative z-20 flex flex-col h-full overflow-auto">
         <Navbar />
 
         <Routes>
+          <Route
+            index
+            element={
+              <div className="flex items-center justify-center h-full text-4xl font-bold text-blue-500">
+                Hello from Reverberate
+              </div>
+            }
+          />
+          <Route path="/artist/:id" element={<ArtistProfile />} />
+          <Route path="/search" element={<SearchResults />} />
+          <Route path="/connect" element={<ConnectSpotify />} />
+          <Route path="/dashboard" element={<SpotifyDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
         </Routes>
       </div>
