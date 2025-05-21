@@ -1,14 +1,17 @@
-import { Routes, Route }     from 'react-router-dom';
-import Navbar                from './components/navbar';
-import ArtistProfile         from './pages/ArtistProfile';
-import SearchResults         from './pages/SearchResults';
-import ConnectSpotify        from './pages/ConnectSpotify';
+import { Routes, Route } from 'react-router-dom';
+import Navbar from './components/navbar';
+import ArtistProfile from './pages/ArtistProfile';
+import SearchResults from './pages/SearchResults';
+import ConnectSpotify from './pages/ConnectSpotify';
 import SpotifyDashboard from './pages/SpotifyDashboard';
+import UserProfile from './pages/UserProfile';
+
 import './App.css';
 
 function App() {
   return (
     <div className="relative w-full h-screen overflow-hidden">
+      {/* Background Video */}
       <video
         autoPlay
         loop
@@ -18,27 +21,29 @@ function App() {
       >
         <source src="/bg-video.mp4" type="video/mp4" />
       </video>
+
+      {/* Overlay */}
       <div className="absolute top-0 left-0 w-full h-full bg-black/30 z-10" />
 
-      <div className="relative z-10 flex flex-col h-full">
+      {/* App content */}
+      <div className="relative z-20 flex flex-col h-full overflow-auto">
         <Navbar />
 
-        <div className="flex-1 overflow-auto">
-          <Routes>
-            <Route
-              index
-              element={
-                <div className="flex items-center justify-center h-full text-4xl font-bold text-blue-500">
-                  Hello from Reverberate
-                </div>
-              }
-            />
-            <Route path="/artist/:id" element={<ArtistProfile />} />
-            <Route path="/search"   element={<SearchResults />} />
-            <Route path="/connect" element={<ConnectSpotify />} />
-            <Route path="/dashboard" element={<SpotifyDashboard />} />
-          </Routes>
-        </div>
+        <Routes>
+          <Route
+            index
+            element={
+              <div className="flex items-center justify-center h-full text-4xl font-bold text-blue-500">
+                Hello from Reverberate
+              </div>
+            }
+          />
+          <Route path="/artist/:id" element={<ArtistProfile />} />
+          <Route path="/search" element={<SearchResults />} />
+          <Route path="/connect" element={<ConnectSpotify />} />
+          <Route path="/dashboard" element={<SpotifyDashboard />} />
+          <Route path="/profile" element={<UserProfile />} />
+        </Routes>
       </div>
     </div>
   );
