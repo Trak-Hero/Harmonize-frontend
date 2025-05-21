@@ -10,7 +10,7 @@ export default function SearchResults() {
   useEffect(()=>{
     if(!query) return;
     setLoading(true);
-    fetch(`http://localhost:8080/artists/search?query=${encodeURIComponent(query)}`)
+    fetch(`http://127.0.0.1:8080/artists/search?query=${encodeURIComponent(query)}`)
        .then(r=>r.json()).then(setResults).catch(console.error)
        .finally(()=>setLoading(false));
   },[query]);

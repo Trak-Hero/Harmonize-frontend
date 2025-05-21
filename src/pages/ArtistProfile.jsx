@@ -5,7 +5,7 @@ import './ArtistProfile.css';
 
 export default function ArtistProfile() {
   const { id } = useParams();
-  const baseURL = 'http://localhost:8080';
+  const baseURL = 'http://127.0.0.1:8080';
   const me = '682bf5ec57acfd1e97d85d8e';
 
   const [artist, setArtist] = useState(null);
@@ -120,7 +120,6 @@ export default function ArtistProfile() {
         console.log('Specific bio endpoint not available, trying general update');
       }
       
-      // If specific endpoint failed, try a general artist update
       if (!success) {
         try {
           const res = await fetch(`${baseURL}/artists/${id}`, {

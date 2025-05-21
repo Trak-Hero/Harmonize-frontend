@@ -27,6 +27,12 @@ export default function Navbar() {
           Search
         </button>
       </form>
+      <Link
+        to="/connect"
+        className="ml-4 px-4 py-1 rounded bg-green-500 hover:bg-green-600"
+      >
+        Sign up
+      </Link>
     </nav>
   );
 }

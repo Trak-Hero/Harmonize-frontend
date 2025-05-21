@@ -2,6 +2,8 @@ import { Routes, Route }     from 'react-router-dom';
 import Navbar                from './components/navbar';
 import ArtistProfile         from './pages/ArtistProfile';
 import SearchResults         from './pages/SearchResults';
+import ConnectSpotify        from './pages/ConnectSpotify';
+import SpotifyDashboard from './pages/SpotifyDashboard';
 import './App.css';
 
 function App() {
@@ -33,6 +35,8 @@ function App() {
             />
             <Route path="/artist/:id" element={<ArtistProfile />} />
             <Route path="/search"   element={<SearchResults />} />
+            <Route path="/connect" element={<ConnectSpotify />} />
+            <Route path="/dashboard" element={<SpotifyDashboard />} />
           </Routes>
         </div>
       </div>
