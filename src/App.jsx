@@ -7,7 +7,6 @@ import './App.css';
 function App() {
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* --- background looping video --- */}
       <video
         autoPlay
         loop
@@ -19,12 +18,9 @@ function App() {
       </video>
       <div className="absolute top-0 left-0 w-full h-full bg-black/30 z-10" />
 
-      {/* --- foreground app --- */}
       <div className="relative z-10 flex flex-col h-full">
-        {/* 1️⃣  NAVBAR lives right here */}
         <Navbar />
 
-        {/* 2️⃣  Main page area scrolls independently of the navbar */}
         <div className="flex-1 overflow-auto">
           <Routes>
             <Route
