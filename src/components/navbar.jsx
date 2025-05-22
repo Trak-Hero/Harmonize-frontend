@@ -13,17 +13,13 @@ export default function Navbar() {
     if (!term) return;
 
     try {
-      /* 1️⃣  call your back‑end search */
       const res = await fetch(`${API}/spotify/search?q=${encodeURIComponent(term)}`, {
         credentials: 'include'
       });
       if (!res.ok) throw new Error('Search failed');
 
-      /* 2️⃣  back‑end returns { id, name, image } */
-      const { id } = await res.json();
-
-      /* 3️⃣  open the Artist profile */
-      navigate(`/artist/${id}`);
+      const { id } = await res.json();   // { id, name, image }
+      navigate(`/artist/${id}`);          // jump straight to profile
       setQ('');
     } catch (err) {
       console.error(err);
