@@ -5,7 +5,7 @@ export default function ConnectSpotify() {
     const backendBaseUrl =
       import.meta.env.MODE === "development"
         ? "http://127.0.0.1:8080"
-        : "https://project-music-and-memories-api.onrender.com";
+        : "https://project-music-and-memories-api-09tv.onrender.com"; // ✅ fixed URL
 
     window.location.href = `${backendBaseUrl}/auth/spotify/login`;
   }, []);
