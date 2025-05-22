@@ -4,7 +4,9 @@ export default function SpotifyDashboard() {
   const [me, setMe] = useState(null);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8080/api/me/spotify", { credentials: "include" })
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/me/spotify`, {
+      credentials: "include",
+    })
       .then((r) => r.json())
       .then(setMe)
       .catch(console.error);
