@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import EventList from '../components/map/eventList';
 import FilterBar from '../components/map/filterBar';
 import SearchBar from '../components/map/searchBar';
-import Navbar from '../components/navbar';
 import MapView from '../components/map/mapView';
 const sampleEvents = [
   {
@@ -63,11 +62,7 @@ const MapPage = () => {
 
   return (
     <div className="w-screen h-screen flex bg-gradient-to-b from-[#012e40] via-[#001c29] to-black text-white">
-      <div className="fixed top-0 left-0 w-full z-50">
-        <Navbar />
-      </div>
-      
-      <div className="flex flex-1 pt-20 overflow-hidden h-100vh">
+      <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <div className="w-[24rem] min-w-[300px] top-50 p-6 space-y-6 bg-black/30 backdrop-blur-lg">
           <SearchBar onSearchChange={handleSearchChange} />
