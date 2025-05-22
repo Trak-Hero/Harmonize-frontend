@@ -1,13 +1,16 @@
 import { create } from 'zustand';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080/api';
+
+
 export const useProfileStore = create((set, get) => ({
   tiles: [],
   editorOpen: false,
   editingTileId: null,
 
   // Auth-aware
-  currentUserId: null,
-  isOwner: false,
+  currentUserId: '6651283db26b776e2c351afe',
+  isOwner: true,
 
   setEditorOpen: (isOpen, tileId = null) => {
     set({ editorOpen: isOpen, editingTileId: tileId });
@@ -16,15 +19,16 @@ export const useProfileStore = create((set, get) => ({
   // 🔄 Fetch tiles from backend
   fetchTiles: async (userId, currentUserId) => {
     try {
-      const res = await fetch(`/tiles/${userId}`);
+      const res = await fetch(`${API_BASE}/tiles/${userId}`);
+      if (!res.ok) throw new Error(`Failed to fetch tiles: ${res.status}`);
       const data = await res.json();
       set({
-        tiles: data,
+        tiles: data.map(tile => ({ ...tile, id: tile._id })), // ✅ Normalize _id → id
         currentUserId,
         isOwner: userId === currentUserId,
       });
     } catch (err) {
-      console.error('Failed to load tiles', err);
+      console.error('Failed to load tiles:', err);
     }
   },
 
@@ -42,35 +46,48 @@ export const useProfileStore = create((set, get) => ({
         h: 1,
         ...tile,
       };
-      const res = await fetch('/tiles', {
+
+      const res = await fetch(`${API_BASE}/tiles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTile),
       });
+
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(`Tile add failed: ${res.status} – ${error}`);
+      }
+
       const savedTile = await res.json();
-      set({ tiles: [...get().tiles, savedTile] });
+      const normalizedTile = { ...savedTile, id: savedTile._id };
+      set({ tiles: [...get().tiles, normalizedTile] });
     } catch (err) {
-      console.error('Tile add failed', err);
+      console.error('Tile add failed:', err);
     }
   },
 
-  // ✏️ Update tile (e.g., from editor or resize)
+  // ✏️ Update tile
   updateTile: async (id, updates) => {
     try {
-      const res = await fetch(`/tiles/${id}`, {
+      const res = await fetch(`${API_BASE}/tiles/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
-      const updated = await res.json();
-      const tiles = get().tiles.map((t) => (t._id === id ? updated : t));
-      set({ tiles });
+
+      if (!res.ok) throw new Error(`Tile update failed: ${res.status}`);
+
+      const updatedTile = await res.json();
+      const updatedTiles = get().tiles.map((tile) =>
+        tile.id === id ? { ...updatedTile, id: updatedTile._id } : tile
+      );
+      set({ tiles: updatedTiles });
     } catch (err) {
-      console.error('Tile update failed', err);
+      console.error('Tile update failed:', err);
     }
   },
 
-  // 🔁 Update layout (drag or resize)
+  // 🔁 Update layout
   updateLayout: async (layout) => {
     const updates = layout.map(({ i, x, y, w, h }) =>
       get().updateTile(i, { x, y, w, h })
@@ -81,11 +98,16 @@ export const useProfileStore = create((set, get) => ({
   // ❌ Delete tile
   removeTile: async (id) => {
     try {
-      await fetch(`/tiles/${id}`, { method: 'DELETE' });
-      const tiles = get().tiles.filter((t) => t._id !== id);
-      set({ tiles });
+      const res = await fetch(`${API_BASE}/tiles/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+
+      const filtered = get().tiles.filter((tile) => tile.id !== id);
+      set({ tiles: filtered });
     } catch (err) {
-      console.error('Tile delete failed', err);
+      console.error('Tile delete failed:', err);
     }
   },
 }));

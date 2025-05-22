@@ -1,32 +1,22 @@
-import { useEffect, useState } from 'react';
-
-const FavoriteSongs = () => {
-  const [tracks, setTracks] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('http://localhost:8080/spotify/recent')
-      .then((res) => res.json())
-      .then((data) => setTracks(data))
-      .catch((err) => console.error('Error fetching top tracks:', err))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <p className="text-gray-400">Loading favorite songs...</p>;
-
-  return (
-    <div className="space-y-4">
-      {tracks.map((track, idx) => (
-        <div key={idx} className="flex items-center gap-4">
-          <img src={track.album.images[0]?.url} alt="" className="w-12 h-12 rounded" />
-          <div>
-            <p className="font-medium">{track.name}</p>
-            <p className="text-sm text-gray-400">{track.artists.map(a => a.name).join(', ')}</p>
+const FavoriteSongs = ({ songs }) => (
+  <div>
+    <h2 className="text-xl font-bold mb-3">Favorite Songs</h2>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {songs.map((song, idx) => (
+        <div key={idx} className="bg-black/50 rounded-xl p-4 backdrop-blur-md text-white">
+          <img
+            src={song.album?.images?.[0]?.url}
+            alt={song.name}
+            className="w-full h-32 object-cover rounded"
+          />
+          <div className="mt-2 font-medium text-sm">{song.name}</div>
+          <div className="text-xs text-gray-400">
+            {song.artists?.map((a) => a.name).join(', ')}
           </div>
         </div>
       ))}
     </div>
-  );
-};
+  </div>
+);
 
 export default FavoriteSongs;

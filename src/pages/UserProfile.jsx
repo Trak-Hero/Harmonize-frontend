@@ -21,6 +21,7 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState('recent');
+  const [spotifyData, setSpotifyData] = useState(null);
 
   const {
     tiles,
@@ -31,20 +32,32 @@ const UserProfile = () => {
   } = useProfileStore();
 
   const tileToEdit = tiles.find((t) => t._id === editingTileId);
-
-  const { userId } = useParams(); // /profile/:userId
+  const { userId } = useParams();
   const currentUser = useAuthStore((s) => s.user);
-
   const isOwner = !userId || (currentUser && userId === currentUser.id);
 
-  // Fetch tiles only if viewing a profile with an ID (not anonymous)
   useEffect(() => {
     if (userId && currentUser) {
       fetchTiles(userId, currentUser.id);
     }
   }, [userId, currentUser]);
 
-  // If user is not loaded yet, show fallback
+  useEffect(() => {
+    const fetchSpotifyData = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8080/api/me/spotify', {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        setSpotifyData(data);
+      } catch (err) {
+        console.error('Failed to fetch Spotify data:', err);
+      }
+    };
+
+    if (isOwner) fetchSpotifyData();
+  }, [isOwner]);
+
   if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -63,9 +76,7 @@ const UserProfile = () => {
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      {/* Left - Profile Info */}
       <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-        {/* Header */}
         <div className="space-y-2">
           <h1 className="text-5xl font-extrabold">
             {isOwner ? currentUser.name || 'Your Profile' : 'Tame Impala'}
@@ -83,7 +94,6 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-3 mt-4">
           <button
             onClick={() => setActiveTab('recent')}
@@ -107,17 +117,16 @@ const UserProfile = () => {
           </button>
         </div>
 
-        {/* Content */}
         {activeTab === 'recent' ? (
           <div className="space-y-6 mt-6">
             <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
-              <FavoriteSongs />
+              <FavoriteSongs songs={spotifyData?.top ?? []} />
             </div>
             <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
-              <FavoriteArtists />
+              <FavoriteArtists artists={spotifyData?.top_artists ?? []} />
             </div>
             <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
-              <RecentlyPlayed />
+              <RecentlyPlayed recent={spotifyData?.recent ?? []} />
             </div>
           </div>
         ) : (
@@ -154,14 +163,12 @@ const UserProfile = () => {
         )}
       </div>
 
-      {/* Right - Sidebar */}
       <aside className="col-span-12 lg:col-span-4">
         <div className="rounded-xl backdrop-blur-lg bg-gradient-to-br from-white/5 via-black/10 to-white/5 p-6 shadow-lg border border-white/20 h-full">
           <FriendActivity />
         </div>
       </aside>
 
-      {/* Tile Editor */}
       {editorOpen && tileToEdit && isOwner && <TileEditor tile={tileToEdit} />}
     </div>
   );
