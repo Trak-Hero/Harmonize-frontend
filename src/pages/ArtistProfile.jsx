@@ -2,7 +2,6 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import './ArtistProfile.css';
 
-
 export default function ArtistProfile() {
   const { id } = useParams();
   const baseURL = import.meta.env.VITE_API_BASE_URL;
@@ -14,6 +13,7 @@ export default function ArtistProfile() {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedBio, setEditedBio] = useState('');
+  const [isSpotifyArtist, setIsSpotifyArtist] = useState(false);
 
   const pick = (...urls) => urls.find(Boolean);
 
@@ -44,26 +44,31 @@ export default function ArtistProfile() {
         let a;
         if (res.ok) {
           a = await res.json();
+          setIsSpotifyArtist(false);
         } else {
           res = await fetch(`${baseURL}/artists/spotify/${id}`);
           if (!res.ok) throw new Error('Spotify lookup failed');
           a = await res.json();
+          setIsSpotifyArtist(true);
         }
-    
+
         if (!a.topTracks?.length) a.topTracks = fallbackTracks;
-        if (!a.albums?.length)   a.albums   = fallbackAlbums;
-    
+        if (!a.albums?.length) a.albums = fallbackAlbums;
+
         setArtist(a);
         setEditedBio(a.bio || '');
         setFollowing((a.followers ?? []).includes(me));
       } catch (err) {
         console.error(err);
         setArtist(null);
-      } finally { setLoading(false); }
-    })();    
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [id]);
 
   const toggleFollow = async () => {
+    if (isSpotifyArtist) return;
     try {
       const res = await fetch(`${baseURL}/artists/${id}/follow`, {
         method: 'PATCH'
@@ -94,6 +99,7 @@ export default function ArtistProfile() {
   };
 
   const startEditing = () => {
+    if (isSpotifyArtist) return;
     setIsEditing(true);
   };
 
@@ -103,43 +109,37 @@ export default function ArtistProfile() {
   };
 
   const saveBio = async () => {
+    if (isSpotifyArtist) return;
     try {
       let success = false;
-      
+
       try {
         const res = await fetch(`${baseURL}/artists/${id}/bio`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ bio: editedBio })
         });
-        
         success = res.ok;
-      } catch (endpointErr) {
-        console.log('Specific bio endpoint not available, trying general update');
-      }
-      
+      } catch {}
+
       if (!success) {
         try {
           const res = await fetch(`${baseURL}/artists/${id}`, {
             method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ bio: editedBio })
           });
-          
           success = res.ok;
-        } catch (generalErr) {
-          console.log('General update failed too');
-        }
+        } catch {}
       }
-      
-      
-      setArtist(prev => prev ? { ...prev, bio: editedBio } : prev);
-      setIsEditing(false);
-      
+
+      if (success) {
+        setArtist(prev => prev ? { ...prev, bio: editedBio } : prev);
+        setIsEditing(false);
+      } else {
+        alert('Failed to save bio.');
+      }
+
     } catch (err) {
       console.error(err);
       alert('Sorry, something went wrong when trying to save the bio.');
@@ -169,27 +169,33 @@ export default function ArtistProfile() {
       <div className="artist-page">
         {/* Left column */}
         <section className="artist-left">
-          <div className="artist-name">{artist.artistName}</div>
+          <div className="artist-name">{artist.artistName || artist.name}</div>
           <div className="follower-stats">
-            {(artist.followers?.length ?? 0).toLocaleString()} Followers • — Following
+            {Array.isArray(artist.followers)
+              ? `${artist.followers.length.toLocaleString()} Followers • — Following`
+              : `${(artist.followers ?? 0).toLocaleString()} Spotify Followers`}
           </div>
 
           <div className="action-buttons">
-            <button className="btn-primary" onClick={toggleFollow}>
-              {following ? 'Following' : 'Follow'}
-            </button>
+            {!isSpotifyArtist && (
+              <button className="btn-primary" onClick={toggleFollow}>
+                {following ? 'Following' : 'Follow'}
+              </button>
+            )}
             <button className="btn-secondary" onClick={share}>
               {copied ? 'Copied!' : 'Share'}
             </button>
-            <button className="btn-secondary" onClick={startEditing}>
-              Edit
-            </button>
+            {!isSpotifyArtist && (
+              <button className="btn-secondary" onClick={startEditing}>
+                Edit
+              </button>
+            )}
           </div>
 
           <img
             className="profile-photo"
             src={pick(artist.profilePic, '/fallback-cover.jpg')}
-            alt={artist.artistName}
+            alt={artist.artistName || artist.name}
             onError={e => {
               e.target.onerror = null;
               e.target.src = 'https://placehold.co/260x260?text=No+Image';
@@ -204,7 +210,7 @@ export default function ArtistProfile() {
             <h2>About Me</h2>
             {isEditing ? (
               <div className="bio-edit-container">
-                <textarea 
+                <textarea
                   className="bio-edit-textarea"
                   value={editedBio}
                   onChange={(e) => setEditedBio(e.target.value)}
@@ -228,21 +234,17 @@ export default function ArtistProfile() {
               <div className="songs-grid">
                 {artist.topTracks.slice(0, 5).map(t => (
                   <div key={t.id} className="track-row">
-                  <img
-                    className="thumb"
-                    src={pick(
-                      t.album?.images?.[0]?.url,
-                      t.album?.cover,
-                      '/fallback-cover.jpg'
-                    )}
-                    alt=""
-                    onError={e => {
-                      e.target.onerror = null;
-                      e.target.src = 'https://placehold.co/38x38?text=♪';
-                    }}
-                  />
-                  <span className="track-name">{t.name}</span>
-                </div>              
+                    <img
+                      className="thumb"
+                      src={pick(t.album?.images?.[0]?.url, t.album?.cover, '/fallback-cover.jpg')}
+                      alt=""
+                      onError={e => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://placehold.co/38x38?text=♪';
+                      }}
+                    />
+                    <span className="track-name">{t.name}</span>
+                  </div>
                 ))}
               </div>
             </div>
