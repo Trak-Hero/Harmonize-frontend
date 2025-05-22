@@ -21,6 +21,7 @@ export default function Navbar() {
         </Link>
         <Link to="/" className="nav-link">Home</Link>
         <Link to="/discover" className="nav-link">Discover</Link>
+        <Link to="/friends" className="nav-link">Friends</Link>
       </div>
 
       {/* Center: Search */}

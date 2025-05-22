@@ -5,6 +5,7 @@ import SearchResults from './pages/SearchResults';
 import ConnectSpotify from './pages/ConnectSpotify';
 import SpotifyDashboard from './pages/SpotifyDashboard';
 import UserProfile from './pages/UserProfile';
+import Friends from './pages/Friends';
 
 import './App.css';
 
@@ -43,6 +44,7 @@ function App() {
           <Route path="/connect" element={<ConnectSpotify />} />
           <Route path="/dashboard" element={<SpotifyDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/friends" element={<Friends />} />
         </Routes>
       </div>
     </div>
