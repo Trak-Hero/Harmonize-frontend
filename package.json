@@ -23,14 +23,14 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.511.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
     "react-grid-layout": "^1.5.1",
     "react-leaflet": "^4.2.1",
     "react-resizable": "^3.0.5",
     "react-router-dom": "^7.6.0",
     "shadcn": "^2.5.0",
-    "zustand": "^5.0.5"
-    "styled-components": "^6.1.18",
+    "zustand": "^5.0.5",
+    "styled-components": "^6.1.18"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
