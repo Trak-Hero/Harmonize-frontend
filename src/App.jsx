@@ -40,8 +40,7 @@ function App() {
               </div>
             }
           />
-          <Route path="/foryou" element={<ForYou />} />
-          <Route path="/discover" element={<ForYou />} /> {/* ← this is the new line */}
+          <Route path="/discover" element={<ForYou />} />
           <Route path="/artist/:id" element={<ArtistProfile />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/connect" element={<ConnectSpotify />} />
