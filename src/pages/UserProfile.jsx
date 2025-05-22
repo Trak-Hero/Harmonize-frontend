@@ -5,7 +5,7 @@ import 'react-resizable/css/styles.css';
 import { useParams } from 'react-router-dom';
 import { useAuthStore } from '../state/authStore';
 
-import Navbar from '../components/Navbar';
+import Navbar from '../components/navbar';
 import Tile from '../components/Tile';
 import TilePicker from '../components/TilePicker';
 import TileEditor from '../components/TileEditor';

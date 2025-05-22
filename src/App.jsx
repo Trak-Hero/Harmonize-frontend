@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/navbar';
 import UserProfile from './pages/UserProfile';
+import Friends from './pages/Friends';
 import './App.css';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
 
         <Routes>
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/friends" element={<Friends />} />
         </Routes>
       </div>
     </div>
