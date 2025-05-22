@@ -4,11 +4,15 @@ import { useNavigate, Link } from 'react-router-dom';
 export default function Navbar() {
   const [q, setQ] = useState('');
   const navigate = useNavigate();
+  // top of Navbar.jsx
+  const API = import.meta.env.VITE_API_BASE_URL;
 
   const search = (e) => {
     e.preventDefault();
-    if (!q.trim()) return;
-    navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+    const term = q.trim();
+    if (!term) return;
+    // 👉 go to SearchResults page, let it fetch array of matches
+    navigate(`/search?q=${encodeURIComponent(term)}`);
     setQ('');
   };
 
@@ -46,9 +50,14 @@ export default function Navbar() {
         <Link to="/dashboard" className="px-4 py-1 rounded bg-blue-500 hover:bg-blue-600">
           Dashboard
         </Link>
-        <Link to="/connect" className="px-4 py-1 rounded bg-green-500 hover:bg-green-600">
+        <button
+          onClick={() => {
+            window.location.href = `${API}/login`; // This starts the auth flow
+          }}
+          className="px-4 py-1 rounded bg-green-500 hover:bg-green-600"
+        >
           Sign up
-        </Link>
+        </button>
       </div>
     </nav>
   );

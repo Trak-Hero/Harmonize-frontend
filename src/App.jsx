@@ -9,7 +9,9 @@ import SpotifyDashboard from './pages/SpotifyDashboard';
 import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
 
-import './App.css';;
+
+import './App.css';
+
 
 function App() {
   return (
