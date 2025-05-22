@@ -5,6 +5,11 @@
 ![ITeam Photo](https://hackmd.io/_uploads/H1fyF3I1ll.jpg)
 [*how?*](https://help.github.com/articles/about-readmes/#relative-links-and-image-paths-in-readme-files)
 
+## Dev URLS
+
+[Frontend](https://project-music-and-memories.onrender.com/)
+[API Server](https://project-music-and-memories-api.onrender.com/)
+
 TODO: short project description, some sample screenshots or mockups
 
 Reverberate is a music discovery social media platform that connects listeners with emerging artists, and with each other. It is a platform that allows music lovers to explore fresh, undiscovered tracks while engaging with a diverse community of users and supporting new artists.
@@ -162,3 +167,6 @@ TODO: list of authors
 ## Acknowledgments
 
 - Special thanks to our TAs, Bruno Mars and Spotify <3
+
+
+

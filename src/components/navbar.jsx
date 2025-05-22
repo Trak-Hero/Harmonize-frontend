@@ -45,9 +45,15 @@ export default function Navbar() {
         <Link to="/dashboard" className="px-4 py-1 rounded bg-blue-500 hover:bg-blue-600">
           Dashboard
         </Link>
-        <Link to="/connect" className="px-4 py-1 rounded bg-green-500 hover:bg-green-600">
+        <button
+          onClick={() => {
+            const API = import.meta.env.VITE_API_BASE_URL;
+            window.location.href = `${API}/login`; // This starts the auth flow
+          }}
+          className="px-4 py-1 rounded bg-green-500 hover:bg-green-600"
+        >
           Sign up
-        </Link>
+        </button>
       </div>
     </nav>
   );
