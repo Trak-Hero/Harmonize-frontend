@@ -1,9 +1,13 @@
-// ConnectSpotify.jsx
 import { useEffect } from "react";
 
 export default function ConnectSpotify() {
   useEffect(() => {
-    window.location.href = "http://127.0.0.1:8080/auth/spotify/login";
+    const backendBaseUrl =
+      import.meta.env.MODE === "development"
+        ? "http://127.0.0.1:8080"
+        : "https://project-music-and-memories-api.onrender.com";
+
+    window.location.href = `${backendBaseUrl}/auth/spotify/login`;
   }, []);
 
   return (
