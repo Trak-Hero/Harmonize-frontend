@@ -10,14 +10,15 @@ export default function Navbar() {
     e.preventDefault();
     const term = q.trim();
     if (!term) return;
-
+  
     try {
+      // query backend -> /spotify/search?q=<term>
       const res = await fetch(`${API}/spotify/search?q=${encodeURIComponent(term)}`, {
         credentials: 'include'
       });
       if (!res.ok) throw new Error('Search failed');
-      const { id } = await res.json();           // { id, name, image }
-      navigate(`/artist/${id}`);
+      const { id } = await res.json();        // { id, name, image }
+      navigate(`/artist/${id}`);               // directly open ArtistProfile
       setQ('');
     } catch (err) {
       console.error(err);
