@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import './ArtistProfile.css';
 
 export default function ArtistProfile() {
-  const { id } = useParams();                       // ➜ Spotify artist ID
+  const { id } = useParams();                       // Spotify artist ID
   const baseURL = import.meta.env.VITE_API_BASE_URL;
   const me = '682bf5ec57acfd1e97d85d8e';
 
@@ -17,36 +17,36 @@ export default function ArtistProfile() {
 
   const pick = (...urls) => urls.find(Boolean);
 
-  const fallbackTracks = [ /* ...unchanged... */ ];
-  const fallbackAlbums = [ /* ...unchanged... */ ];
+  /* ↓ leave your existing fallbackTracks / fallbackAlbums here */
 
   useEffect(() => {
     setLoading(true);
     (async () => {
       try {
-        /* 1️⃣ — try Spotify first */
-        let res = await fetch(`${baseURL}/artists/spotify/${id}`);
-        let a;
+        // ---- 1️⃣  Always try Spotify route first ----
+        let res   = await fetch(`${baseURL}/artists/spotify/${id}`);
+        let data;
+
         if (res.ok) {
-          a = await res.json();
+          data = await res.json();
           setIsSpotifyArtist(true);
         } else {
-          /* 2️⃣ — fall back to local Mongo artist */
+          // ---- 2️⃣  Fallback: try Mongo route ----
           res = await fetch(`${baseURL}/artists/${id}`);
-          if (!res.ok) throw new Error('Artist not found');
-          a = await res.json();
+          if (!res.ok) throw new Error('Artist not found in DB or Spotify');
+          data = await res.json();
           setIsSpotifyArtist(false);
         }
 
-        if (!a.topTracks?.length) a.topTracks = fallbackTracks;
-        if (!a.albums?.length)   a.albums   = fallbackAlbums;
+        if (!data.topTracks?.length) data.topTracks = fallbackTracks;
+        if (!data.albums?.length)    data.albums    = fallbackAlbums;
 
-        setArtist(a);
-        setEditedBio(a.bio || '');
-        setFollowing((a.followers ?? []).includes(me));
+        setArtist(data);
+        setEditedBio(data.bio || '');
+        setFollowing((data.followers ?? []).includes(me));
       } catch (err) {
-        console.error(err);
-        setArtist(null);
+        console.error('[ArtistProfile] Fetch failed:', err.message || err);
+        // keep artist as‑is; UI will still show previous state or fallback
       } finally {
         setLoading(false);
       }
