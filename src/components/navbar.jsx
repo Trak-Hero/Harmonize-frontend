@@ -20,6 +20,7 @@ export default function Navbar() {
           Reverberate
         </Link>
         <Link to="/" className="nav-link">Home</Link>
+        <Link to="/foryou" className="nav-link">For You</Link>
         <Link to="/discover" className="nav-link">Discover</Link>
         <Link to="/friends" className="nav-link">Friends</Link>
       </div>

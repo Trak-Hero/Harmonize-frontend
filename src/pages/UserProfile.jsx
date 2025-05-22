@@ -13,6 +13,7 @@ import FavoriteSongs from '../components/FavoriteSongs';
 import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed from '../components/RecentlyPlayed';
 import FriendActivity from '../components/FriendActivity';
+// import ProfileHeader from '../components/ProfileHeader'; // Optional
 
 import { useProfileStore } from '../state/profileStore';
 import '../index.css';
@@ -77,6 +78,9 @@ const UserProfile = () => {
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
       <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+        {/* Optional: Profile banner */}
+        {/* <ProfileHeader /> */}
+
         <div className="space-y-2">
           <h1 className="text-5xl font-extrabold">
             {isOwner ? currentUser.name || 'Your Profile' : 'Tame Impala'}
@@ -175,3 +179,4 @@ const UserProfile = () => {
 };
 
 export default UserProfile;
+

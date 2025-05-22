@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/navbar';
+import ForYou from './pages/ForYou';
 import ArtistProfile from './pages/ArtistProfile';
 import SearchResults from './pages/SearchResults';
 import ConnectSpotify from './pages/ConnectSpotify';
@@ -39,6 +40,7 @@ function App() {
               </div>
             }
           />
+          <Route path="/foryou" element={<ForYou />} />
           <Route path="/artist/:id" element={<ArtistProfile />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/connect" element={<ConnectSpotify />} />
