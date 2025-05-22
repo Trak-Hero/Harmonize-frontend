@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/navbar';
+import MapPage from './pages/MapPage';
 import ForYou from './pages/ForYou';
 import ArtistProfile from './pages/ArtistProfile';
 import SearchResults from './pages/SearchResults';
@@ -8,7 +9,7 @@ import SpotifyDashboard from './pages/SpotifyDashboard';
 import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
 
-import './App.css';
+import './App.css';;
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
           <Route path="/dashboard" element={<SpotifyDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/friends" element={<Friends />} />
+          <Route path="/map" element={<MapPage />} />
         </Routes>
       </div>
     </div>
