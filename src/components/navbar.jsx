@@ -4,27 +4,33 @@ import { useNavigate, Link } from 'react-router-dom';
 export default function Navbar() {
   const [q, setQ] = useState('');
   const navigate = useNavigate();
+  // top of Navbar.jsx
   const API = import.meta.env.VITE_API_BASE_URL;
 
   const search = async (e) => {
     e.preventDefault();
     const term = q.trim();
     if (!term) return;
-  
+
     try {
-      // query backend -> /spotify/search?q=<term>
+      /* 1️⃣  call your back‑end search */
       const res = await fetch(`${API}/spotify/search?q=${encodeURIComponent(term)}`, {
         credentials: 'include'
       });
       if (!res.ok) throw new Error('Search failed');
-      const { id } = await res.json();        // { id, name, image }
-      navigate(`/artist/${id}`);               // directly open ArtistProfile
+
+      /* 2️⃣  back‑end returns { id, name, image } */
+      const { id } = await res.json();
+
+      /* 3️⃣  open the Artist profile */
+      navigate(`/artist/${id}`);
       setQ('');
     } catch (err) {
       console.error(err);
       alert('Artist not found.');
     }
   };
+
 
   return (
     <nav className="w-full flex items-center justify-between gap-4 px-6 py-3 bg-black/60 backdrop-blur text-white">
