@@ -4,12 +4,25 @@ import { useNavigate, Link } from 'react-router-dom';
 export default function Navbar() {
   const [q, setQ] = useState('');
   const navigate = useNavigate();
+  const API = import.meta.env.VITE_API_BASE_URL;
 
-  const search = (e) => {
+  const search = async (e) => {
     e.preventDefault();
-    if (!q.trim()) return;
-    navigate(`/search?q=${encodeURIComponent(q.trim())}`);
-    setQ('');
+    const term = q.trim();
+    if (!term) return;
+
+    try {
+      const res = await fetch(`${API}/spotify/search?q=${encodeURIComponent(term)}`, {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Search failed');
+      const { id } = await res.json();           // { id, name, image }
+      navigate(`/artist/${id}`);
+      setQ('');
+    } catch (err) {
+      console.error(err);
+      alert('Artist not found.');
+    }
   };
 
   return (
@@ -47,7 +60,6 @@ export default function Navbar() {
         </Link>
         <button
           onClick={() => {
-            const API = import.meta.env.VITE_API_BASE_URL;
             window.location.href = `${API}/login`; // This starts the auth flow
           }}
           className="px-4 py-1 rounded bg-green-500 hover:bg-green-600"
