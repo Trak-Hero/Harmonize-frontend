@@ -2,36 +2,28 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 
 export default function SearchResults() {
-  const [params] = useSearchParams();
-  const query = params.get('q') ?? '';
+  const [params]  = useSearchParams();
+  const query     = params.get('q') ?? '';
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const baseURL = import.meta.env.VITE_API_BASE_URL;
 
-  useEffect(() => {
+  useEffect(()=>{
     if (!query) return;
-
     setLoading(true);
-    fetch(`${baseURL}/spotify/search?q=${encodeURIComponent(query)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setResults(data);
-        else setResults([]);
-      })
-      .catch((err) => {
-        console.error('Search failed:', err);
-        setResults([]);
-      })
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/spotify/search?q=${encodeURIComponent(query)}`)
+      .then(r => r.json())
+      .then(data => Array.isArray(data) ? setResults(data) : setResults([]))
+      .catch(console.error)
       .finally(() => setLoading(false));
   }, [query]);
 
-  if (!query) return <p className="p-6 text-white">Enter an artist name…</p>;
-  if (loading) return <p className="p-6 text-white">Searching…</p>;
+  if (!query)         return <p className="p-6 text-white">Enter an artist name…</p>;
+  if (loading)        return <p className="p-6 text-white">Searching…</p>;
   if (!results.length) return <p className="p-6 text-white">No matches.</p>;
 
   return (
     <div className="p-6 text-white grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-6">
-      {results.map((a) => (
+      {results.map(a => (
         <Link key={a.id} to={`/artist/${a.id}`} className="text-center hover:opacity-80">
           <img
             src={a.image || 'https://placehold.co/160?text=Artist'}
