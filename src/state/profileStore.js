@@ -1,70 +1,113 @@
 import { create } from 'zustand';
 
-export const useProfileStore = create((set, get) => {
-  const loadTiles = () => {
-    const stored = JSON.parse(localStorage.getItem('tiles')) || [];
-    return stored.map(tile => ({
-      x: 0,
-      y: Infinity,
-      w: 1,
-      h: 1,
-      i: tile.id,
-      ...tile,
-    }));
-  };
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080/api';
 
-  return {
-    tiles: loadTiles(),
 
-    editorOpen: false,
-    editingTileId: null,
+export const useProfileStore = create((set, get) => ({
+  tiles: [],
+  editorOpen: false,
+  editingTileId: null,
 
-    setEditorOpen: (isOpen, tileId = null) => {
-      set({ editorOpen: isOpen, editingTileId: tileId });
-    },
+  // Auth-aware
+  currentUserId: '6651283db26b776e2c351afe',
+  isOwner: true,
 
-    setTiles: (tiles) => {
-      set({ tiles });
-      localStorage.setItem('tiles', JSON.stringify(tiles));
-    },
+  setEditorOpen: (isOpen, tileId = null) => {
+    set({ editorOpen: isOpen, editingTileId: tileId });
+  },
 
-    addTile: (tile) => {
-      const id = crypto.randomUUID();
+  // 🔄 Fetch tiles from backend
+  fetchTiles: async (userId, currentUserId) => {
+    try {
+      const res = await fetch(`${API_BASE}/tiles/${userId}`);
+      if (!res.ok) throw new Error(`Failed to fetch tiles: ${res.status}`);
+      const data = await res.json();
+      set({
+        tiles: data.map(tile => ({ ...tile, id: tile._id })), // ✅ Normalize _id → id
+        currentUserId,
+        isOwner: userId === currentUserId,
+      });
+    } catch (err) {
+      console.error('Failed to load tiles:', err);
+    }
+  },
+
+  // ➕ Add new tile
+  addTile: async (tile) => {
+    try {
       const newTile = {
-        id,
-        i: id,
-        type: 'text',
+        userId: get().currentUserId,
+        type: tile.type || 'text',
         bgColor: '#1e1e1e',
         font: 'sans-serif',
         x: 0,
-        y: Infinity, // auto-place at bottom
+        y: Infinity,
         w: 1,
         h: 1,
         ...tile,
       };
-      const updated = [...get().tiles, newTile];
-      set({ tiles: updated });
-      localStorage.setItem('tiles', JSON.stringify(updated));
-    },
 
-    updateLayout: (layout) => {
-      const tiles = get().tiles.map((tile) => {
-        const l = layout.find((item) => item.i === tile.id);
-        return l ? { ...tile, x: l.x, y: l.y, w: l.w, h: l.h } : tile;
+      const res = await fetch(`${API_BASE}/tiles`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTile),
       });
-      set({ tiles });
-      localStorage.setItem('tiles', JSON.stringify(tiles));
-    },
 
-    removeTile: (id) => {
-      const updated = get().tiles.filter((tile) => tile.id !== id);
-      set({ tiles: updated });
-      localStorage.setItem('tiles', JSON.stringify(updated));
-    },
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(`Tile add failed: ${res.status} – ${error}`);
+      }
 
-    resetTiles: () => {
-      set({ tiles: [] });
-      localStorage.removeItem('tiles');
+      const savedTile = await res.json();
+      const normalizedTile = { ...savedTile, id: savedTile._id };
+      set({ tiles: [...get().tiles, normalizedTile] });
+    } catch (err) {
+      console.error('Tile add failed:', err);
     }
-  };
-});
+  },
+
+  // ✏️ Update tile
+  updateTile: async (id, updates) => {
+    try {
+      const res = await fetch(`${API_BASE}/tiles/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+
+      if (!res.ok) throw new Error(`Tile update failed: ${res.status}`);
+
+      const updatedTile = await res.json();
+      const updatedTiles = get().tiles.map((tile) =>
+        tile.id === id ? { ...updatedTile, id: updatedTile._id } : tile
+      );
+      set({ tiles: updatedTiles });
+    } catch (err) {
+      console.error('Tile update failed:', err);
+    }
+  },
+
+  // 🔁 Update layout
+  updateLayout: async (layout) => {
+    const updates = layout.map(({ i, x, y, w, h }) =>
+      get().updateTile(i, { x, y, w, h })
+    );
+    await Promise.all(updates);
+  },
+
+  // ❌ Delete tile
+  removeTile: async (id) => {
+    try {
+      const res = await fetch(`${API_BASE}/tiles/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+
+      const filtered = get().tiles.filter((tile) => tile.id !== id);
+      set({ tiles: filtered });
+    } catch (err) {
+      console.error('Tile delete failed:', err);
+    }
+  },
+}));

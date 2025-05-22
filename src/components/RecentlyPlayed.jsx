@@ -1,17 +1,22 @@
-export default function RecentlyPlayed() {
-  const tracks = ['Random Access Memories', 'Glow On', 'Dopethrone', 'The Narcotic Story'];
-  return (
-    <section className="rounded-xl bg-gradient-to-br from-sky-100/10 to-zinc-200/10 p-4">
-      <h3 className="text-lg font-semibold mb-2">Recently Played</h3>
-      <ul className="space-y-2 text-sm">
-        {tracks.map((t, i) => (
-          <li key={i} className="flex items-center gap-3">
-            <span className="text-gray-400">{`0${i}`}</span>
-            <button className="bg-white text-black w-6 h-6 rounded-full flex items-center justify-center text-xs">▶</button>
-            <span>{t}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
+const RecentlyPlayed = ({ recent }) => (
+  <div>
+    <h2 className="text-xl font-bold mb-3">Recently Played</h2>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {recent.map(({ track }, idx) => (
+        <div key={idx} className="bg-black/50 rounded-xl p-4 backdrop-blur-md text-white">
+          <img
+            src={track.album?.images?.[0]?.url}
+            alt={track.name}
+            className="w-full h-32 object-cover rounded"
+          />
+          <div className="mt-2 font-medium text-sm">{track.name}</div>
+          <div className="text-xs text-gray-400">
+            {track.artists?.map((a) => a.name).join(', ')}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export default RecentlyPlayed;

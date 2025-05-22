@@ -1,109 +1,182 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { useParams } from 'react-router-dom';
+import { useAuthStore } from '../state/authStore';
 
-import Navbar from '../components/Navbar';
+import Navbar from '../components/navbar';
 import Tile from '../components/Tile';
 import TilePicker from '../components/TilePicker';
 import TileEditor from '../components/TileEditor';
-
-import { useProfileStore } from '../state/profileStore';
-
 import FavoriteSongs from '../components/FavoriteSongs';
 import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed from '../components/RecentlyPlayed';
 import FriendActivity from '../components/FriendActivity';
-import ProfileHeader from '../components/ProfileHeader';
+// import ProfileHeader from '../components/ProfileHeader'; // Optional
+
+import { useProfileStore } from '../state/profileStore';
+import '../index.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState('recent');
+  const [spotifyData, setSpotifyData] = useState(null);
 
-  const tiles = useProfileStore((s) => s.tiles);
-  const editorOpen = useProfileStore((s) => s.editorOpen);
-  const editingTileId = useProfileStore((s) => s.editingTileId);
-  const tileToEdit = useProfileStore((s) => s.tiles.find((t) => t.id === editingTileId));
-  const updateLayout = useProfileStore((s) => s.updateLayout);
+  const {
+    tiles,
+    editorOpen,
+    editingTileId,
+    updateLayout,
+    fetchTiles,
+  } = useProfileStore();
+
+  const tileToEdit = tiles.find((t) => t._id === editingTileId);
+  const { userId } = useParams();
+  const currentUser = useAuthStore((s) => s.user);
+  const isOwner = !userId || (currentUser && userId === currentUser.id);
+
+  useEffect(() => {
+    if (userId && currentUser) {
+      fetchTiles(userId, currentUser.id);
+    }
+  }, [userId, currentUser]);
+
+  useEffect(() => {
+    const fetchSpotifyData = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8080/api/me/spotify', {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        setSpotifyData(data);
+      } catch (err) {
+        console.error('Failed to fetch Spotify data:', err);
+      }
+    };
+
+    if (isOwner) fetchSpotifyData();
+  }, [isOwner]);
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white text-lg">
+        Loading your profile...
+      </div>
+    );
+  }
+
+  const layout = tiles.map((tile) => ({
+    i: tile._id,
+    x: tile.x || 0,
+    y: tile.y || Infinity,
+    w: tile.w || 1,
+    h: tile.h || 1,
+  }));
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-screen-xl mx-auto px-6 py-10 grid grid-cols-12 gap-6">
-        {/* Left/Main */}
-        <div className="col-span-12 lg:col-span-9 space-y-10">
-          <ProfileHeader />
+    <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
+      <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+        {/* Optional: Profile banner */}
+        {/* <ProfileHeader /> */}
 
-          {/* Tab Toggle */}
-          <div className="flex gap-4">
-            <button
-              onClick={() => setActiveTab('recent')}
-              className={`px-6 py-2 rounded-full text-lg font-semibold ${
-                activeTab === 'recent'
-                  ? 'bg-white text-black'
-                  : 'bg-neutral-800 text-gray-400 hover:bg-neutral-700'
-              }`}
-            >
-              Recent
-            </button>
-            <button
-              onClick={() => setActiveTab('space')}
-              className={`px-6 py-2 rounded-full text-lg font-semibold ${
-                activeTab === 'space'
-                  ? 'bg-white text-black'
-                  : 'bg-neutral-800 text-gray-400 hover:bg-neutral-700'
-              }`}
-            >
-              Space
+        <div className="space-y-2">
+          <h1 className="text-5xl font-extrabold">
+            {isOwner ? currentUser.name || 'Your Profile' : 'Tame Impala'}
+          </h1>
+          <p className="text-white/70">0 Followers • — Following</p>
+          <div className="flex gap-4 mt-3">
+            {!isOwner && (
+              <button className="px-5 py-2 rounded-full bg-white text-black font-medium">
+                Follow
+              </button>
+            )}
+            <button className="px-5 py-2 rounded-full bg-white/10 text-white border border-white/30">
+              Share
             </button>
           </div>
-
-          {/* Conditional View */}
-          {activeTab === 'recent' ? (
-            <div className="space-y-8">
-              <FavoriteSongs />
-              <FavoriteArtists />
-              <RecentlyPlayed />
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <TilePicker />
-              <ResponsiveGridLayout
-                className="layout"
-                layouts={{ lg: tiles.map(tile => ({
-                  i: tile.id,
-                  x: tile.x,
-                  y: tile.y,
-                  w: tile.w,
-                  h: tile.h,
-                })) }}
-                breakpoints={{ lg: 1024 }}
-                cols={{ lg: 4 }}
-                rowHeight={150}
-                isDraggable
-                isResizable
-                onLayoutChange={(layout) => updateLayout(layout)}
-              >
-                {tiles.map((tile) => (
-                  <div key={tile.id} data-grid={{ x: tile.x, y: tile.y, w: tile.w, h: tile.h, i: tile.id }}>
-                    <Tile tile={tile} />
-                  </div>
-                ))}
-              </ResponsiveGridLayout>
-            </div>
-          )}
         </div>
 
-        {/* Right Sidebar */}
-        <aside className="col-span-12 lg:col-span-3">
-          <FriendActivity />
-        </aside>
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={() => setActiveTab('recent')}
+            className={`px-6 py-2 rounded-full text-lg font-semibold ${
+              activeTab === 'recent'
+                ? 'bg-white text-black'
+                : 'bg-white/10 text-white/70 border border-white/30'
+            }`}
+          >
+            Recent
+          </button>
+          <button
+            onClick={() => setActiveTab('space')}
+            className={`px-6 py-2 rounded-full text-lg font-semibold ${
+              activeTab === 'space'
+                ? 'bg-white text-black'
+                : 'bg-white/10 text-white/70 border border-white/30'
+            }`}
+          >
+            Space
+          </button>
+        </div>
+
+        {activeTab === 'recent' ? (
+          <div className="space-y-6 mt-6">
+            <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
+              <FavoriteSongs songs={spotifyData?.top ?? []} />
+            </div>
+            <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
+              <FavoriteArtists artists={spotifyData?.top_artists ?? []} />
+            </div>
+            <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
+              <RecentlyPlayed recent={spotifyData?.recent ?? []} />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6 mt-6">
+            {isOwner && <TilePicker />}
+            <ResponsiveGridLayout
+              className="layout"
+              rowHeight={100}
+              cols={{ lg: 4, md: 3, sm: 2, xs: 1 }}
+              layouts={{ lg: layout }}
+              onLayoutChange={(newLayout) => {
+                if (isOwner) updateLayout(newLayout);
+              }}
+              isDraggable={isOwner}
+              isResizable={isOwner}
+            >
+              {tiles.map((tile) => (
+                <div
+                  key={tile._id}
+                  data-grid={{
+                    x: tile.x || 0,
+                    y: tile.y || Infinity,
+                    w: tile.w || 1,
+                    h: tile.h || 1,
+                  }}
+                >
+                  <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg h-full">
+                    <Tile tile={tile} />
+                  </div>
+                </div>
+              ))}
+            </ResponsiveGridLayout>
+          </div>
+        )}
       </div>
 
-      {/* Global Tile Editor */}
-      {editorOpen && tileToEdit && <TileEditor tile={tileToEdit} />}
+      <aside className="col-span-12 lg:col-span-4">
+        <div className="rounded-xl backdrop-blur-lg bg-gradient-to-br from-white/5 via-black/10 to-white/5 p-6 shadow-lg border border-white/20 h-full">
+          <FriendActivity />
+        </div>
+      </aside>
+
+      {editorOpen && tileToEdit && isOwner && <TileEditor tile={tileToEdit} />}
     </div>
   );
 };
 
 export default UserProfile;
+

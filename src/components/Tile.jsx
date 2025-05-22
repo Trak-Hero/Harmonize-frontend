@@ -3,36 +3,38 @@ import { useProfileStore } from '../state/profileStore';
 const Tile = ({ tile }) => {
   const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
 
-  const style = {
-    backgroundColor: tile.bgColor || '#1e1e1e',
-    backgroundImage: tile.bgImage ? `url(${tile.bgImage})` : undefined,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    fontFamily: tile.font || 'sans-serif',
-  };
-
   return (
     <div
-      className="rounded-xl p-4 text-white shadow-md cursor-pointer hover:scale-[1.02] transition"
-      style={style}
-      onClick={() => setEditorOpen(true, tile.id)}
+      className="relative h-full w-full rounded-lg overflow-hidden"
+      style={{
+        backgroundColor: tile.bgColor,
+        backgroundImage: tile.bgImage ? `url(${tile.bgImage})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        fontFamily: tile.font || 'sans-serif',
+      }}
     >
-      {tile.type === 'text' && (
-        <p className="text-lg">{tile.content || 'Click to edit text'}</p>
-      )}
-      {tile.type === 'artist' && (
-        <div className="text-center">
-          <img
-            src={tile.image || '/placeholder.jpg'}
-            alt={tile.name || 'Artist'}
-            className="rounded-full w-16 h-16 mx-auto mb-2 object-cover"
-          />
-          <h2 className="font-bold text-md">{tile.name || 'Artist Name'}</h2>
-        </div>
-      )}
-      {tile.type === 'picture' && tile.bgImage && (
-        <div className="h-32 w-full rounded overflow-hidden" />
-      )}
+      {/* ✏️ Edit Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // prevent triggering parent drag
+          setEditorOpen(true, tile.id);
+        }}
+        className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs z-10 hover:bg-opacity-80"
+      >
+        Edit
+      </button>
+
+      {/* Your Tile content here */}
+      <div className="p-4">
+        {tile.type === 'text' && <p>{tile.content}</p>}
+        {tile.type === 'artist' && (
+          <>
+            {tile.image && <img src={tile.image} alt={tile.name} className="w-full h-24 object-cover rounded" />}
+            <p className="mt-2 font-semibold">{tile.name}</p>
+          </>
+        )}
+      </div>
     </div>
   );
 };

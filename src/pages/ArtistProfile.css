@@ -1,0 +1,299 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+}
+
+#root {
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.artist-page {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  gap: 2rem;
+  padding: 3rem 5%;
+  color: #fff;
+  align-items: start;
+}
+
+
+/* ── left column ── */
+.artist-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.artist-name {
+  font-size: 2.8rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.follower-stats {
+  margin-top: .5rem;
+  font-size: .9rem;
+  opacity: .8;
+}
+
+.action-buttons {
+  margin: 1.2rem 0;
+  display: flex;
+  gap: .8rem;
+}
+
+.btn-primary {
+  background: #fff;
+  color: #000;
+  padding: .5rem 1.2rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background: #f0f0f0;
+}
+
+.btn-secondary {
+  background: rgba(68, 68, 68, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: .5rem 1.2rem;
+  border-radius: 9999px;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(85, 85, 85, 0.4);
+}
+
+/* avatar fixed size */
+.profile-photo {
+  width: 260px;
+  height: 260px;
+  margin-top: 1rem;
+  border-radius: 1rem;
+  object-fit: cover;
+}
+
+/* ── center column ── */
+.artist-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 8rem;
+}
+
+.glass {
+  backdrop-filter: blur(25px) saturate(160%);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1.2rem;
+  padding: 1.2rem 1.6rem;
+}
+
+.about-card h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.songs-card h3, .albums-section h3 {
+  margin-top: 0;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+/* Bio editing styles */
+.bio-edit-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  color: #fff;
+  padding: 0.8rem;
+  font-size: 1rem;
+  resize: vertical;
+  font-family: inherit;
+  margin-bottom: 1rem;
+}
+
+.bio-edit-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.songs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  font-size: .9rem;
+}
+
+.track-row {
+  display: flex;
+  align-items: center;
+  padding: .5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.track-row:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  margin-right: 12px;
+}
+
+.track-name {
+  flex: 1;
+  text-align: left;
+}
+
+.track-plays {
+  min-width: 3rem;
+  text-align: right;
+  color: #bbb;
+}
+
+
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.album-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.album-cover {
+  width: 140px;
+  aspect-ratio: 1/1;
+  border-radius: 0.8rem;
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.album-cover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+}
+
+.album-name {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.album-year {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 0.2rem;
+}
+
+.friend-sidebar {
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-right: 0.5rem;
+}
+
+
+.subtitle {
+  font-size: .85rem;
+  opacity: .8;
+  margin-bottom: 1rem;
+}
+
+.friend-row {
+  display: flex;
+  gap: .8rem;
+  align-items: center;
+  margin: .6rem 0;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #555;
+}
+
+.friend-lines .line {
+  height: 6px;
+  background: #666;
+  border-radius: 3px;
+  margin: .2rem 0;
+}
+
+.friend-lines .w-24 {
+  width: 96px;
+}
+
+.friend-lines .w-16 {
+  width: 64px;
+}
+
+.shimmer {
+  animation: shimmer 1.2s infinite linear;
+}
+
+@keyframes shimmer {
+  0% {
+    opacity: .6;
+  }
+  50% {
+    opacity: .3;
+  }
+  100% {
+    opacity: .6;
+  }
+}
+
+.sidebar-actions {
+  margin-top: auto;
+  display: flex;
+  gap: .5rem;
+}
+
+.btn-location {
+  background: #2b2b2b;
+  color: #fff;
+  padding: .5rem 1rem;
+  border-radius: 9999px;
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.8);
+}

@@ -1,15 +1,22 @@
-export default function FavoriteSongs() {
-  return (
-    <section className="rounded-xl bg-gradient-to-br from-pink-100/20 to-neutral-700/30 p-4">
-      <h3 className="text-xl font-bold mb-2">Favorite Songs</h3>
-      <div className="flex overflow-x-scroll space-x-4 pb-2">
-        {/* Map over your real favorite songs here */}
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="min-w-[120px] h-[160px] rounded-lg bg-neutral-800 flex items-center justify-center text-sm">
-            Song {i + 1}
+const FavoriteSongs = ({ songs }) => (
+  <div>
+    <h2 className="text-xl font-bold mb-3">Favorite Songs</h2>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {songs.map((song, idx) => (
+        <div key={idx} className="bg-black/50 rounded-xl p-4 backdrop-blur-md text-white">
+          <img
+            src={song.album?.images?.[0]?.url}
+            alt={song.name}
+            className="w-full h-32 object-cover rounded"
+          />
+          <div className="mt-2 font-medium text-sm">{song.name}</div>
+          <div className="text-xs text-gray-400">
+            {song.artists?.map((a) => a.name).join(', ')}
           </div>
-        ))}
-      </div>
-    </section>
-  );
-}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export default FavoriteSongs;

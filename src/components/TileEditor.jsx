@@ -9,7 +9,9 @@ const TileEditor = ({ tile }) => {
   const [form, setForm] = useState({ ...tile });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const parsed = ['w', 'h'].includes(name) ? parseInt(value) : value;
+    setForm({ ...form, [name]: parsed });
   };
 
   const close = () => setEditorOpen(false);
@@ -90,6 +92,30 @@ const TileEditor = ({ tile }) => {
           <option value="serif">Serif</option>
           <option value="monospace">Monospace</option>
         </select>
+
+        {/* 📐 Predefined Size Controls */}
+        <div className="flex gap-2">
+          <select
+            name="w"
+            value={form.w}
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
+          >
+            <option value={1}>Width: 1</option>
+            <option value={2}>Width: 2</option>
+            <option value={4}>Width: 4</option>
+          </select>
+
+          <select
+            name="h"
+            value={form.h}
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
+          >
+            <option value={1}>Height: 1</option>
+            <option value={2}>Height: 2</option>
+          </select>
+        </div>
 
         <div className="flex justify-between mt-4">
           <button onClick={save} className="px-4 py-2 bg-blue-500 text-white rounded">Save</button>
