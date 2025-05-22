@@ -7,26 +7,14 @@ export default function Navbar() {
   // top of Navbar.jsx
   const API = import.meta.env.VITE_API_BASE_URL;
 
-  const search = async (e) => {
+  const search = (e) => {
     e.preventDefault();
     const term = q.trim();
     if (!term) return;
-
-    try {
-      const res = await fetch(`${API}/spotify/search?q=${encodeURIComponent(term)}`, {
-        credentials: 'include'
-      });
-      if (!res.ok) throw new Error('Search failed');
-
-      const { id } = await res.json();   // { id, name, image }
-      navigate(`/artist/${id}`);          // jump straight to profile
-      setQ('');
-    } catch (err) {
-      console.error(err);
-      alert('Artist not found.');
-    }
+    // 👉 go to SearchResults page, let it fetch array of matches
+    navigate(`/search?q=${encodeURIComponent(term)}`);
+    setQ('');
   };
-
 
   return (
     <nav className="w-full flex items-center justify-between gap-4 px-6 py-3 bg-black/60 backdrop-blur text-white">
