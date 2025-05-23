@@ -43,7 +43,6 @@ const UserProfile = () => {
     }
   }, [userId, currentUser, fetchTiles]);
 
-  /* ---------- FIX: use deployed API base URL ---------- */
   const API = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
@@ -81,25 +80,8 @@ const UserProfile = () => {
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
       <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-        {/* Optional: Profile banner */}
+        {/* Dynamic Profile Header */}
         <ProfileHeader />
-
-        <div className="space-y-2">
-          <h1 className="text-5xl font-extrabold">
-            {isOwner ? currentUser.name || 'Your Profile' : 'Artist Profile'}
-          </h1>
-          <p className="text-white/70">0 Followers • — Following</p>
-          <div className="flex gap-4 mt-3">
-            {!isOwner && (
-              <button className="px-5 py-2 rounded-full bg-white text-black font-medium">
-                Follow
-              </button>
-            )}
-            <button className="px-5 py-2 rounded-full bg-white/10 text-white border border-white/30">
-              Share
-            </button>
-          </div>
-        </div>
 
         <div className="flex gap-3 mt-4">
           <button
