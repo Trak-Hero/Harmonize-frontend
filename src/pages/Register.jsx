@@ -2,12 +2,9 @@
 import { useState } from 'react';
 
 export default function Register() {
-  const [form, setForm] = useState({
-    name: '',
-    username: '',
-    password: '',
-    accountType: 'user',
-  });
+    const [form, setForm] = useState({
+            name: '', username: '', email: '', password: '', accountType: 'user',
+          });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,6 +38,7 @@ export default function Register() {
       <input name="username" placeholder="Username" required onChange={handleChange} className="w-full p-2 border" />
       <input name="password" type="password" placeholder="Password" required onChange={handleChange} className="w-full p-2 border" />
       <select name="accountType" onChange={handleChange} className="w-full p-2 border">
+      <input name="email"    placeholder="E‑mail" required onChange={handleChange} className="w-full p-2 border" />
         <option value="user">User</option>
         <option value="artist">Artist</option>
       </select>
