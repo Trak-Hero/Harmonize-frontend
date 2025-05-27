@@ -36,12 +36,30 @@ export default function Register() {
       <h2 className="text-2xl font-bold">Create Account</h2>
       <input name="name" placeholder="Name" required onChange={handleChange} className="w-full p-2 border" />
       <input name="username" placeholder="Username" required onChange={handleChange} className="w-full p-2 border" />
-      <input name="password" type="password" placeholder="Password" required onChange={handleChange} className="w-full p-2 border" />
-      <select name="accountType" onChange={handleChange} className="w-full p-2 border">
-      <input name="email"    placeholder="E‑mail" required onChange={handleChange} className="w-full p-2 border" />
+      <input
+        name="password"
+        type="password"
+        placeholder="Password"
+        required
+        onChange={handleChange}
+        className="w-full p-2 border"
+        />
+        <input
+        name="email"
+        placeholder="E‑mail"
+        required
+        onChange={handleChange}
+        className="w-full p-2 border"
+        />
+        <select
+        name="accountType"
+        onChange={handleChange}
+        className="w-full p-2 border"
+        >
         <option value="user">User</option>
         <option value="artist">Artist</option>
-      </select>
+        </select>
+
       <button type="submit" className="w-full p-2 bg-blue-600 text-white">Register & Connect Spotify</button>
     </form>
   );
