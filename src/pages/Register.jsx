@@ -14,19 +14,31 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(form),
-          });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-      alert('Registered! Now connect Spotify.');
-      window.location.href = '/connect';
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+  
+      const contentType = res.headers.get('content-type');
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Server error: ${res.status} – ${errorText}`);
+      }
+  
+      if (contentType?.includes('application/json')) {
+        const data = await res.json();
+        alert('Registered! Now connect Spotify.');
+        window.location.href = '/connect';
+      } else {
+        throw new Error('Unexpected non-JSON response');
+      }
     } catch (err) {
       alert('Registration failed: ' + err.message);
+      console.error(err);
     }
   };
+  
 
   return (
     <form
