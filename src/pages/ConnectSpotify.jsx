@@ -1,18 +1,15 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 export default function ConnectSpotify() {
   useEffect(() => {
-    const backendBaseUrl =
-      import.meta.env.MODE === "development"
-        ? "http://127.0.0.1:8080"
-        : "https://project-music-and-memories-api.onrender.com";
-
-        window.location.href = `${backendBaseUrl}/auth/spotify/login`;
+    // kick off OAuth as soon as the page mounts
+    window.location.href =
+      `${import.meta.env.VITE_API_BASE_URL}/auth/spotify/login`;
   }, []);
 
   return (
-    <div className="h-screen flex items-center justify-center text-white">
-      Redirecting to Spotify …
+    <div className="h-full flex items-center justify-center text-xl text-white">
+      Redirecting you to Spotify&hellip;
     </div>
   );
 }

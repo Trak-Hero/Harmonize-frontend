@@ -50,14 +50,12 @@ export default function Navbar() {
         <Link to="/dashboard" className="px-4 py-1 rounded bg-blue-500 hover:bg-blue-600">
           Dashboard
         </Link>
-        <button
-          onClick={() => {
-            window.location.href = `${API}/login`; // This starts the auth flow
-          }}
+        <Link
+          to="/register"
           className="px-4 py-1 rounded bg-green-500 hover:bg-green-600"
         >
           Sign up
-        </button>
+        </Link>
       </div>
     </nav>
   );

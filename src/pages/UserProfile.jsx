@@ -49,18 +49,26 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchSpotifyData = async () => {
       try {
-        const res = await fetch(`${API}/api/me/spotify`, {
+        const res = await fetch(`${API}/auth/api/me/spotify`, {
           credentials: 'include',
         });
+        if (res.status === 401) return; // Not linked
+        if (!res.ok) throw new Error(await res.text());
+  
         const data = await res.json();
-        setSpotifyData(data);
+        setSpotifyData({
+          top: data.top || [],
+          top_artists: [],
+          recent: [],
+        });
       } catch (err) {
         console.error('Failed to fetch Spotify data:', err);
       }
     };
-
+  
     if (isOwner) fetchSpotifyData();
   }, [isOwner, API]);
+  
 
   if (!currentUser) {
     return (
