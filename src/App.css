@@ -5,6 +5,10 @@
   flex-direction: column;
 }
 
+body {
+  font-family: 'Afacad', sans-serif;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

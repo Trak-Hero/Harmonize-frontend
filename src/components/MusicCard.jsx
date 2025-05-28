@@ -35,7 +35,8 @@ const MusicCard = ({ item }) => {
 
           {/* buttons */}
           <div className="flex justify-between mt-4 text-gray-300">
-            <button className="hover:text-pink-400">Like</button>
+            <button className="hover:text-pink-400">Add to playlist</button>
+            <button className="hover:text-pink-400">Follow artist</button>
             <button className="hover:text-blue-400">Comment</button>
             <button className="hover:text-green-400">Share</button>
           </div>
