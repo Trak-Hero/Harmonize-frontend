@@ -8,7 +8,7 @@ export default function Login() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const login = useAuthStore((s) => s.login);
+  const login = useAuthStore((s) => s.login); // Use the login method from authStore
   const API = import.meta.env.VITE_API_BASE_URL;
 
   const handleSubmit = async (e) => {
@@ -17,6 +17,9 @@ export default function Login() {
     setError(null);
     
     try {
+      console.log('API URL:', API); // Debug log
+      console.log('Attempting login with:', { usernameOrEmail, password: '***' });
+      
       const res = await fetch(`${API}/auth/login`, {
         method: 'POST',
         credentials: 'include',
@@ -24,16 +27,20 @@ export default function Login() {
         body: JSON.stringify({ usernameOrEmail, password }),
       });
       
+      console.log('Response status:', res.status);
+      
       if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || 'Login failed');
+        const errorData = await res.json().catch(() => ({ message: 'Login failed' }));
+        throw new Error(errorData.message || 'Login failed');
       }
 
       const user = await res.json();
-      login(user); // Use the login method to persist user data
-      navigate('/profile');
+      console.log('Login successful:', user);
+      login(user);
+      navigate('/dashboard'); // Navigate to dashboard instead of profile
     } catch (err) {
-      setError(err.message || 'Login failed');
+      console.error('Login error:', err);
+      setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
