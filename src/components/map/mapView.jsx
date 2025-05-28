@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 
 const LocationMarker = () => {
@@ -32,20 +33,125 @@ const MapResizeFix = () => {
   return null;
 };
 
+const FriendsMarkers = ({ visible }) => {
+  const [friends, setFriends] = useState([]);
+
+  useEffect(() => {
+    const fetchFriends = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/friends', {
+          credentials: 'include'
+        });        
+        const data = await response.json();
+        setFriends(data);
+      } catch (error) {
+        console.error("Failed to fetch friends:", error);
+      }
+    };
+
+    fetchFriends();
+  }, []);
+
+  if (!visible) return null;
+
+  return friends.map(friend =>
+    friend.location?.coordinates?.length === 2 ? (
+      <Marker
+        key={friend._id}
+        position={[friend.location.coordinates[1], friend.location.coordinates[0]]}
+        icon={L.icon({
+          iconUrl: 'https://cdn-icons-png.flaticon.com/512/1946/1946429.png',
+          iconSize: [30, 30],
+          iconAnchor: [15, 30],
+          popupAnchor: [0, -30],
+        })}
+      >
+        <Popup>
+          <div>
+            <h2>{friend.displayName || friend.username}</h2>
+          </div>
+        </Popup>
+      </Marker>
+    ) : null
+  );
+};
+
+const EventMarkers = ({ visible }) => {
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    // Static mock data for now
+    setEvents([
+      {
+        title: 'The Rockapellas',
+        location: { coordinates: [-72.2896, 43.7025] },
+        date: new Date('2024-05-20T22:00:00'),
+        description: 'A capella group performance'
+      },
+      {
+        title: 'Sheba',
+        location: { coordinates: [-72.2880, 43.7030] },
+        date: new Date('2024-05-20T20:00:00'),
+        description: 'Smooth jazz evening'
+      },
+      {
+        title: 'Coast Jazz Orchestra',
+        location: { coordinates: [-72.2850, 43.7050] },
+        date: new Date('2024-05-24T19:00:00'),
+        description: 'Live performance by the coast'
+      }
+    ]);
+  }, []);
+
+  if (!visible) return null;
+
+  return events.map((event, idx) => (
+    <Marker
+      key={`event-${idx}`}
+      position={[event.location.coordinates[1], event.location.coordinates[0]]}
+      icon={L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+        popupAnchor: [0, -30],
+      })}
+    >
+      <Popup>
+        <div>
+          <h2 className="font-bold">{event.title}</h2>
+          <p>{event.description}</p>
+          <p>{new Date(event.date).toLocaleString()}</p>
+        </div>
+      </Popup>
+    </Marker>
+  ));
+};
+
 const MapView = () => {
+  const [showEvents, setShowEvents] = useState(true);
+  const [showFriends, setShowFriends] = useState(true);
+
   return (
-    <div className="w-full h-full relative"> {/* Make parent relative to position buttons */}
-      {/* Overlayed buttons */}
+    <div className="w-full h-full relative">
       <div className="absolute top-4 left-4 z-[999] space-x-2">
-        <button className="bg-white text-black px-4 py-2 rounded-md shadow">
+        <button
+          onClick={() => setShowEvents(prev => !prev)}
+          className={`px-4 py-2 rounded-md shadow transition ${
+            showEvents ? 'bg-blue-500 text-white' : 'bg-white text-black hover:bg-gray-300'
+          }`}
+        >
           Events
         </button>
-        <button className="bg-white text-black px-4 py-2 rounded-md shadow">
+        <button
+          onClick={() => setShowFriends(prev => !prev)}
+          className={`px-4 py-2 rounded-md shadow transition ${
+            showFriends ? 'bg-blue-500 text-white' : 'bg-white text-black hover:bg-gray-300'
+          }`}
+        >
           Friends
         </button>
       </div>
 
-      {/* Leaflet Map */}
       <MapContainer
         center={{ lat: 43.7022, lng: -72.2896 }}
         zoom={13}
@@ -53,11 +159,13 @@ const MapView = () => {
         className="w-full h-full z-0"
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapResizeFix />
         <LocationMarker />
+        <FriendsMarkers visible={showFriends} />
+        <EventMarkers visible={showEvents} />
       </MapContainer>
     </div>
   );
