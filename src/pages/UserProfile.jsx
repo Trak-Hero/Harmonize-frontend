@@ -58,8 +58,8 @@ const UserProfile = () => {
         const data = await res.json();
         setSpotifyData({
           top: data.top || [],
-          top_artists: [],
-          recent: [],
+          top_artists: data.top_artists || [],
+          recent: data.recent || [],
         });
       } catch (err) {
         console.error('Failed to fetch Spotify data:', err);

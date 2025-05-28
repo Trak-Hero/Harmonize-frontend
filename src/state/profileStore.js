@@ -8,7 +8,6 @@ export const useProfileStore = create((set, get) => ({
   editorOpen: false,
   editingTileId: null,
 
-  // Auth-aware
   currentUserId: '6651283db26b776e2c351afe',
   isOwner: true,
 
@@ -16,14 +15,13 @@ export const useProfileStore = create((set, get) => ({
     set({ editorOpen: isOpen, editingTileId: tileId });
   },
 
-  // 🔄 Fetch tiles from backend
   fetchTiles: async (userId, currentUserId) => {
     try {
       const res = await fetch(`${API_BASE}/tiles/${userId}`);
       if (!res.ok) throw new Error(`Failed to fetch tiles: ${res.status}`);
       const data = await res.json();
       set({
-        tiles: data.map(tile => ({ ...tile, id: tile._id })), // ✅ Normalize _id → id
+        tiles: data.map(tile => ({ ...tile, id: tile._id })),
         currentUserId,
         isOwner: userId === currentUserId,
       });
@@ -87,7 +85,6 @@ export const useProfileStore = create((set, get) => ({
     }
   },
 
-  // 🔁 Update layout
   updateLayout: async (layout) => {
     const updates = layout.map(({ i, x, y, w, h }) =>
       get().updateTile(i, { x, y, w, h })
@@ -95,7 +92,6 @@ export const useProfileStore = create((set, get) => ({
     await Promise.all(updates);
   },
 
-  // ❌ Delete tile
   removeTile: async (id) => {
     try {
       const res = await fetch(`${API_BASE}/tiles/${id}`, {
