@@ -30,8 +30,8 @@
     "react-resizable": "^3.0.5",
     "react-router-dom": "^7.6.0",
     "shadcn": "^2.5.0",
-    "styled-components": "^6.1.18",
-    "zustand": "^5.0.4"
+    "zustand": "^5.0.5",
+    "styled-components": "^6.1.18"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

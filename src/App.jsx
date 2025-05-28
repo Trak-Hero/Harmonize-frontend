@@ -9,8 +9,10 @@ import ConnectSpotify from './pages/ConnectSpotify';
 import SpotifyDashboard from './pages/SpotifyDashboard';
 import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
+import Register from './pages/Register';
 
-import './App.css';;
+import './App.css';
+
 
 function App() {
   return (
@@ -30,6 +32,7 @@ function App() {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/map" element={<MapPage />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
     </div>

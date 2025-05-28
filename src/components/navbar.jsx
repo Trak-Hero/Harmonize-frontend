@@ -5,11 +5,15 @@ import { Compass, Users, MapTrifold, ArrowRight } from '@phosphor-icons/react';
 export default function Navbar() {
   const [q, setQ] = useState('');
   const navigate = useNavigate();
+  // top of Navbar.jsx
+  const API = import.meta.env.VITE_API_BASE_URL;
 
   const search = (e) => {
     e.preventDefault();
-    if (!q.trim()) return;
-    navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+    const term = q.trim();
+    if (!term) return;
+    // 👉 go to SearchResults page, let it fetch array of matches
+    navigate(`/search?q=${encodeURIComponent(term)}`);
     setQ('');
   };
 

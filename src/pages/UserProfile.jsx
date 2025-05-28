@@ -13,7 +13,7 @@ import FavoriteSongs from '../components/FavoriteSongs';
 import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed from '../components/RecentlyPlayed';
 import FriendActivity from '../components/FriendActivity';
-// import ProfileHeader from '../components/ProfileHeader'; // Optional
+// import ProfileHeader from '../components/ProfileHeader';
 
 import { useProfileStore } from '../state/profileStore';
 import '../index.css';
@@ -41,23 +41,34 @@ const UserProfile = () => {
     if (userId && currentUser) {
       fetchTiles(userId, currentUser.id);
     }
-  }, [userId, currentUser]);
+  }, [userId, currentUser, fetchTiles]);
+
+  /* ---------- FIX: use deployed API base URL ---------- */
+  const API = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const fetchSpotifyData = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8080/api/me/spotify', {
+        const res = await fetch(`${API}/auth/api/me/spotify`, {
           credentials: 'include',
         });
+        if (res.status === 401) return; // Not linked
+        if (!res.ok) throw new Error(await res.text());
+  
         const data = await res.json();
-        setSpotifyData(data);
+        setSpotifyData({
+          top: data.top || [],
+          top_artists: [],
+          recent: [],
+        });
       } catch (err) {
         console.error('Failed to fetch Spotify data:', err);
       }
     };
-
+  
     if (isOwner) fetchSpotifyData();
-  }, [isOwner]);
+  }, [isOwner, API]);
+  
 
   if (!currentUser) {
     return (
@@ -83,7 +94,7 @@ const UserProfile = () => {
 
         <div className="space-y-2">
           <h1 className="text-5xl font-extrabold">
-            {isOwner ? currentUser.name || 'Your Profile' : 'Tame Impala'}
+            {isOwner ? currentUser.name || 'Your Profile' : 'Artist Profile'}
           </h1>
           <p className="text-white/70">0 Followers • — Following</p>
           <div className="flex gap-4 mt-3">
@@ -179,4 +190,3 @@ const UserProfile = () => {
 };
 
 export default UserProfile;
-
