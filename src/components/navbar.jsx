@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuthStore } from '../state/authStore';
 
 export default function Navbar() {
   const [q, setQ] = useState('');
   const navigate = useNavigate();
+  const user      = useAuthStore((s) => s.user);
+  const logout    = useAuthStore((s) => s.logout);
   // top of Navbar.jsx
   const API = import.meta.env.VITE_API_BASE_URL;
 
@@ -50,12 +53,20 @@ export default function Navbar() {
         <Link to="/dashboard" className="px-4 py-1 rounded bg-blue-500 hover:bg-blue-600">
           Dashboard
         </Link>
-        <Link
-          to="/register"
-          className="px-4 py-1 rounded bg-green-500 hover:bg-green-600"
-        >
-          Sign up
-        </Link>
+        {!user && (
+          <>
+            <Link to="/login"   className="px-4 py-1 rounded bg-blue-500  hover:bg-blue-600">Log in</Link>
+            <Link to="/register" className="px-4 py-1 rounded bg-green-500 hover:bg-green-600">Sign up</Link>
+          </>
+        )}
+        {user && (
+          <button
+            onClick={logout}
+            className="px-4 py-1 rounded bg-red-500 hover:bg-red-600"
+          >
+            Log out
+          </button>
+        )}
       </div>
     </nav>
   );
