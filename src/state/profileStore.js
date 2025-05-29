@@ -36,15 +36,16 @@ export const useProfileStore = create((set, get) => ({
       const userId = get().currentUserId;
       if (!userId) throw new Error('No user ID available for tile creation.');
 
-      const newTile = {
+      const defaultTile = {
         userId,
         type: tile.type || 'text',
+        content: '',
         bgColor: '#1e1e1e',
         font: 'sans-serif',
         x: 0,
         y: Infinity,
-        w: 1,
-        h: 1,
+        w: 2,
+        h: 2,
         ...tile,
       };
 
@@ -52,7 +53,7 @@ export const useProfileStore = create((set, get) => ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(newTile),
+        body: JSON.stringify(defaultTile),
       });
 
       if (!res.ok) {
@@ -80,7 +81,7 @@ export const useProfileStore = create((set, get) => ({
       if (!res.ok) throw new Error(`Tile update failed: ${res.status}`);
 
       const updatedTile = await res.json();
-      const updatedTiles = get().tiles.map((tile) =>
+      const updatedTiles = get().tiles.map(tile =>
         tile.id === id ? { ...updatedTile, id: updatedTile._id } : tile
       );
       set({ tiles: updatedTiles });
@@ -105,7 +106,7 @@ export const useProfileStore = create((set, get) => ({
 
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
 
-      const filtered = get().tiles.filter((tile) => tile.id !== id);
+      const filtered = get().tiles.filter(tile => tile.id !== id);
       set({ tiles: filtered });
     } catch (err) {
       console.error('Tile delete failed:', err);
