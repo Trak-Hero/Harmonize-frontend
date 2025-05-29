@@ -22,7 +22,7 @@ export const useProfileStore = create((set, get) => ({
       if (!res.ok) throw new Error(`Failed to fetch tiles: ${res.status}`);
       const data = await res.json();
       set({
-        tiles: data.map((tile) => ({ ...tile, id: tile._id })),
+        tiles: data.map(tile => ({ ...tile, id: tile._id })),
         currentUserId,
         isOwner: userId === currentUserId,
       });
@@ -33,8 +33,11 @@ export const useProfileStore = create((set, get) => ({
 
   addTile: async (tile) => {
     try {
+      const userId = get().currentUserId;
+      if (!userId) throw new Error('No user ID available for tile creation.');
+
       const newTile = {
-        userId: get().currentUserId,
+        userId,
         type: tile.type || 'text',
         bgColor: '#1e1e1e',
         font: 'sans-serif',
@@ -58,9 +61,8 @@ export const useProfileStore = create((set, get) => ({
       }
 
       const savedTile = await res.json();
-      set((state) => ({
-        tiles: [...state.tiles, { ...savedTile, id: savedTile._id }],
-      }));
+      const normalizedTile = { ...savedTile, id: savedTile._id };
+      set({ tiles: [...get().tiles, normalizedTile] });
     } catch (err) {
       console.error('Tile add failed:', err);
     }
@@ -78,25 +80,20 @@ export const useProfileStore = create((set, get) => ({
       if (!res.ok) throw new Error(`Tile update failed: ${res.status}`);
 
       const updatedTile = await res.json();
-      set((state) => ({
-        tiles: state.tiles.map((tile) =>
-          tile.id === id ? { ...updatedTile, id: updatedTile._id } : tile
-        ),
-      }));
+      const updatedTiles = get().tiles.map((tile) =>
+        tile.id === id ? { ...updatedTile, id: updatedTile._id } : tile
+      );
+      set({ tiles: updatedTiles });
     } catch (err) {
       console.error('Tile update failed:', err);
     }
   },
 
   updateLayout: async (layout) => {
-    try {
-      const updates = layout.map(({ i, x, y, w, h }) =>
-        get().updateTile(i, { x, y, w, h })
-      );
-      await Promise.all(updates);
-    } catch (err) {
-      console.error('Layout update failed:', err);
-    }
+    const updates = layout.map(({ i, x, y, w, h }) =>
+      get().updateTile(i, { x, y, w, h })
+    );
+    await Promise.all(updates);
   },
 
   removeTile: async (id) => {
@@ -108,9 +105,8 @@ export const useProfileStore = create((set, get) => ({
 
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
 
-      set((state) => ({
-        tiles: state.tiles.filter((tile) => tile.id !== id),
-      }));
+      const filtered = get().tiles.filter((tile) => tile.id !== id);
+      set({ tiles: filtered });
     } catch (err) {
       console.error('Tile delete failed:', err);
     }

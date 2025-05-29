@@ -11,14 +11,21 @@ import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import { useEffect } from 'react';
+import { useAuthStore } from './state/authStore';
 
 import './App.css';
 
 
 function App() {
+  const fetchUser = useAuthStore((s) => s.fetchUser);
+
+  useEffect(() => {
+    fetchUser(); // fetch session user on initial load
+  }, []);
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
- 
       {/* App content */}
       <div className="relative z-20 flex flex-col h-full overflow-auto">
         <Navbar />
@@ -40,5 +47,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;
