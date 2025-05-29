@@ -1,5 +1,5 @@
 import React from 'react';
-import Event from './event';
+import EventCard from './eventCard'; // Ensure the filename is capitalized to match the component
 
 const EventList = ({ events }) => {
   return (
@@ -8,7 +8,7 @@ const EventList = ({ events }) => {
         <p className="text-white text-center">No events found</p>
       ) : (
         events.map((event, idx) => (
-          <Event key={idx} event={event} />
+          <EventCard key={idx} event={event} />
         ))
       )}
     </div>
