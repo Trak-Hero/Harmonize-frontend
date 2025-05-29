@@ -29,6 +29,7 @@ const UserProfile = () => {
     editingTileId,
     updateLayout,
     fetchTiles,
+    setEditorOpen,
   } = useProfileStore();
 
   const tileToEdit = tiles.find((t) => t._id === editingTileId);
@@ -75,10 +76,10 @@ const UserProfile = () => {
     );
   }
 
-  const layout = tiles.map((tile) => ({
+  const layoutItems = tiles.map((tile) => ({
     i: tile._id,
     x: tile.x || 0,
-    y: tile.y || Infinity,
+    y: tile.y || 0,
     w: tile.w || 1,
     h: tile.h || 1,
   }));
@@ -143,13 +144,17 @@ const UserProfile = () => {
           </div>
         ) : (
           <div className="space-y-6 mt-6">
-            {isOwner && <TilePicker />}
+            {isOwner && (
+              <div className="mb-4">
+                <TilePicker onAdd={() => setEditorOpen(true)} />
+              </div>
+            )}
             <ResponsiveGridLayout
               className="layout"
               rowHeight={100}
               breakpoints={breakpoints}
               cols={cols}
-              layouts={{ lg: layout }}
+              layouts={{ lg: layoutItems }}
               onLayoutChange={(newLayout) => {
                 if (isOwner) updateLayout(newLayout);
               }}
@@ -157,15 +162,13 @@ const UserProfile = () => {
               isResizable={isOwner}
             >
               {tiles.map((tile) => (
-                <div
-                  key={tile._id}
-                  data-grid={{
-                    x: tile.x || 0,
-                    y: tile.y || Infinity,
-                    w: tile.w || 1,
-                    h: tile.h || 1,
-                  }}
-                >
+                <div key={tile._id} data-grid={{
+                  x: tile.x || 0,
+                  y: tile.y || 0,
+                  w: tile.w || 1,
+                  h: tile.h || 1,
+                  i: tile._id
+                }}>
                   <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg h-full">
                     <Tile tile={tile} />
                   </div>
