@@ -63,7 +63,12 @@ export const useProfileStore = create((set, get) => ({
 
       const savedTile = await res.json();
       const normalizedTile = { ...savedTile, id: savedTile._id };
-      set({ tiles: [...get().tiles, normalizedTile] });
+
+      set((state) => ({
+        tiles: [...state.tiles, normalizedTile],
+        editorOpen: true,
+        editingTileId: normalizedTile.id,
+      }));
     } catch (err) {
       console.error('Tile add failed:', err);
     }
@@ -81,10 +86,13 @@ export const useProfileStore = create((set, get) => ({
       if (!res.ok) throw new Error(`Tile update failed: ${res.status}`);
 
       const updatedTile = await res.json();
-      const updatedTiles = get().tiles.map(tile =>
-        tile.id === id ? { ...updatedTile, id: updatedTile._id } : tile
-      );
-      set({ tiles: updatedTiles });
+      const normalizedTile = { ...updatedTile, id: updatedTile._id };
+
+      set((state) => ({
+        tiles: state.tiles.map(tile =>
+          tile.id === id ? normalizedTile : tile
+        ),
+      }));
     } catch (err) {
       console.error('Tile update failed:', err);
     }
@@ -106,8 +114,9 @@ export const useProfileStore = create((set, get) => ({
 
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
 
-      const filtered = get().tiles.filter(tile => tile.id !== id);
-      set({ tiles: filtered });
+      set((state) => ({
+        tiles: state.tiles.filter(tile => tile.id !== id),
+      }));
     } catch (err) {
       console.error('Tile delete failed:', err);
     }
