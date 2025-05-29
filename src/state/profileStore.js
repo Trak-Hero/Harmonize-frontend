@@ -2,14 +2,13 @@ import { create } from 'zustand';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080/api';
 
-
 export const useProfileStore = create((set, get) => ({
   tiles: [],
   editorOpen: false,
   editingTileId: null,
 
-  currentUserId: '6651283db26b776e2c351afe',
-  isOwner: true,
+  currentUserId: null,
+  isOwner: false,
 
   setEditorOpen: (isOpen, tileId = null) => {
     set({ editorOpen: isOpen, editingTileId: tileId });
@@ -17,11 +16,13 @@ export const useProfileStore = create((set, get) => ({
 
   fetchTiles: async (userId, currentUserId) => {
     try {
-      const res = await fetch(`${API_BASE}/tiles/${userId}`);
+      const res = await fetch(`${API_BASE}/tiles/${userId}`, {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error(`Failed to fetch tiles: ${res.status}`);
       const data = await res.json();
       set({
-        tiles: data.map(tile => ({ ...tile, id: tile._id })),
+        tiles: data.map((tile) => ({ ...tile, id: tile._id })),
         currentUserId,
         isOwner: userId === currentUserId,
       });
@@ -30,7 +31,6 @@ export const useProfileStore = create((set, get) => ({
     }
   },
 
-  // ➕ Add new tile
   addTile: async (tile) => {
     try {
       const newTile = {
@@ -48,6 +48,7 @@ export const useProfileStore = create((set, get) => ({
       const res = await fetch(`${API_BASE}/tiles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(newTile),
       });
 
@@ -57,51 +58,59 @@ export const useProfileStore = create((set, get) => ({
       }
 
       const savedTile = await res.json();
-      const normalizedTile = { ...savedTile, id: savedTile._id };
-      set({ tiles: [...get().tiles, normalizedTile] });
+      set((state) => ({
+        tiles: [...state.tiles, { ...savedTile, id: savedTile._id }],
+      }));
     } catch (err) {
       console.error('Tile add failed:', err);
     }
   },
 
-  // ✏️ Update tile
   updateTile: async (id, updates) => {
     try {
       const res = await fetch(`${API_BASE}/tiles/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(updates),
       });
 
       if (!res.ok) throw new Error(`Tile update failed: ${res.status}`);
 
       const updatedTile = await res.json();
-      const updatedTiles = get().tiles.map((tile) =>
-        tile.id === id ? { ...updatedTile, id: updatedTile._id } : tile
-      );
-      set({ tiles: updatedTiles });
+      set((state) => ({
+        tiles: state.tiles.map((tile) =>
+          tile.id === id ? { ...updatedTile, id: updatedTile._id } : tile
+        ),
+      }));
     } catch (err) {
       console.error('Tile update failed:', err);
     }
   },
 
   updateLayout: async (layout) => {
-    const updates = layout.map(({ i, x, y, w, h }) =>
-      get().updateTile(i, { x, y, w, h })
-    );
-    await Promise.all(updates);
+    try {
+      const updates = layout.map(({ i, x, y, w, h }) =>
+        get().updateTile(i, { x, y, w, h })
+      );
+      await Promise.all(updates);
+    } catch (err) {
+      console.error('Layout update failed:', err);
+    }
   },
 
   removeTile: async (id) => {
     try {
       const res = await fetch(`${API_BASE}/tiles/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
 
-      const filtered = get().tiles.filter((tile) => tile.id !== id);
-      set({ tiles: filtered });
+      set((state) => ({
+        tiles: state.tiles.filter((tile) => tile.id !== id),
+      }));
     } catch (err) {
       console.error('Tile delete failed:', err);
     }
