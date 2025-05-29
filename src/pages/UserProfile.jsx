@@ -13,7 +13,6 @@ import FavoriteSongs from '../components/FavoriteSongs';
 import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed from '../components/RecentlyPlayed';
 import FriendActivity from '../components/FriendActivity';
-// import ProfileHeader from '../components/ProfileHeader';
 
 import { useProfileStore } from '../state/profileStore';
 import '../index.css';
@@ -43,7 +42,6 @@ const UserProfile = () => {
     }
   }, [userId, currentUser, fetchTiles]);
 
-  /* ---------- FIX: use deployed API base URL ---------- */
   const API = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
@@ -52,9 +50,9 @@ const UserProfile = () => {
         const res = await fetch(`${API}/auth/api/me/spotify`, {
           credentials: 'include',
         });
-        if (res.status === 401) return; // Not linked
+        if (res.status === 401) return;
         if (!res.ok) throw new Error(await res.text());
-  
+
         const data = await res.json();
         setSpotifyData({
           top: data.top || [],
@@ -65,10 +63,9 @@ const UserProfile = () => {
         console.error('Failed to fetch Spotify data:', err);
       }
     };
-  
+
     if (isOwner) fetchSpotifyData();
   }, [isOwner, API]);
-  
 
   if (!currentUser) {
     return (
@@ -86,12 +83,12 @@ const UserProfile = () => {
     h: tile.h || 1,
   }));
 
+  const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
+  const cols = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
+
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
       <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-        {/* Optional: Profile banner */}
-        {/* <ProfileHeader /> */}
-
         <div className="space-y-2">
           <h1 className="text-5xl font-extrabold">
             {isOwner ? currentUser.name || 'Your Profile' : 'Artist Profile'}
@@ -150,7 +147,8 @@ const UserProfile = () => {
             <ResponsiveGridLayout
               className="layout"
               rowHeight={100}
-              cols={{ lg: 4, md: 3, sm: 2, xs: 1 }}
+              breakpoints={breakpoints}
+              cols={cols}
               layouts={{ lg: layout }}
               onLayoutChange={(newLayout) => {
                 if (isOwner) updateLayout(newLayout);
