@@ -7,19 +7,19 @@ const mockUser = {
 };
 
 export const useAuthStore = create((set) => {
-  const storedUser = JSON.parse(localStorage.getItem('user'));
+  const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
 
-  const initialUser = storedUser || mockUser; // ✅ fallback to mock if nothing is in localStorage
-
-  // Optional: persist mock if none exists
-  if (!storedUser) {
-    localStorage.setItem('user', JSON.stringify(mockUser));
-  }
+  const initialUser = storedUser || null; // Start with null if no stored user
 
   return {
     user: initialUser,
 
     login: (userData) => {
+      localStorage.setItem('user', JSON.stringify(userData));
+      set({ user: userData });
+    },
+
+    setUser: (userData) => {
       localStorage.setItem('user', JSON.stringify(userData));
       set({ user: userData });
     },
