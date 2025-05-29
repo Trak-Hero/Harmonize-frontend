@@ -6,6 +6,7 @@ import FilterBar from '../components/map/filterBar';
 import SearchBar from '../components/map/searchBar';
 import MapView from '../components/map/mapView';
 
+
 const sampleEvents = [
   {
     title: 'The Rockapellas',
