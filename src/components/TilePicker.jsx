@@ -1,7 +1,16 @@
 import { useProfileStore } from '../state/profileStore';
 
-const TilePicker = () => {
-  const addTile = useProfileStore((s) => s.addTile);
+
+const TilePicker = ({ onAdd }) => {
+  const addTileStore = useProfileStore((s) => s.addTile);
+
+  const add = (payload) => {
+    if (onAdd) {
+      onAdd(payload);
+    } else {
+      addTileStore(payload);
+    }
+  };
 
   const types = ['text', 'artist', 'song', 'picture', 'spacer'];
 
@@ -10,7 +19,7 @@ const TilePicker = () => {
       {types.map((type) => (
         <button
           key={type}
-          onClick={() => addTile({ type })}
+          onClick={() => add({ type })}
           className="flex items-center justify-center px-4 py-6 font-semibold text-white rounded-xl backdrop-blur-lg bg-white/10 border border-white/20 hover:bg-white/20 transition-shadow shadow-md"
         >
           + {type.charAt(0).toUpperCase() + type.slice(1)}
