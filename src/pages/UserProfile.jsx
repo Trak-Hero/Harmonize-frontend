@@ -35,35 +35,28 @@ const UserProfile = () => {
   const { userId: routeUserId } = useParams();
   const currentUser = useAuthStore((s) => s.user);
 
-  // Whose profile are we looking at?
+  /* whose profile are we viewing? */
   const effectiveUserId = routeUserId ?? currentUser?.id;
   const isOwner = !routeUserId || routeUserId === currentUser?.id;
 
-  /* ───────────── Sync tile store & fetch tiles ───────────── */
+  /* make sure profileStore knows that ID *before* any clicks happen */
   useEffect(() => {
-    if (!currentUser || !effectiveUserId) return;
-
-    // 1) Register the userId so addTile() knows who to talk to
+    if (!effectiveUserId || !currentUser) return;
     setCurrentUserId(effectiveUserId);
-
-    // 2) Pull tiles (viewerId is currentUser.id so the server can gate private tiles)
     fetchTiles(effectiveUserId, currentUser.id);
-  }, [effectiveUserId, currentUser, fetchTiles, setCurrentUserId]);
+  }, [effectiveUserId, currentUser, setCurrentUserId, fetchTiles]);
 
-  /* ───────────── Owner‑only Spotify section ───────────── */
+  /* owner‑only spotify fetch */
   const API = import.meta.env.VITE_API_BASE_URL;
-
   useEffect(() => {
     if (!isOwner) return;
-
     (async () => {
       try {
         const res = await fetch(`${API}/auth/api/me/spotify`, {
           credentials: 'include',
         });
-        if (res.status === 401) return;           // not connected yet
+        if (res.status === 401) return;
         if (!res.ok) throw new Error(await res.text());
-
         const data = await res.json();
         setSpotifyData({
           top: data.top || [],
@@ -76,7 +69,7 @@ const UserProfile = () => {
     })();
   }, [isOwner, API]);
 
-  /* ───────────── Loading gate ───────────── */
+  /* gate while we don’t know who we are */
   if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -85,7 +78,6 @@ const UserProfile = () => {
     );
   }
 
-  /* ───────────── Helpers ───────────── */
   const tileToEdit =
     tiles.find((t) => t._id === editingTileId || t.id === editingTileId) ?? null;
 
@@ -100,18 +92,16 @@ const UserProfile = () => {
   const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
   const cols        = { xxs: 1, xs: 2, sm: 4, md: 8,  lg: 12  };
 
-  /* ───────────── Render ───────────── */
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      {/* ───────────── Left column ───────────── */}
+      {/* ‑‑‑‑‑ left column ‑‑‑‑‑ */}
       <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-        {/* Header */}
+        {/* header */}
         <div className="space-y-2">
           <h1 className="text-5xl font-extrabold">
             {isOwner ? currentUser.name || 'Your Profile' : 'Artist Profile'}
           </h1>
           <p className="text-white/70">0 Followers • — Following</p>
-
           <div className="flex gap-4 mt-3">
             {!isOwner && (
               <button className="px-5 py-2 rounded-full bg-white text-black font-medium">
@@ -124,7 +114,7 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* tabs */}
         <div className="flex gap-3 mt-4">
           {['recent', 'space'].map((tab) => (
             <button
@@ -141,7 +131,7 @@ const UserProfile = () => {
           ))}
         </div>
 
-        {/* ---------------- RECENT TAB ---------------- */}
+        {/* recent tab */}
         {activeTab === 'recent' && (
           <div className="space-y-6 mt-6">
             <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
@@ -156,12 +146,17 @@ const UserProfile = () => {
           </div>
         )}
 
-        {/* ---------------- SPACE TAB ---------------- */}
+        {/* space tab */}
         {activeTab === 'space' && (
           <div className="space-y-6 mt-6">
             {isOwner && (
               <div className="mb-4">
-                <TilePicker onAdd={(payload) => addTile(payload)} />
+                {/* pass the id so profileStore.addTile never complains */}
+                <TilePicker
+                  onAdd={(payload) =>
+                    addTile({ ...payload, userId: effectiveUserId })
+                  }
+                />
               </div>
             )}
 
@@ -198,14 +193,14 @@ const UserProfile = () => {
         )}
       </div>
 
-      {/* ───────────── Right column ───────────── */}
+      {/* ‑‑‑‑‑ right column (friend activity) ‑‑‑‑‑ */}
       <aside className="col-span-12 lg:col-span-4">
         <div className="rounded-xl backdrop-blur-lg bg-gradient-to-br from-white/5 via-black/10 to-white/5 p-6 shadow-lg border border-white/20 h-full">
           <FriendActivity />
         </div>
       </aside>
 
-      {/* ───────────── Modal editor ───────────── */}
+      {/* modal editor */}
       {editorOpen && isOwner && (
         <TileEditor
           tile={
