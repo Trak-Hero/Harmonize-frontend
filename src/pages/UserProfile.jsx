@@ -30,6 +30,7 @@ const UserProfile = () => {
     updateLayout,
     fetchTiles,
     setEditorOpen,
+    setCurrentUserId,
   } = useProfileStore();
 
   const tileToEdit = tiles.find((t) => t._id === editingTileId);
@@ -38,10 +39,11 @@ const UserProfile = () => {
   const isOwner = !userId || (currentUser && userId === currentUser.id);
 
   useEffect(() => {
-    if (userId && currentUser) {
-      fetchTiles(userId, currentUser.id);
+    if (currentUser) {
+      fetchTiles(userId || currentUser.id, currentUser.id);
+      setCurrentUserId(currentUser.id);
     }
-  }, [userId, currentUser, fetchTiles]);
+  }, [userId, currentUser, fetchTiles, setCurrentUserId]);
 
   const API = import.meta.env.VITE_API_BASE_URL;
 
@@ -162,13 +164,16 @@ const UserProfile = () => {
               isResizable={isOwner}
             >
               {tiles.map((tile) => (
-                <div key={tile._id} data-grid={{
-                  x: tile.x || 0,
-                  y: tile.y || 0,
-                  w: tile.w || 1,
-                  h: tile.h || 1,
-                  i: tile._id
-                }}>
+                <div
+                  key={tile._id}
+                  data-grid={{
+                    x: tile.x || 0,
+                    y: tile.y || 0,
+                    w: tile.w || 1,
+                    h: tile.h || 1,
+                    i: tile._id,
+                  }}
+                >
                   <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg h-full">
                     <Tile tile={tile} />
                   </div>
