@@ -31,7 +31,7 @@ const UserProfile = () => {
     fetchTiles,
     setEditorOpen,
     addTile,
-    setCurrentUserId, // Added this
+    setCurrentUserId,
   } = useProfileStore();
 
   const tileToEdit = tiles.find((t) => t._id === editingTileId || t.id === editingTileId);
@@ -39,17 +39,16 @@ const UserProfile = () => {
   const currentUser = useAuthStore((s) => s.user);
   const isOwner = !userId || (currentUser && userId === currentUser.id);
 
+  // Determine the target user ID
+  const targetUserId = userId || currentUser?.id;
+
   useEffect(() => {
-    if (userId && currentUser) {
-      // Set the current user ID in the profile store
-      setCurrentUserId(userId);
-      fetchTiles(userId, currentUser.id);
-    } else if (currentUser && isOwner) {
-      // If no userId in params but user is logged in, use their ID
-      setCurrentUserId(currentUser.id);
-      fetchTiles(currentUser.id, currentUser.id);
+    if (targetUserId && currentUser) {
+      // Always set the current user ID in the profile store first
+      setCurrentUserId(targetUserId);
+      fetchTiles(targetUserId, currentUser.id);
     }
-  }, [userId, currentUser, fetchTiles, setCurrentUserId, isOwner]);
+  }, [targetUserId, currentUser, fetchTiles, setCurrentUserId]);
 
   const API = import.meta.env.VITE_API_BASE_URL;
 
@@ -95,9 +94,14 @@ const UserProfile = () => {
   const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
   const cols = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
 
-  // Fixed: Pass the current user ID to addTile
+  // Fixed: Always pass the userId explicitly to addTile
   const handleAddTile = (tileData = {}) => {
-    const targetUserId = userId || currentUser.id;
+    if (!targetUserId) {
+      console.error('Cannot add tile: No target user ID available');
+      return;
+    }
+    
+    console.log('Adding tile for user:', targetUserId, 'with data:', tileData);
     addTile({ ...tileData, userId: targetUserId });
   };
 
