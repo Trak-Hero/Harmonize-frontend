@@ -30,18 +30,20 @@ export const useProfileStore = create(
         }
       },
 
-      /**  ← FIXED  */
       addTile: async (tileData) => {
-                // NEW: allow caller to pass userId explicitly; fall back to cached id.
-                const userId = tileData.userId || get().currentUserId;
-                if (!userId) {
-                  console.error('Tile add failed: No user ID set in profileStore');
-                  return;
-                }
-                try {
-                  const res = await axios.post(
-                    `${import.meta.env.VITE_API_BASE_URL}/api/tiles`,
-                    { ...tileData, userId },
+        // Prefer an explicit userId from the caller; otherwise fall back to the one cached
+        const userId = tileData.userId || get().currentUserId;
+        if (!userId) {
+          console.error('Tile add failed: No user ID set in profileStore');
+          console.log('Current state:', get());
+          return;
+        }
+        
+        try {
+          console.log('Adding tile with userId:', userId, 'tileData:', tileData);
+          const res = await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/api/tiles`,
+            { ...tileData, userId },
             { withCredentials: true }
           );
           set((state) => ({ tiles: [...state.tiles, res.data] }));
@@ -81,6 +83,7 @@ export const useProfileStore = create(
         }
       },
 
+      // FIXED: Changed to match backend route - use PATCH and /bulk-layout
       updateLayout: async (layout) => {
         const updates = layout.map(({ i, x, y, w, h }) => ({
           id: i,
