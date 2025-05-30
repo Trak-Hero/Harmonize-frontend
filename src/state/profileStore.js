@@ -105,7 +105,7 @@ export const useProfileStore = create(
               console.warn(`Tile not found for layout item: ${i}`);
               return null;
             }
-            return { id: tile._id || tile.id, x, y, w, h };
+            return { _id: tile._id, x, y, w, h }; 
           })
           .filter(Boolean);
 

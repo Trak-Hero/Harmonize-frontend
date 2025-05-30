@@ -22,7 +22,7 @@ const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
 const cols        = { xxs: 1, xs: 2, sm: 4,  md: 8,  lg: 12 };
 
 export default function UserProfile() {
-  /* ───────────────────────────── state & stores ───────────────────────────── */
+  /* ─────────────────────────────────── state & stores ────────────────────────────────── */
   const { userId: paramUserId } = useParams();
   const authUser     = useAuthStore((s) => s.user);                     // undefined on first render
   const targetUserId = paramUserId ?? authUser?.id ?? authUser?._id;    // fallback to _id too
@@ -36,7 +36,7 @@ export default function UserProfile() {
   const [activeTab,   setActiveTab]   = useState('recent');
   const [spotifyData, setSpotifyData] = useState(null);
 
-  /* ───────────────────────────── load tiles ───────────────────────────── */
+  /* ────────────────────────────────── load tiles ────────────────────────────────── */
   useEffect(() => {
     if (!targetUserId || !authUser) return;
 
@@ -44,7 +44,7 @@ export default function UserProfile() {
     fetchTiles(targetUserId, authUser.id);           // always pass ownerId for ACL
   }, [targetUserId, authUser, fetchTiles, setCurrentUserId]);
 
-  /* ──────────────────────── load spotify data (owner) ─────────────────────── */
+  /* ────────────────────────────────── load spotify data (owner) ────────────────────────────────── */
   const API = import.meta.env.VITE_API_BASE_URL;
 
   const loadSpotify = useCallback(async () => {
@@ -64,7 +64,7 @@ export default function UserProfile() {
 
   useEffect(() => { if (isOwner) loadSpotify(); }, [isOwner, loadSpotify]);
 
-  /* ───────────────────────────── add‑tile handler ─────────────────────────── */
+  /* ────────────────────────────────── add‑tile handler ────────────────────────────────── */
   const handleAddTile = useCallback(
     (tileData = {}) => {
       if (!targetUserId)
@@ -74,7 +74,7 @@ export default function UserProfile() {
     [targetUserId, addTile]
   );
 
-  /* ───────────────────────────── loading guard ────────────────────────────── */
+  /* ────────────────────────────────── loading guard ────────────────────────────────── */
   if (!authUser) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -83,16 +83,16 @@ export default function UserProfile() {
     );
   }
 
-  /* ───────────────────────────── derived values ───────────────────────────── */
+  /* ────────────────────────────────── derived values ────────────────────────────────── */
   const layoutItems = tiles.map((t) => ({
     i: t._id || t.id, x: t.x || 0, y: t.y || 0, w: t.w || 1, h: t.h || 1,
   }));
   const tileBeingEdited = tiles.find((t) => (t._id || t.id) === editingTileId);
 
-  /* ───────────────────────────────── render ───────────────────────────────── */
+  /* ────────────────────────────────── render ────────────────────────────────── */
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      {/* ─────────────── main column ─────────────── */}
+      {/* ──────────────── main column ──────────────── */}
       <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
         {/* header */}
         <header className="space-y-2">
@@ -164,16 +164,16 @@ export default function UserProfile() {
         )}
       </section>
 
-      {/* ─────────────── right column ─────────────── */}
+      {/* ──────────────── right column ──────────────── */}
       <aside className="col-span-12 lg:col-span-4">
         <div className="card backdrop-blur-lg h-full">
           <FriendActivity />
         </div>
       </aside>
 
-      {/* ─────────────── modal editor ─────────────── */}
+      {/* ──────────────── modal editor ──────────────── */}
       {editorOpen && isOwner && (
-        <TileEditor tile={tileBeingEdited ?? { title: '', w: 2, h: 2, x: 0, y: Infinity }} />
+        <TileEditor tile={tileBeingEdited} />
       )}
     </div>
   );
