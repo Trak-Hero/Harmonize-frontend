@@ -34,11 +34,11 @@ export const useProfileStore = create((set, get) => ({
   addTile: async (tile) => {
     try {
       const userId = get().currentUserId;
-      if (!userId) throw new Error('No user ID available for tile creation.');
+      if (!userId) throw new Error('No user ID set in profileStore');
 
       const defaultTile = {
         userId,
-        type: tile.type || 'text',
+        type: tile?.type || 'text',
         content: '',
         bgColor: '#1e1e1e',
         font: 'sans-serif',
@@ -57,8 +57,8 @@ export const useProfileStore = create((set, get) => ({
       });
 
       if (!res.ok) {
-        const error = await res.text();
-        throw new Error(`Tile add failed: ${res.status} – ${error}`);
+        const text = await res.text();
+        throw new Error(`Failed to add tile: ${res.status} ${text}`);
       }
 
       const savedTile = await res.json();

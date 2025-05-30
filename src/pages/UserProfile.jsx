@@ -185,7 +185,9 @@ const UserProfile = () => {
         </div>
       </aside>
 
-      {editorOpen && tileToEdit && isOwner && <TileEditor tile={tileToEdit} />}
+      {editorOpen && isOwner && (
+        <TileEditor tile={tileToEdit || { title: '', w: 2, h: 2, x: 0, y: Infinity }} />
+      )}
     </div>
   );
 };
