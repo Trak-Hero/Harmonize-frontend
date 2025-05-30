@@ -28,6 +28,8 @@ const TileEditor = ({ tile }) => {
     };
   }, []);
 
+  if (!tile) return null;
+
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
       <div className="bg-white text-black rounded-lg p-6 w-[90%] max-w-md space-y-4">
@@ -68,7 +70,7 @@ const TileEditor = ({ tile }) => {
         <input
           type="color"
           name="bgColor"
-          value={form.bgColor}
+          value={form.bgColor || '#ffffff'}
           onChange={handleChange}
           className="w-full"
         />
@@ -84,7 +86,7 @@ const TileEditor = ({ tile }) => {
 
         <select
           name="font"
-          value={form.font}
+          value={form.font || 'sans-serif'}
           onChange={handleChange}
           className="w-full border p-2 rounded"
         >
@@ -93,11 +95,10 @@ const TileEditor = ({ tile }) => {
           <option value="monospace">Monospace</option>
         </select>
 
-        {/* 📐 Predefined Size Controls */}
         <div className="flex gap-2">
           <select
             name="w"
-            value={form.w}
+            value={form.w || 1}
             onChange={handleChange}
             className="w-full border p-2 rounded"
           >
@@ -108,7 +109,7 @@ const TileEditor = ({ tile }) => {
 
           <select
             name="h"
-            value={form.h}
+            value={form.h || 1}
             onChange={handleChange}
             className="w-full border p-2 rounded"
           >
