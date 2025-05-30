@@ -5,7 +5,7 @@ const Tile = ({ tile }) => {
 
   return (
     <div
-      className="relative h-full w-full rounded-lg overflow-hidden"
+      className="relative h-full w-full rounded-lg overflow-hidden border border-white/40"
       style={{
         backgroundColor: tile.bgColor,
         backgroundImage: tile.bgImage ? `url(${tile.bgImage})` : undefined,
