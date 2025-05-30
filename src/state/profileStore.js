@@ -18,7 +18,7 @@ export const useProfileStore = create(
       fetchTiles: async (profileUserId, currentUserId) => {
         try {
           const res = await axios.get(
-            `${import.meta.env.VITE_API_BASE_URL}/tiles/${profileUserId}`,
+            `${import.meta.env.VITE_API_BASE_URL}/api/tiles/${profileUserId}`,
             { withCredentials: true }
           );
           set({ tiles: res.data, currentUserId });
@@ -35,8 +35,8 @@ export const useProfileStore = create(
         }
         try {
           const res = await axios.post(
-            `${import.meta.env.VITE_API_BASE_URL}/tiles`,
-            { ...tileData, user: userId },
+            `${import.meta.env.VITE_API_BASE_URL}/api/tiles`,
+            { ...tileData, userId },
             { withCredentials: true }
           );
           set((state) => ({ tiles: [...state.tiles, res.data] }));
@@ -47,8 +47,8 @@ export const useProfileStore = create(
 
       updateTile: async (id, updates) => {
         try {
-          const res = await axios.put(
-            `${import.meta.env.VITE_API_BASE_URL}/tiles/${id}`,
+          const res = await axios.patch(
+            `${import.meta.env.VITE_API_BASE_URL}/api/tiles/${id}`,
             updates,
             { withCredentials: true }
           );
@@ -65,7 +65,7 @@ export const useProfileStore = create(
       deleteTile: async (id) => {
         try {
           await axios.delete(
-            `${import.meta.env.VITE_API_BASE_URL}/tiles/${id}`,
+            `${import.meta.env.VITE_API_BASE_URL}/api/tiles/${id}`,
             { withCredentials: true }
           );
           set((state) => ({
@@ -86,7 +86,7 @@ export const useProfileStore = create(
         }));
         try {
           await axios.put(
-            `${import.meta.env.VITE_API_BASE_URL}/tiles/layout`,
+            `${import.meta.env.VITE_API_BASE_URL}/api/tiles/layout`,
             { updates },
             { withCredentials: true }
           );
