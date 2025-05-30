@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useProfileStore } from '../state/profileStore';
 
-const TileEditor = ({ tile }) => {
-  const updateTile   = useProfileStore((s) => s.updateTile);
+/**
+ * Simple editor for a “text” tile.
+ * Extend later for artist / song / picture types.
+ */
+const TileEditor = ({ tile = {} }) => {
+  const updateTile    = useProfileStore((s) => s.updateTile);
   const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
 
-  // local draft
   const [content, setContent] = useState(tile.content ?? '');
 
+  /* keep local form in sync when a different tile is selected */
   useEffect(() => setContent(tile.content ?? ''), [tile]);
 
   const save = async () => {
     if (tile._id) {
-            await updateTile(tile._id, { content });   // PATCH /api/tiles/:id
-          }
-          setEditorOpen(false);
+      await updateTile(tile._id, { content });
+    }
+    setEditorOpen(false);          // close modal either way
   };
 
   return (
@@ -23,10 +27,10 @@ const TileEditor = ({ tile }) => {
         <h2 className="text-2xl font-bold">Edit text tile</h2>
 
         <textarea
-          className="w-full h-40 p-3 rounded bg-zinc-800 border border-zinc-700 focus:outline-none"
+          autoFocus
+          className="w-full h-40 p-3 rounded bg-zinc-800 border border-zinc-700 focus:outline-none resize-none"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          autoFocus
         />
 
         <div className="flex justify-end gap-3">
