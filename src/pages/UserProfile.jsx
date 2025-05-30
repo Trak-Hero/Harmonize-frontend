@@ -1,164 +1,135 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
+import { useParams } from 'react-router-dom';
+import { useAuthStore }  from '../state/authStore';
+import { useProfileStore } from '../state/profileStore';
+import withTokenRefresh   from '../utils/withTokenRefresh';
+
+import TilePicker      from '../components/TilePicker';
+import Tile            from '../components/Tile';
+import TileEditor      from '../components/TileEditor';
+import FavoriteSongs   from '../components/FavoriteSongs';
+import FavoriteArtists from '../components/FavoriteArtists';
+import RecentlyPlayed  from '../components/RecentlyPlayed';
+import FriendActivity  from '../components/FriendActivity';
+
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import { useParams } from 'react-router-dom';
-import { useAuthStore } from '../state/authStore';
-
-import Navbar from '../components/navbar';
-import Tile from '../components/Tile';
-import TilePicker from '../components/TilePicker';
-import TileEditor from '../components/TileEditor';
-import FavoriteSongs from '../components/FavoriteSongs';
-import FavoriteArtists from '../components/FavoriteArtists';
-import RecentlyPlayed from '../components/RecentlyPlayed';
-import FriendActivity from '../components/FriendActivity';
-
-import { useProfileStore } from '../state/profileStore';
 import '../index.css';
 
-const ResponsiveGridLayout = WidthProvider(Responsive);
+const ResponsiveGrid = WidthProvider(Responsive);
+const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
+const cols        = { xxs: 1, xs: 2, sm: 4,  md: 8,  lg: 12 };
 
-const UserProfile = () => {
-  const [activeTab, setActiveTab] = useState('recent');
-  const [spotifyData, setSpotifyData] = useState(null);
+export default function UserProfile() {
+  /* ───────────────────────────── state & stores ───────────────────────────── */
+  const { userId: paramUserId } = useParams();
+  const authUser     = useAuthStore((s) => s.user);                     // undefined on first render
+  const targetUserId = paramUserId ?? authUser?.id ?? authUser?._id;    // fallback to _id too
+  const isOwner      = !paramUserId || (authUser && targetUserId === authUser.id);
 
   const {
-    tiles,
-    editorOpen,
-    editingTileId,
-    updateLayout,
-    fetchTiles,
-    setEditorOpen,
-    addTile,
-    setCurrentUserId,
+    tiles, editorOpen, editingTileId,
+    fetchTiles, updateLayout, addTile, setCurrentUserId
   } = useProfileStore();
 
-  const tileToEdit = tiles.find((t) => t._id === editingTileId || t.id === editingTileId);
-  const { userId } = useParams();
-  const currentUser = useAuthStore((s) => s.user);
-  const isOwner = !userId || (currentUser && userId === currentUser.id);
+  const [activeTab,   setActiveTab]   = useState('recent');
+  const [spotifyData, setSpotifyData] = useState(null);
 
-  // Determine the target user ID
-  const targetUserId = userId || currentUser?.id;
-
+  /* ───────────────────────────── load tiles ───────────────────────────── */
   useEffect(() => {
-    if (targetUserId && currentUser) {
-      // Always set the current user ID in the profile store first
-      setCurrentUserId(targetUserId);
-      fetchTiles(targetUserId, currentUser.id);
-    }
-  }, [targetUserId, currentUser, fetchTiles, setCurrentUserId]);
+    if (!targetUserId || !authUser) return;
 
+    setCurrentUserId(targetUserId);
+    fetchTiles(targetUserId, authUser.id);           // always pass ownerId for ACL
+  }, [targetUserId, authUser, fetchTiles, setCurrentUserId]);
+
+  /* ──────────────────────── load spotify data (owner) ─────────────────────── */
   const API = import.meta.env.VITE_API_BASE_URL;
 
-  useEffect(() => {
-    const fetchSpotifyData = async () => {
-      try {
-        const res = await fetch(`${API}/auth/api/me/spotify`, {
-          credentials: 'include',
-        });
-        if (res.status === 401) return;
-        if (!res.ok) throw new Error(await res.text());
+  const loadSpotify = useCallback(async () => {
+    const res = await withTokenRefresh(
+      () => fetch(`${API}/auth/api/me/spotify`, { credentials: 'include' }),
+      () => fetch(`${API}/auth/refresh`,        { credentials: 'include' })
+    );
+    if (!res?.ok) return;
 
-        const data = await res.json();
-        setSpotifyData({
-          top: data.top || [],
-          top_artists: data.top_artists || [],
-          recent: data.recent || [],
-        });
-      } catch (err) {
-        console.error('Failed to fetch Spotify data:', err);
-      }
-    };
+    const data = await res.json();
+    setSpotifyData({
+      top:         data.top         ?? [],
+      top_artists: data.top_artists ?? [],
+      recent:      data.recent      ?? [],
+    });
+  }, [API]);
 
-    if (isOwner) fetchSpotifyData();
-  }, [isOwner, API]);
+  useEffect(() => { if (isOwner) loadSpotify(); }, [isOwner, loadSpotify]);
 
-  if (!currentUser) {
+  /* ───────────────────────────── add‑tile handler ─────────────────────────── */
+  const handleAddTile = useCallback(
+    (tileData = {}) => {
+      if (!targetUserId)
+        return console.warn('Add‑Tile blocked: user still loading');
+      addTile({ ...tileData, userId: targetUserId });
+    },
+    [targetUserId, addTile]
+  );
+
+  /* ───────────────────────────── loading guard ────────────────────────────── */
+  if (!authUser) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
-        Loading your profile...
+        Loading your profile…
       </div>
     );
   }
 
-  const layoutItems = tiles.map((tile) => ({
-    i: tile._id || tile.id,
-    x: tile.x || 0,
-    y: tile.y || 0,
-    w: tile.w || 1,
-    h: tile.h || 1,
+  /* ───────────────────────────── derived values ───────────────────────────── */
+  const layoutItems = tiles.map((t) => ({
+    i: t._id || t.id, x: t.x || 0, y: t.y || 0, w: t.w || 1, h: t.h || 1,
   }));
+  const tileBeingEdited = tiles.find((t) => (t._id || t.id) === editingTileId);
 
-  const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
-  const cols = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
-
-  // Fixed: Always pass the userId explicitly to addTile
-  const handleAddTile = (tileData = {}) => {
-    if (!targetUserId) {
-      console.error('Cannot add tile: No target user ID available');
-      return;
-    }
-    
-    console.log('Adding tile for user:', targetUserId, 'with data:', tileData);
-    addTile({ ...tileData, userId: targetUserId });
-  };
-
+  /* ───────────────────────────────── render ───────────────────────────────── */
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-        <div className="space-y-2">
+      {/* ─────────────── main column ─────────────── */}
+      <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+        {/* header */}
+        <header className="space-y-2">
           <h1 className="text-5xl font-extrabold">
-            {isOwner ? currentUser.name || 'Your Profile' : 'Artist Profile'}
+            {isOwner ? authUser.name ?? 'Your Profile' : 'Artist Profile'}
           </h1>
-          <p className="text-white/70">0 Followers • — Following</p>
-          <div className="flex gap-4 mt-3">
-            {!isOwner && (
-              <button className="px-5 py-2 rounded-full bg-white text-black font-medium">
-                Follow
-              </button>
-            )}
-            <button className="px-5 py-2 rounded-full bg-white/10 text-white border border-white/30">
-              Share
+          <p className="text-white/70">0 Followers • — Following</p>
+          {!isOwner && (
+            <button className="px-5 py-2 mt-3 rounded-full bg-white text-black font-medium">
+              Follow
             </button>
-          </div>
-        </div>
+          )}
+        </header>
 
-        <div className="flex gap-3 mt-4">
-          <button
-            onClick={() => setActiveTab('recent')}
-            className={`px-6 py-2 rounded-full text-lg font-semibold ${
-              activeTab === 'recent'
-                ? 'bg-white text-black'
-                : 'bg-white/10 text-white/70 border border-white/30'
-            }`}
-          >
-            Recent
-          </button>
-          <button
-            onClick={() => setActiveTab('space')}
-            className={`px-6 py-2 rounded-full text-lg font-semibold ${
-              activeTab === 'space'
-                ? 'bg-white text-black'
-                : 'bg-white/10 text-white/70 border border-white/30'
-            }`}
-          >
-            Space
-          </button>
-        </div>
+        {/* tab selector */}
+        <nav className="flex gap-3 mt-4">
+          {['recent', 'space'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-2 rounded-full text-lg font-semibold ${
+                activeTab === tab
+                  ? 'bg-white text-black'
+                  : 'bg-white/10 text-white/70 border border-white/30'
+              }`}
+            >
+              {tab === 'recent' ? 'Recent' : 'Space'}
+            </button>
+          ))}
+        </nav>
 
+        {/* tab content */}
         {activeTab === 'recent' ? (
           <div className="space-y-6 mt-6">
-            <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
-              <FavoriteSongs songs={spotifyData?.top ?? []} />
-            </div>
-            <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
-              <FavoriteArtists artists={spotifyData?.top_artists ?? []} />
-            </div>
-            <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
-              <RecentlyPlayed recent={spotifyData?.recent ?? []} />
-            </div>
+            <div className="card"><FavoriteSongs   songs   ={spotifyData?.top         ?? []} /></div>
+            <div className="card"><FavoriteArtists artists ={spotifyData?.top_artists ?? []} /></div>
+            <div className="card"><RecentlyPlayed  recent  ={spotifyData?.recent      ?? []} /></div>
           </div>
         ) : (
           <div className="space-y-6 mt-6">
@@ -167,47 +138,47 @@ const UserProfile = () => {
                 <TilePicker onAdd={handleAddTile} />
               </div>
             )}
-            <ResponsiveGridLayout
+
+            <ResponsiveGrid
               className="layout"
               rowHeight={100}
               breakpoints={breakpoints}
               cols={cols}
               layouts={{ lg: layoutItems }}
-              onLayoutChange={(newLayout) => {
-                if (isOwner) updateLayout(newLayout);
-              }}
+              onLayoutChange={isOwner ? updateLayout : undefined}
               isDraggable={isOwner}
               isResizable={isOwner}
             >
-              {tiles.map((tile) => (
-                <div key={tile._id || tile.id} data-grid={{
-                  x: tile.x || 0,
-                  y: tile.y || 0,
-                  w: tile.w || 1,
-                  h: tile.h || 1,
-                  i: tile._id || tile.id
-                }}>
-                  <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg h-full">
-                    <Tile tile={tile} />
+              {tiles.map((t) => (
+                <div
+                  key={t._id || t.id}
+                  data-grid={{ x: t.x || 0, y: t.y || 0, w: t.w || 1, h: t.h || 1, i: t._id || t.id }}
+                >
+                  <div className="card h-full">
+                    <Tile tile={t} />
                   </div>
                 </div>
               ))}
-            </ResponsiveGridLayout>
+            </ResponsiveGrid>
           </div>
         )}
-      </div>
+      </section>
 
+      {/* ─────────────── right column ─────────────── */}
       <aside className="col-span-12 lg:col-span-4">
-        <div className="rounded-xl backdrop-blur-lg bg-gradient-to-br from-white/5 via-black/10 to-white/5 p-6 shadow-lg border border-white/20 h-full">
+        <div className="card backdrop-blur-lg h-full">
           <FriendActivity />
         </div>
       </aside>
 
+      {/* ─────────────── modal editor ─────────────── */}
       {editorOpen && isOwner && (
-        <TileEditor tile={tileToEdit || { title: '', w: 2, h: 2, x: 0, y: Infinity }} />
+        <TileEditor tile={tileBeingEdited ?? { title: '', w: 2, h: 2, x: 0, y: Infinity }} />
       )}
     </div>
   );
-};
+}
 
-export default UserProfile;
+/* utility classname */
+const card =
+  'rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6';
