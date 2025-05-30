@@ -5,6 +5,7 @@ import 'react-resizable/css/styles.css';
 import { useParams } from 'react-router-dom';
 import { useAuthStore } from '../state/authStore';
 
+import Navbar from '../components/navbar';
 import Tile from '../components/Tile';
 import TilePicker from '../components/TilePicker';
 import TileEditor from '../components/TileEditor';
@@ -28,35 +29,39 @@ const UserProfile = () => {
     editingTileId,
     updateLayout,
     fetchTiles,
-    setCurrentUserId,
+    setEditorOpen,
     addTile,
+    setCurrentUserId, // Added this
   } = useProfileStore();
 
-  const { userId: routeUserId } = useParams();
+  const tileToEdit = tiles.find((t) => t._id === editingTileId || t.id === editingTileId);
+  const { userId } = useParams();
   const currentUser = useAuthStore((s) => s.user);
+  const isOwner = !userId || (currentUser && userId === currentUser.id);
 
-  /* whose profile are we viewing? */
-  const effectiveUserId = routeUserId ?? currentUser?.id;
-  const isOwner = !routeUserId || routeUserId === currentUser?.id;
-
-  /* make sure profileStore knows that ID *before* any clicks happen */
   useEffect(() => {
-    if (!effectiveUserId || !currentUser) return;
-    setCurrentUserId(effectiveUserId);
-    fetchTiles(effectiveUserId, currentUser.id);
-  }, [effectiveUserId, currentUser, setCurrentUserId, fetchTiles]);
+    if (userId && currentUser) {
+      // Set the current user ID in the profile store
+      setCurrentUserId(userId);
+      fetchTiles(userId, currentUser.id);
+    } else if (currentUser && isOwner) {
+      // If no userId in params but user is logged in, use their ID
+      setCurrentUserId(currentUser.id);
+      fetchTiles(currentUser.id, currentUser.id);
+    }
+  }, [userId, currentUser, fetchTiles, setCurrentUserId, isOwner]);
 
-  /* owner‑only spotify fetch */
   const API = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
-    if (!isOwner) return;
-    (async () => {
+    const fetchSpotifyData = async () => {
       try {
         const res = await fetch(`${API}/auth/api/me/spotify`, {
           credentials: 'include',
         });
         if (res.status === 401) return;
         if (!res.ok) throw new Error(await res.text());
+
         const data = await res.json();
         setSpotifyData({
           top: data.top || [],
@@ -66,37 +71,39 @@ const UserProfile = () => {
       } catch (err) {
         console.error('Failed to fetch Spotify data:', err);
       }
-    })();
+    };
+
+    if (isOwner) fetchSpotifyData();
   }, [isOwner, API]);
 
-  /* gate while we don’t know who we are */
   if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
-        Loading your profile…
+        Loading your profile...
       </div>
     );
   }
 
-  const tileToEdit =
-    tiles.find((t) => t._id === editingTileId || t.id === editingTileId) ?? null;
-
   const layoutItems = tiles.map((tile) => ({
     i: tile._id || tile.id,
-    x: tile.x ?? 0,
-    y: tile.y ?? 0,
-    w: tile.w ?? 1,
-    h: tile.h ?? 1,
+    x: tile.x || 0,
+    y: tile.y || 0,
+    w: tile.w || 1,
+    h: tile.h || 1,
   }));
 
   const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
-  const cols        = { xxs: 1, xs: 2, sm: 4, md: 8,  lg: 12  };
+  const cols = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
+
+  // Fixed: Pass the current user ID to addTile
+  const handleAddTile = (tileData = {}) => {
+    const targetUserId = userId || currentUser.id;
+    addTile({ ...tileData, userId: targetUserId });
+  };
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      {/* ‑‑‑‑‑ left column ‑‑‑‑‑ */}
       <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-        {/* header */}
         <div className="space-y-2">
           <h1 className="text-5xl font-extrabold">
             {isOwner ? currentUser.name || 'Your Profile' : 'Artist Profile'}
@@ -114,25 +121,30 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* tabs */}
         <div className="flex gap-3 mt-4">
-          {['recent', 'space'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-full text-lg font-semibold ${
-                activeTab === tab
-                  ? 'bg-white text-black'
-                  : 'bg-white/10 text-white/70 border border-white/30'
-              }`}
-            >
-              {tab === 'recent' ? 'Recent' : 'Space'}
-            </button>
-          ))}
+          <button
+            onClick={() => setActiveTab('recent')}
+            className={`px-6 py-2 rounded-full text-lg font-semibold ${
+              activeTab === 'recent'
+                ? 'bg-white text-black'
+                : 'bg-white/10 text-white/70 border border-white/30'
+            }`}
+          >
+            Recent
+          </button>
+          <button
+            onClick={() => setActiveTab('space')}
+            className={`px-6 py-2 rounded-full text-lg font-semibold ${
+              activeTab === 'space'
+                ? 'bg-white text-black'
+                : 'bg-white/10 text-white/70 border border-white/30'
+            }`}
+          >
+            Space
+          </button>
         </div>
 
-        {/* recent tab */}
-        {activeTab === 'recent' && (
+        {activeTab === 'recent' ? (
           <div className="space-y-6 mt-6">
             <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6">
               <FavoriteSongs songs={spotifyData?.top ?? []} />
@@ -144,22 +156,13 @@ const UserProfile = () => {
               <RecentlyPlayed recent={spotifyData?.recent ?? []} />
             </div>
           </div>
-        )}
-
-        {/* space tab */}
-        {activeTab === 'space' && (
+        ) : (
           <div className="space-y-6 mt-6">
             {isOwner && (
               <div className="mb-4">
-                {/* pass the id so profileStore.addTile never complains */}
-                <TilePicker
-                  onAdd={(payload) =>
-                    addTile({ ...payload, userId: effectiveUserId })
-                  }
-                />
+                <TilePicker onAdd={handleAddTile} />
               </div>
             )}
-
             <ResponsiveGridLayout
               className="layout"
               rowHeight={100}
@@ -173,16 +176,13 @@ const UserProfile = () => {
               isResizable={isOwner}
             >
               {tiles.map((tile) => (
-                <div
-                  key={tile._id || tile.id}
-                  data-grid={{
-                    x: tile.x ?? 0,
-                    y: tile.y ?? 0,
-                    w: tile.w ?? 1,
-                    h: tile.h ?? 1,
-                    i: tile._id || tile.id,
-                  }}
-                >
+                <div key={tile._id || tile.id} data-grid={{
+                  x: tile.x || 0,
+                  y: tile.y || 0,
+                  w: tile.w || 1,
+                  h: tile.h || 1,
+                  i: tile._id || tile.id
+                }}>
                   <div className="rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg h-full">
                     <Tile tile={tile} />
                   </div>
@@ -193,20 +193,14 @@ const UserProfile = () => {
         )}
       </div>
 
-      {/* ‑‑‑‑‑ right column (friend activity) ‑‑‑‑‑ */}
       <aside className="col-span-12 lg:col-span-4">
         <div className="rounded-xl backdrop-blur-lg bg-gradient-to-br from-white/5 via-black/10 to-white/5 p-6 shadow-lg border border-white/20 h-full">
           <FriendActivity />
         </div>
       </aside>
 
-      {/* modal editor */}
       {editorOpen && isOwner && (
-        <TileEditor
-          tile={
-            tileToEdit || { title: '', w: 2, h: 2, x: 0, y: Infinity }
-          }
-        />
+        <TileEditor tile={tileToEdit || { title: '', w: 2, h: 2, x: 0, y: Infinity }} />
       )}
     </div>
   );
