@@ -101,7 +101,7 @@ const UserProfile = () => {
           <h1 className="text-5xl font-extrabold">
             {isOwner ? currentUser.name || 'Your Profile' : 'Artist Profile'}
           </h1>
-          <p className="text-white/70">0 Followers • — Following</p>
+          <p className="text-white/70">0 Followers • — Following</p>
           <div className="flex gap-4 mt-3">
             {!isOwner && (
               <button className="px-5 py-2 rounded-full bg-white text-black font-medium">
