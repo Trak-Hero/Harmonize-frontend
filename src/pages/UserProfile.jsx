@@ -40,10 +40,12 @@ const UserProfile = () => {
 
   useEffect(() => {
     if (currentUser) {
-      fetchTiles(userId || currentUser.id, currentUser.id);
-      setCurrentUserId(currentUser.id);
+      const idToUse = userId || currentUser.id;
+      setCurrentUserId(idToUse);
+      fetchTiles(idToUse, currentUser.id);
     }
   }, [userId, currentUser, fetchTiles, setCurrentUserId]);
+
 
   const API = import.meta.env.VITE_API_BASE_URL;
 
