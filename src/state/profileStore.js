@@ -83,15 +83,32 @@ export const useProfileStore = create(
         }
       },
 
-      // FIXED: Changed to match backend route - use PATCH and /bulk-layout
+      // FIXED: Added validation to ensure only valid ObjectIds are sent
       updateLayout: async (layout) => {
-        const updates = layout.map(({ i, x, y, w, h }) => ({
-          id: i,
-          x,
-          y,
-          w,
-          h,
-        }));
+        const state = get();
+        const updates = layout
+          .map(({ i, x, y, w, h }) => {
+            // Find the actual tile to ensure we have a valid ID
+            const tile = state.tiles.find(t => (t._id || t.id) === i);
+            if (!tile) {
+              console.warn(`Tile not found for layout item: ${i}`);
+              return null;
+            }
+            return {
+              id: tile._id || tile.id,
+              x,
+              y,
+              w,
+              h,
+            };
+          })
+          .filter(Boolean); // Remove null entries
+
+        if (updates.length === 0) {
+          console.warn('No valid tiles found for layout update');
+          return;
+        }
+
         try {
           await axios.patch(
             `${import.meta.env.VITE_API_BASE_URL}/api/tiles/bulk-layout`,
@@ -101,7 +118,7 @@ export const useProfileStore = create(
           set((state) => ({
             tiles: state.tiles.map((tile) => {
               const match = updates.find((u) => u.id === (tile._id || tile.id));
-              return match ? { ...tile, ...match } : tile;
+              return match ? { ...tile, x: match.x, y: match.y, w: match.w, h: match.h } : tile;
             }),
           }));
         } catch (err) {
