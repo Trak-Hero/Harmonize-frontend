@@ -11,8 +11,10 @@ const TileEditor = ({ tile }) => {
   useEffect(() => setContent(tile.content ?? ''), [tile]);
 
   const save = async () => {
-    await updateTile(tile._id, { content });
-    setEditorOpen(false);
+    if (tile._id) {
+            await updateTile(tile._id, { content });   // PATCH /api/tiles/:id
+          }
+          setEditorOpen(false);
   };
 
   return (
@@ -24,6 +26,7 @@ const TileEditor = ({ tile }) => {
           className="w-full h-40 p-3 rounded bg-zinc-800 border border-zinc-700 focus:outline-none"
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          autoFocus
         />
 
         <div className="flex justify-end gap-3">
