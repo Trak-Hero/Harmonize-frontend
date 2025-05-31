@@ -15,7 +15,7 @@ export default function ArtistSearchModal({ onClose, userId }) {
     setLoading(true); setError('');
     try {
       const url =
-        `${API}/auth/api/spotify/search?q=${encodeURIComponent(query)}&type=artist`;
+        `${API}/spotify/search?q=${encodeURIComponent(query)}&type=artist`;
       const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
