@@ -16,13 +16,30 @@ import { useAuthStore } from './state/authStore';
 
 import './App.css';
 
-
 function App() {
-  const fetchUser = useAuthStore((s) => s.fetchUser);
+  const { fetchUser, isLoading, isInitialized, user } = useAuthStore((s) => ({
+    fetchUser: s.fetchUser,
+    isLoading: s.isLoading,
+    isInitialized: s.isInitialized,
+    user: s.user
+  }));
 
   useEffect(() => {
-    fetchUser(); // fetch session user on initial load
-  }, []);
+    // Always try to fetch user on app load to verify session
+    fetchUser();
+  }, [fetchUser]);
+
+  // Show loading spinner while checking authentication
+  if (!isInitialized && isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          <p className="text-white">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -47,6 +64,5 @@ function App() {
     </div>
   );
 }
-
 
 export default App;
