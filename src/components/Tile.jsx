@@ -2,6 +2,10 @@ import { useProfileStore } from '../state/profileStore';
 
 const Tile = ({ tile }) => {
   const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
+  const deleteTile    = useProfileStore((s) => s.deleteTile);
+
+  const displayTitle = tile.title ?? tile.name ?? '';
+  const showTitle    = !!displayTitle;
 
   return (
     <div
@@ -22,19 +26,28 @@ const Tile = ({ tile }) => {
         Edit
       </button>
 
-      {/* ─── TEXT TILE ─── */}
+      {/* Delete button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          if (window.confirm('Delete this tile?')) deleteTile(tile._id);
+        }}
+        className="absolute top-2 left-2 bg-red-500/70 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+      >
+        Delete
+      </button>
+
+      {/* TEXT TILE */}
       {tile.type === 'text' && (
         <div className="p-4 text-white">{tile.content}</div>
       )}
 
-      {/* ─── ARTIST TILE ─── */}
-      {tile.type === 'artist' && (
+      {/* ARTIST TILE */}
+      {tile.type === 'artist' && showTitle && (
         <div className="absolute inset-0 flex items-end p-4 bg-black/40 backdrop-blur-sm">
-          <h3 className="text-xl font-bold text-white">{tile.title}</h3>
+          <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
         </div>
       )}
-
-      {/* other tile types can be added here … */}
     </div>
   );
 };
