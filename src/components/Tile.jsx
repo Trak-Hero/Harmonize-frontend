@@ -35,8 +35,27 @@ const Tile = ({ tile }) => {
 
       {/* TEXT TILE */}
       {tile.type === 'text' && (
-        <div className="relative z-10 p-4 text-white break-words whitespace-pre-wrap">
-          {tile.content}
+        <div className="relative z-10 p-4 text-white break-words whitespace-pre-wrap h-full flex items-center justify-center">
+          <div className="text-center">
+            {tile.content || 'Click Edit to add text'}
+          </div>
+        </div>
+      )}
+
+      {/* PICTURE TILE */}
+      {tile.type === 'picture' && (
+        <div className="relative z-10 h-full w-full">
+          {tile.bgImage ? (
+            <img
+              src={tile.bgImage}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-white bg-gray-600">
+              <span>Click Edit to add image</span>
+            </div>
+          )}
         </div>
       )}
 
