@@ -41,10 +41,12 @@ const Tile = ({ tile }) => {
               <img
                 src={tile.image}
                 alt={tile.name}
-                className="w-full h-24 object-cover rounded"
+                className="absolute inset-0 w-full h-full object-cover opacity-30"
               />
             )}
-            <p className="mt-2 font-semibold">{tile.name}</p>
+            <div className="relative z-10 p-4">
+              <p className="font-bold text-white text-xl">{tile.name}</p>
+            </div>
           </>
         )}
         {/* add other tile types here */}
