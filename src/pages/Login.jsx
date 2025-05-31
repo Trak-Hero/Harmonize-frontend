@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../state/authStore';
@@ -7,40 +8,43 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
-  const login = useAuthStore((s) => s.login); // Use the login method from authStore
-  const API = import.meta.env.VITE_API_BASE_URL;
+  const loginAction = useAuthStore((state) => state.login);
+  const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     try {
-      console.log('API URL:', API); // Debug log
-      console.log('Attempting login with:', { usernameOrEmail, password: '***' });
-      
+      // 1) POST /auth/login with credentials: 'include' so that our cookie is set
       const res = await fetch(`${API}/auth/login`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usernameOrEmail, password }),
       });
-      
-      console.log('Response status:', res.status);
-      
+
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: 'Login failed' }));
-        throw new Error(errorData.message || 'Login failed');
+        // Try to parse an error message from the JSON response
+        const errPayload = await res.json().catch(() => null);
+        const msg = errPayload?.message || 'Login failed';
+        throw new Error(msg);
       }
 
+      // 2) If 200 OK, the server returns the user object in JSON
       const user = await res.json();
-      console.log('Login successful:', user);
-      login(user);
-      navigate('/dashboard'); // Navigate to dashboard instead of profile
+
+      // 3) Update our Zustand store + localStorage
+      loginAction(user);
+
+      // 4) Redirect to dashboard (or wherever you like)
+      navigate('/dashboard');
     } catch (err) {
-      console.error('Login error:', err);
-      setError(err.message || 'Login failed. Please check your credentials.');
+      console.error('[Login] error:', err);
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -59,6 +63,7 @@ export default function Login() {
           className="w-full px-4 py-2 rounded bg-gray-800 placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
+
         <input
           type="password"
           placeholder="Password"
@@ -70,7 +75,7 @@ export default function Login() {
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
 
-        <button 
+        <button
           type="submit"
           disabled={loading}
           className="w-full py-2 rounded bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -80,7 +85,7 @@ export default function Login() {
       </form>
 
       <p className="mt-4 text-sm text-gray-300">
-        Don't have an account?&nbsp;
+        Don’t have an account?{' '}
         <Link to="/register" className="text-blue-400 hover:underline">
           Sign up
         </Link>

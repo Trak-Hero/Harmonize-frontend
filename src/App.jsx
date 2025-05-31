@@ -1,7 +1,10 @@
+// src/App.jsx
 import { Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useAuthStore } from './state/authStore';
+
 import Navbar from './components/navbar';
 import Landing from './pages/Landing';
-import MapPage from './pages/MapPage';
 import ForYou from './pages/ForYou';
 import ArtistProfile from './pages/ArtistProfile';
 import SearchResults from './pages/SearchResults';
@@ -11,22 +14,20 @@ import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
 import Register from './pages/Register';
 import Login from './pages/Login';
-import { useEffect } from 'react';
-import { useAuthStore } from './state/authStore';
 
 import './App.css';
 
-
 function App() {
-  const fetchUser = useAuthStore((s) => s.fetchUser);
+  // Pull down the `fetchUser` action from our store:
+  const fetchUser = useAuthStore((state) => state.fetchUser);
 
   useEffect(() => {
-    fetchUser(); // fetch session user on initial load
-  }, []);
+    // On initial mount, re‐hydrate auth state from cookie/localStorage:
+    fetchUser();
+  }, [fetchUser]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* App content */}
       <div className="relative z-20 flex flex-col h-full overflow-auto">
         <Navbar />
 
@@ -47,6 +48,5 @@ function App() {
     </div>
   );
 }
-
 
 export default App;
