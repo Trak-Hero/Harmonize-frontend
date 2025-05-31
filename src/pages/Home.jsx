@@ -14,9 +14,9 @@ import axios from "axios";
   ─────────────────────────────────────────────────────────────────────────────*/
 
 /* replace with your own UI components or keep simple <img>/<p> */
-import MediaCard   from "./components/MediaCard";
-import Carousel    from "./components/Carousel";
-import FriendFeed  from "./components/FriendFeed";
+import MediaCard   from "../components/MediaCard";
+import Carousel    from "../components/Carousel";
+import FriendFeed  from "../components/FriendFeed";
 
 
 const API = import.meta.env.VITE_API_BASE_URL ?? ""; // empty → same origin
