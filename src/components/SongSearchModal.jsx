@@ -28,7 +28,8 @@ export default function SongSearchModal({ onClose, userId }) {
   };
 
   const pickSong = async (track) => {
-    const albumCover = track.album?.images?.[0]?.url ?? '';
+    console.log('[pickSong] track data:', track); // ADD THIS
+    const albumCover = track.album?.images?.[0]?.url ?? track.images?.[0]?.url ?? '';
     await addTile({
       userId,
       type: 'song',
@@ -38,7 +39,7 @@ export default function SongSearchModal({ onClose, userId }) {
     });
     onClose();
   };
-
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-zinc-900 w-full max-w-xl rounded-xl p-6 space-y-4">
