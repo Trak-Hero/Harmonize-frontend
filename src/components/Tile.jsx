@@ -2,6 +2,7 @@
 import { useProfileStore } from '../state/profileStore';
 
 const Tile = ({ tile }) => {
+  console.log('[Tile.jsx] rendering tile:', tile);
   const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
   const deleteTile    = useProfileStore((s) => s.deleteTile);
 
