@@ -1,27 +1,21 @@
 import { useState } from 'react';
 import { useProfileStore } from '../state/profileStore';
 import ArtistSearchModal from './ArtistSearchModal';
+import SongSearchModal   from './SongSearchModal';
 
 const TilePicker = ({ onAdd }) => {
   const addTileStore = useProfileStore((s) => s.addTile);
   const userId       = useProfileStore((s) => s.currentUserId);
 
   const [showArtistModal, setShowArtistModal] = useState(false);
+  const [showSongModal,   setShowSongModal]   = useState(false);
 
-  const add = (payload) => {
-    if (onAdd) {
-      onAdd(payload);
-    } else {
-      addTileStore(payload);
-    }
-  };
+  const add = (payload) => (onAdd ? onAdd(payload) : addTileStore(payload));
 
   const handleClick = (type) => {
-    if (type === 'artist') {
-      setShowArtistModal(true);
-    } else {
-      add({ type });
-    }
+    if (type === 'artist') setShowArtistModal(true);
+    else if (type === 'song') setShowSongModal(true);
+    else add({ type });
   };
 
   const types = ['text', 'artist', 'song', 'picture', 'spacer'];
@@ -41,10 +35,10 @@ const TilePicker = ({ onAdd }) => {
       </div>
 
       {showArtistModal && (
-        <ArtistSearchModal
-          userId={userId}
-          onClose={() => setShowArtistModal(false)}
-        />
+        <ArtistSearchModal userId={userId} onClose={() => setShowArtistModal(false)} />
+      )}
+      {showSongModal && (
+        <SongSearchModal userId={userId} onClose={() => setShowSongModal(false)} />
       )}
     </>
   );
