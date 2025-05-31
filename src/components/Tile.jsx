@@ -48,6 +48,13 @@ const Tile = ({ tile }) => {
           <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
         </div>
       )}
+      {/* SPACER TILE (empty) */}
+      {tile.type === 'spacer' && null}
+
+      {/* PICTURE TILE */}
+      {tile.type === 'picture' && tile.bgImage && (
+        <img src={tile.bgImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      )}
     </div>
   );
 };

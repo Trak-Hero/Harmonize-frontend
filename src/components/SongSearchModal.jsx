@@ -18,7 +18,7 @@ export default function SongSearchModal({ onClose, userId }) {
       const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      setResults(data.tracks?.items ?? []);
+      setResults(data.tracks?.items ?? data.tracks ?? []);  
     } catch (e) {
       console.error('[SongSearchModal] search failed:', e);
       setError('Could not fetch songs.');
