@@ -17,7 +17,17 @@ const TileEditor = () => {
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSave = async () => {
-    await updateTile(tile._id || tile.id, form);
+    const tileId = tile._id || tile.id;
+    
+    // If this is a temporary tile (starts with 'tmp_'), create a new tile
+    if (typeof tileId === 'string' && tileId.startsWith('tmp_')) {
+      const { addTile } = useProfileStore.getState();
+      await addTile(form, tileId); // Pass tempId to replace the temporary tile
+    } else {
+      // Otherwise, update existing tile
+      await updateTile(tileId, form);
+    }
+    
     setEditorOpen(false);
   };
 
