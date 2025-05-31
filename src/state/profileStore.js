@@ -23,6 +23,12 @@ export const useProfileStore = create(
        * Fetch all tiles that belong to `profileUserId`.
        * `viewerId` is passed so the backend can decide what is public.
        */
+      addTempTile: (tileData) => {
+              const tempId = `tmp_${Date.now()}`;       // simple unique id
+              const newTile = { id: tempId, ...tileData };
+              set((state) => ({ tiles: [...state.tiles, newTile] }));
+              return tempId;                            // return so caller can open editor
+            },
       fetchTiles: async (profileUserId, viewerId) => {
         try {
           const res = await axios.get(
@@ -39,7 +45,7 @@ export const useProfileStore = create(
        * Create a new tile that belongs to the *current* profile.
        * Falls back to the cached currentUserId if caller does not pass one.
        */
-      addTile: async (tileData) => {
+      addTile: async (tileData, tempId = null) => {
         // Prefer an explicit userId from the caller; otherwise fall back to the one cached
         const userId = tileData.userId || get().currentUserId;
         if (!userId) {
@@ -55,7 +61,11 @@ export const useProfileStore = create(
             { ...tileData, userId },
             { withCredentials: true }
           );
-          set((state) => ({ tiles: [...state.tiles, res.data] }));
+          set((state) => ({
+                      tiles: tempId
+                        ? state.tiles.map((t) => (t.id === tempId ? res.data : t)) // replace placeholder
+                        : [...state.tiles, res.data],                              // normal create
+                    }));
         } catch (err) {
           console.error('Failed to add tile:', err);
         }
