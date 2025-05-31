@@ -19,16 +19,13 @@ export const useProfileStore = create(
         set({ editorOpen: open, editingTileId: tileId }),
 
       /* ──────────── SERVER ACTIONS ──────────── */
-      /**
-       * Fetch all tiles that belong to `profileUserId`.
-       * `viewerId` is passed so the backend can decide what is public.
-       */
       addTempTile: (tileData) => {
-              const tempId = `tmp_${Date.now()}`;       // simple unique id
-              const newTile = { id: tempId, ...tileData };
-              set((state) => ({ tiles: [...state.tiles, newTile] }));
-              return tempId;                            // return so caller can open editor
-            },
+        const tempId = `tmp_${Date.now()}`;
+        const newTile = { id: tempId, ...tileData };
+        set((state) => ({ tiles: [...state.tiles, newTile] }));
+        return tempId;
+      },
+
       fetchTiles: async (profileUserId, viewerId) => {
         try {
           const res = await axios.get(
@@ -41,12 +38,7 @@ export const useProfileStore = create(
         }
       },
 
-      /**
-       * Create a new tile that belongs to the *current* profile.
-       * Falls back to the cached currentUserId if caller does not pass one.
-       */
       addTile: async (tileData, tempId = null) => {
-        // Prefer an explicit userId from the caller; otherwise fall back to the one cached
         const userId = tileData.userId || get().currentUserId;
         if (!userId) {
           console.error('Tile add failed: No user ID set in profileStore');
@@ -55,23 +47,21 @@ export const useProfileStore = create(
         }
 
         try {
-          console.log('Adding tile with userId:', userId, 'tileData:', tileData);
           const res = await axios.post(
             `${import.meta.env.VITE_API_BASE_URL}/api/tiles`,
             { ...tileData, userId },
             { withCredentials: true }
           );
           set((state) => ({
-                      tiles: tempId
-                        ? state.tiles.map((t) => (t.id === tempId ? res.data : t)) // replace placeholder
-                        : [...state.tiles, res.data],                              // normal create
-                    }));
+            tiles: tempId
+              ? state.tiles.map((t) => (t.id === tempId ? res.data : t))
+              : [...state.tiles, res.data],
+          }));
         } catch (err) {
           console.error('Failed to add tile:', err);
         }
       },
 
-      /** Update a single tile */
       updateTile: async (id, updates) => {
         try {
           const res = await axios.patch(
@@ -87,7 +77,6 @@ export const useProfileStore = create(
         }
       },
 
-      /** Delete a tile */
       deleteTile: async (id) => {
         try {
           await axios.delete(
@@ -95,27 +84,23 @@ export const useProfileStore = create(
             { withCredentials: true }
           );
           set((state) => ({
-            tiles: state.tiles.filter((tile) => tile._id !== id),
+            tiles: state.tiles.filter((tile) => (tile._id || tile.id) !== id),
           }));
         } catch (err) {
           console.error('Failed to delete tile:', err);
         }
       },
 
-      /**
-       * Persist new x/y/w/h for a *bunch* of tiles after a layout drag.
-       * We only send valid ObjectIds to the backend.
-       */
       updateLayout: async (layout) => {
         const state = get();
         const updates = layout
           .map(({ i, x, y, w, h }) => {
             const tile = state.tiles.find((t) => (t._id || t.id) === i);
-            if (!tile) {
-              console.warn(`Tile not found for layout item: ${i}`);
+            if (!tile || !tile._id) {
+              console.warn(`Tile not found or missing _id: ${i}`);
               return null;
             }
-            return { _id: tile._id, x, y, w, h }; 
+            return { id: tile._id, x, y, w, h };
           })
           .filter(Boolean);
 
@@ -132,10 +117,8 @@ export const useProfileStore = create(
           );
           set((state) => ({
             tiles: state.tiles.map((tile) => {
-              const match = updates.find((u) => u.id === (tile._id || tile.id));
-              return match
-                ? { ...tile, x: match.x, y: match.y, w: match.w, h: match.h }
-                : tile;
+              const match = updates.find((u) => u.id === tile._id);
+              return match ? { ...tile, x: match.x, y: match.y, w: match.w, h: match.h } : tile;
             }),
           }));
         } catch (err) {
@@ -145,7 +128,6 @@ export const useProfileStore = create(
     }),
     {
       name: 'profile-store',
-      // Only persist the user the profile page is currently showing, nothing more
       partialize: (state) => ({ currentUserId: state.currentUserId }),
     }
   )
