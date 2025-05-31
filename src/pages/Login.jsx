@@ -1,4 +1,4 @@
-// src/pages/Login.jsx
+// src/components/Login.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../state/authStore';
@@ -8,10 +8,13 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
-  const loginAction = useAuthStore((state) => state.login);
-  const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+
+  // Grab the `login` action from the store
+  const login = useAuthStore((s) => s.login);
+
+  // API base URL (make sure VITE_API_BASE_URL is set in your .env)
+  const API = import.meta.env.VITE_API_BASE_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,61 +22,60 @@ export default function Login() {
     setError(null);
 
     try {
-      // 1) POST /auth/login with credentials: 'include' so that our cookie is set
       const res = await fetch(`${API}/auth/login`, {
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include', // so that cookies are sent back from the server
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usernameOrEmail, password }),
       });
 
       if (!res.ok) {
-        // Try to parse an error message from the JSON response
-        const errPayload = await res.json().catch(() => null);
-        const msg = errPayload?.message || 'Login failed';
-        throw new Error(msg);
+        const err = await res.json();
+        throw new Error(err.message || 'Login failed');
       }
 
-      // 2) If 200 OK, the server returns the user object in JSON
-      const user = await res.json();
-
-      // 3) Update our Zustand store + localStorage
-      loginAction(user);
-
-      // 4) Redirect to dashboard (or wherever you like)
+      const userData = await res.json();
+      // 1) Persist in localStorage + store
+      login(userData);
+      // 2) Redirect
       navigate('/dashboard');
     } catch (err) {
-      console.error('[Login] error:', err);
-      setError(err.message || 'Login failed. Please try again.');
-    } finally {
+      console.error(err);
+      setError(err.message);
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-white">
-      <h1 className="text-4xl font-bold mb-6">Log in to Reverberate</h1>
+    <div className="max-w-md mx-auto mt-32 p-6 bg-gray-800 rounded-md text-white">
+      <h2 className="text-2xl font-semibold mb-4">Log in</h2>
 
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <input
-          type="text"
-          placeholder="Username or Email"
-          value={usernameOrEmail}
-          onChange={(e) => setUsernameOrEmail(e.target.value)}
-          className="w-full px-4 py-2 rounded bg-gray-800 placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        />
+      {error && (
+        <div className="bg-red-600 p-2 rounded mb-4 text-sm">{error}</div>
+      )}
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-2 rounded bg-gray-800 placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm mb-1">Username or Email</label>
+          <input
+            type="text"
+            value={usernameOrEmail}
+            onChange={(e) => setUsernameOrEmail(e.target.value)}
+            required
+            className="w-full px-3 py-2 rounded bg-gray-700 focus:outline-none"
+          />
+        </div>
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        <div>
+          <label className="block text-sm mb-1">Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-3 py-2 rounded bg-gray-700 focus:outline-none"
+          />
+        </div>
 
         <button
           type="submit"
@@ -85,7 +87,7 @@ export default function Login() {
       </form>
 
       <p className="mt-4 text-sm text-gray-300">
-        Don’t have an account?{' '}
+        Don't have an account?&nbsp;
         <Link to="/register" className="text-blue-400 hover:underline">
           Sign up
         </Link>

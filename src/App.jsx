@@ -1,10 +1,11 @@
 // src/App.jsx
-import { Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './state/authStore';
 
 import Navbar from './components/navbar';
 import Landing from './pages/Landing';
+import MapPage from './pages/MapPage';
 import ForYou from './pages/ForYou';
 import ArtistProfile from './pages/ArtistProfile';
 import SearchResults from './pages/SearchResults';
@@ -15,37 +16,56 @@ import Friends from './pages/Friends';
 import Register from './pages/Register';
 import Login from './pages/Login';
 
-import './App.css';
-
 function App() {
-  // Pull down the `fetchUser` action from our store:
-  const fetchUser = useAuthStore((state) => state.fetchUser);
+  // Grab fetchUser() and user from the Zustand store
+  const fetchUser = useAuthStore((s) => s.fetchUser);
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
-    // On initial mount, re‐hydrate auth state from cookie/localStorage:
+    // 1) On first mount, rehydrate from localStorage AND confirm with backend /me
     fetchUser();
   }, [fetchUser]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
-      <div className="relative z-20 flex flex-col h-full overflow-auto">
-        <Navbar />
+    <BrowserRouter>
+      <Navbar />
 
+      <div className="pt-16">
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Landing />} />
-          <Route path="/discover" element={<ForYou />} />
-          <Route path="/artist/:id" element={<ArtistProfile />} />
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/foryou" element={<ForYou />} />
+          <Route path="/artist/:artistId" element={<ArtistProfile />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/connect" element={<ConnectSpotify />} />
-          <Route path="/dashboard" element={<SpotifyDashboard />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/friends" element={<Friends />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+
+          {/* Protected Routes: Redirect to /login if not logged in */}
+          <Route
+            path="/dashboard"
+            element={user ? <SpotifyDashboard /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/profile"
+            element={user ? <UserProfile /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/friends"
+            element={user ? <Friends /> : <Navigate to="/login" replace />}
+          />
+
+          {/* Auth Routes: Redirect to /dashboard if already logged in */}
+          <Route
+            path="/register"
+            element={user ? <Navigate to="/dashboard" replace /> : <Register />}
+          />
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/dashboard" replace /> : <Login />}
+          />
         </Routes>
       </div>
-    </div>
+    </BrowserRouter>
   );
 }
 
