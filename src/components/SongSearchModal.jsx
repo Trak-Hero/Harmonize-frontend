@@ -18,7 +18,10 @@ export default function SongSearchModal({ onClose, userId }) {
       const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      setResults(data.tracks?.items ?? data.tracks ?? []);  
+      
+      console.log('[SongSearchModal] received data:', data);
+      // Backend returns { tracks: [...] } for songs
+      setResults(data.tracks || []);  
     } catch (e) {
       console.error('[SongSearchModal] search failed:', e);
       setError('Could not fetch songs.');
@@ -28,7 +31,9 @@ export default function SongSearchModal({ onClose, userId }) {
   };
 
   const pickSong = async (track) => {
-    const albumCover = track.album?.images?.[0]?.url ?? '';
+    console.log('[pickSong] track data:', track);
+    // Backend sends album.image, not album.images array
+    const albumCover = track.album?.image || '';
     await addTile({
       userId,
       type: 'song',
@@ -38,7 +43,7 @@ export default function SongSearchModal({ onClose, userId }) {
     });
     onClose();
   };
-
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-zinc-900 w-full max-w-xl rounded-xl p-6 space-y-4">
@@ -60,7 +65,7 @@ export default function SongSearchModal({ onClose, userId }) {
         {loading && <p className="text-white">Searching…</p>}
         {error && <p className="text-red-400">{error}</p>}
         {!loading && !results.length && !error && (
-          <p className="text-white/60">No results yet – try a search.</p>
+          <p className="text-white/60">No results yet – try a search.</p>
         )}
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
@@ -71,11 +76,16 @@ export default function SongSearchModal({ onClose, userId }) {
               className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
             >
               <img
-                src={t.album?.images?.[0]?.url}
+                src={t.album?.image || 'https://placehold.co/48x48?text=Song'}
                 alt={t.name}
                 className="w-12 h-12 object-cover rounded"
               />
-              <span className="text-white">{t.name}</span>
+              <div className="flex flex-col">
+                <span className="text-white font-medium">{t.name}</span>
+                <span className="text-gray-400 text-sm">
+                  {t.artists?.map(a => a.name).join(', ')}
+                </span>
+              </div>
             </li>
           ))}
         </ul>

@@ -19,7 +19,10 @@ export default function ArtistSearchModal({ onClose, userId }) {
       const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      setResults(data.artists?.items ?? []);
+      
+      // Backend returns array directly for artists, not wrapped in object
+      console.log('[ArtistSearchModal] received data:', data);
+      setResults(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error('[ArtistSearchModal] search failed:', e);
       setError('Could not fetch artists. Check the backend route.');
@@ -33,7 +36,7 @@ export default function ArtistSearchModal({ onClose, userId }) {
             userId,
             type:     'artist',
             title:    artist.name,                   
-            bgImage:  artist.images?.[0]?.url ?? '',  
+            bgImage:  artist.image || '',  // Backend sends 'image' not 'images'
         
             x: 0, y: Infinity, w: 2, h: 2,
           });
@@ -61,7 +64,7 @@ export default function ArtistSearchModal({ onClose, userId }) {
         {loading && <p className="text-white">Searching…</p>}
         {error   && <p className="text-red-400">{error}</p>}
         {!loading && !results.length && !error && (
-          <p className="text-white/60">No results yet – try a search.</p>
+          <p className="text-white/60">No results yet – try a search.</p>
         )}
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
@@ -72,7 +75,7 @@ export default function ArtistSearchModal({ onClose, userId }) {
               className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
             >
               <img
-                src={a.images?.[0]?.url}
+                src={a.image || 'https://placehold.co/48x48?text=Artist'}
                 alt={a.name}
                 className="w-12 h-12 object-cover rounded"
               />
