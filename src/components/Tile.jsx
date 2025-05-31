@@ -4,7 +4,7 @@ const Tile = ({ tile }) => {
   const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
   const deleteTile    = useProfileStore((s) => s.deleteTile);
 
-  const displayTitle = tile.title ?? tile.name ?? '';
+  const displayTitle = tile.title ?? tile.name ?? tile.content ?? '';
   const showTitle    = !!displayTitle;
 
   return (
@@ -42,8 +42,8 @@ const Tile = ({ tile }) => {
         <div className="p-4 text-white">{tile.content}</div>
       )}
 
-      {/* ARTIST TILE */}
-      {tile.type === 'artist' && showTitle && (
+      {/* ARTIST or SONG TILE */}
+      {(tile.type === 'artist' || tile.type === 'song') && showTitle && (
         <div className="absolute inset-0 flex items-end p-4 bg-black/40 backdrop-blur-sm">
           <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
         </div>
