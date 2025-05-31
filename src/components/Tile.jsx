@@ -45,6 +45,7 @@ const Tile = ({ tile }) => {
           <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
         </div>
       )}
+      
 
       {/* PICTURE */}
       {tile.type === 'picture' && tile.bgImage && (
