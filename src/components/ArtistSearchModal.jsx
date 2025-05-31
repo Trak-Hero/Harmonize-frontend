@@ -30,12 +30,13 @@ export default function ArtistSearchModal({ onClose, userId }) {
 
   const pickArtist = async (artist) => {
     await addTile({
-      userId,
-      type:  'artist',
-      name:  artist.name,
-      image: artist.images?.[0]?.url ?? '',
-      x: 0, y: Infinity, w: 2, h: 2,
-    });
+            userId,
+            type:     'artist',
+            title:    artist.name,                   
+            bgImage:  artist.images?.[0]?.url ?? '',  
+        
+            x: 0, y: Infinity, w: 2, h: 2,
+          });
     onClose();
   };
 
