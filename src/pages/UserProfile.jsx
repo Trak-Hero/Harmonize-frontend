@@ -30,7 +30,7 @@ export default function UserProfile() {
 
   const {
     tiles, editorOpen, editingTileId,
-    fetchTiles, updateLayout, addTile, setCurrentUserId
+    fetchTiles, updateLayout, addTile, addTempTile, setEditorOpen, setCurrentUserId
   } = useProfileStore();
 
   const [activeTab,   setActiveTab]   = useState('recent');
@@ -40,7 +40,7 @@ export default function UserProfile() {
   useEffect(() => {
     if (!targetUserId || !authUser) return;
 
-    setCurrentUserId(targetUserId);
+    setCurrentUserId(targetUserId); 
     fetchTiles(targetUserId, authUser.id);           // always pass ownerId for ACL
   }, [targetUserId, authUser, fetchTiles, setCurrentUserId]);
 
@@ -69,9 +69,19 @@ export default function UserProfile() {
     (tileData = {}) => {
       if (!targetUserId)
         return console.warn('Add‑Tile blocked: user still loading');
-      addTile({ ...tileData, userId: targetUserId });
+      const tempId = addTempTile({
+                ...tileData,
+                userId: targetUserId,
+                x: 0,
+                y: Infinity,
+                w: 2,
+                h: 2,
+                content: '',
+              });
+              /* 2️⃣ …then open the editor immediately */
+              setEditorOpen(true, tempId);
     },
-    [targetUserId, addTile]
+    [targetUserId, addTempTile, setEditorOpen]
   );
 
   /* ────────────────────────────────── loading guard ────────────────────────────────── */
@@ -99,7 +109,7 @@ export default function UserProfile() {
           <h1 className="text-5xl font-extrabold">
             {isOwner ? authUser.name ?? 'Your Profile' : 'Artist Profile'}
           </h1>
-          <p className="text-white/70">0 Followers • — Following</p>
+          <p className="text-white/70">0 Followers • — Following</p>
           {!isOwner && (
             <button className="px-5 py-2 mt-3 rounded-full bg-white text-black font-medium">
               Follow
