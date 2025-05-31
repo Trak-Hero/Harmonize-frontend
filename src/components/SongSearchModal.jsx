@@ -28,7 +28,7 @@ export default function SongSearchModal({ onClose, userId }) {
   };
 
   const pickSong = async (track) => {
-    const albumCover = track.album?.images?.[0]?.url ?? '';
+    const albumCover = track.album?.images?.[0]?.url ?? track.images?.[0]?.url ?? '';
     await addTile({
       userId,
       type: 'song',
