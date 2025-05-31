@@ -1,6 +1,5 @@
 // src/components/Tile.jsx
 import { useProfileStore } from '../state/profileStore';
-import ReactMarkdown from 'react-markdown';
 
 const Tile = ({ tile }) => {
   const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
@@ -35,16 +34,9 @@ const Tile = ({ tile }) => {
       )}
 
       {/* TEXT TILE */}
-      {tile.type === 'text' && tile.content && (
+      {tile.type === 'text' && (
         <div className="relative z-10 p-4 text-white break-words whitespace-pre-wrap">
-          <ReactMarkdown>{tile.content}</ReactMarkdown>
-        </div>
-      )}
-
-      {/* PICTURE TILE with Markdown support */}
-      {tile.type === 'picture' && tile.content && (
-        <div className="absolute inset-0 w-full h-full object-cover z-0">
-          <ReactMarkdown>{tile.content}</ReactMarkdown>
+          {tile.content}
         </div>
       )}
 
