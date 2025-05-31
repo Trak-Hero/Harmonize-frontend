@@ -1,138 +1,126 @@
 import { useEffect, useState } from 'react';
 import { useProfileStore } from '../state/profileStore';
 
-const TileEditor = ({ tile }) => {
-  const updateTile = useProfileStore((s) => s.updateTile);
-  const removeTile = useProfileStore((s) => s.removeTile);
-  const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
+const TileEditor = () => {
+  const { tiles, editingTileId, updateTile, setEditorOpen } = useProfileStore();
+  const tile = tiles.find((t) => (t._id || t.id) === editingTileId);
 
-  const [form, setForm] = useState({ ...tile });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    const parsed = ['w', 'h'].includes(name) ? parseInt(value) : value;
-    setForm({ ...form, [name]: parsed });
-  };
-
-  const close = () => setEditorOpen(false);
-
-  const save = () => {
-    updateTile(tile.id, form);
-    close();
-  };
+  const [form, setForm] = useState({});
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, []);
+    if (tile) setForm(tile);
+  }, [tile]);
+
+  if (!tile) return null;
+
+  const onChange = (e) =>
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+
+  const handleSave = async () => {
+    const tileId = tile._id || tile.id;
+    
+    // If this is a temporary tile (starts with 'tmp_'), create a new tile
+    if (typeof tileId === 'string' && tileId.startsWith('tmp_')) {
+      const { addTile } = useProfileStore.getState();
+      await addTile(form, tileId); // Pass tempId to replace the temporary tile
+    } else {
+      // Otherwise, update existing tile
+      await updateTile(tileId, form);
+    }
+    
+    setEditorOpen(false);
+  };
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
-      <div className="bg-white text-black rounded-lg p-6 w-[90%] max-w-md space-y-4">
-        <h2 className="text-xl font-bold">Edit Tile</h2>
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+      <div className="bg-zinc-900 w-full max-w-md rounded-xl p-6 space-y-6">
+        <h2 className="text-2xl font-bold text-white">Edit Tile</h2>
 
+        {/* Title for artist / song */}
+        {(tile.type === 'artist' || tile.type === 'song') && (
+          <div>
+            <label className="block mb-1 text-white">Title</label>
+            <input
+              name="title"
+              value={form.title || ''}
+              onChange={onChange}
+              className="w-full rounded bg-zinc-800 p-2 text-white"
+              placeholder="Enter title..."
+            />
+          </div>
+        )}
+
+        {/* Content for text */}
         {tile.type === 'text' && (
+          <div>
+            <label className="block mb-1 text-white">Content</label>
+            <textarea
+              name="content"
+              rows={4}
+              value={form.content || ''}
+              onChange={onChange}
+              className="w-full rounded bg-zinc-800 p-2 text-white"
+              placeholder="Enter your text..."
+            />
+          </div>
+        )}
+
+        {/* Image URL for picture */}
+        {tile.type === 'picture' && (
+          <div>
+            <label className="block mb-1 text-white">Image URL</label>
+            <input
+              name="bgImage"
+              value={form.bgImage || ''}
+              onChange={onChange}
+              className="w-full rounded bg-zinc-800 p-2 text-white"
+              placeholder="https://example.com/photo.jpg"
+            />
+            {form.bgImage && (
+              <div className="mt-2">
+                <img
+                  src={form.bgImage}
+                  alt="Preview"
+                  className="w-full h-32 object-cover rounded"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Background Color for all tiles */}
+        <div>
+          <label className="block mb-1 text-white">Background Color</label>
           <input
-            type="text"
-            name="content"
-            value={form.content}
-            onChange={handleChange}
-            placeholder="Text"
-            className="w-full border p-2 rounded"
+            name="bgColor"
+            type="color"
+            value={form.bgColor || '#000000'}
+            onChange={onChange}
+            className="w-full h-10 rounded bg-zinc-800 p-1"
           />
-        )}
-
-        {tile.type === 'artist' && (
-          <>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Artist Name"
-              className="w-full border p-2 rounded"
-            />
-            <input
-              type="text"
-              name="image"
-              value={form.image}
-              onChange={handleChange}
-              placeholder="Image URL"
-              className="w-full border p-2 rounded"
-            />
-          </>
-        )}
-
-        <input
-          type="color"
-          name="bgColor"
-          value={form.bgColor}
-          onChange={handleChange}
-          className="w-full"
-        />
-
-        <input
-          type="text"
-          name="bgImage"
-          value={form.bgImage || ''}
-          onChange={handleChange}
-          placeholder="Background Image URL"
-          className="w-full border p-2 rounded"
-        />
-
-        <select
-          name="font"
-          value={form.font}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        >
-          <option value="sans-serif">Sans-serif</option>
-          <option value="serif">Serif</option>
-          <option value="monospace">Monospace</option>
-        </select>
-
-        {/* 📐 Predefined Size Controls */}
-        <div className="flex gap-2">
-          <select
-            name="w"
-            value={form.w}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          >
-            <option value={1}>Width: 1</option>
-            <option value={2}>Width: 2</option>
-            <option value={4}>Width: 4</option>
-          </select>
-
-          <select
-            name="h"
-            value={form.h}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          >
-            <option value={1}>Height: 1</option>
-            <option value={2}>Height: 2</option>
-          </select>
         </div>
 
-        <div className="flex justify-between mt-4">
-          <button onClick={save} className="px-4 py-2 bg-blue-500 text-white rounded">Save</button>
-          <button onClick={close} className="px-4 py-2 bg-gray-400 text-white rounded">Cancel</button>
+        <div className="flex justify-end gap-2 pt-4">
           <button
-            onClick={() => {
-              removeTile(tile.id);
-              close();
-            }}
-            className="px-4 py-2 bg-red-500 text-white rounded"
+            onClick={() => setEditorOpen(false)}
+            className="px-4 py-2 bg-zinc-700 rounded text-white hover:bg-zinc-600"
           >
-            Delete
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-blue-600 rounded text-white hover:bg-blue-700"
+          >
+            Save
           </button>
         </div>
       </div>
     </div>
   );
 };
+
 
 export default TileEditor;
