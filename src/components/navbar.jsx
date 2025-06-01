@@ -77,12 +77,12 @@ export default function Navbar() {
             Profile
           </Link>
 
-          <Link
+          {/* <Link
             to="/dashboard"
             className="px-4 py-2 rounded-md border border-white/20 hover:bg-white/10 text-sm font-medium transition"
           >
             Dashboard
-          </Link>
+          </Link> */}
 
           <Link
             to="/connect"
