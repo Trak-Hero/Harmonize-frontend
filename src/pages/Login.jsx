@@ -8,8 +8,10 @@ export default function Login() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const login = useAuthStore((s) => s.login); // Use the login method from authStore
-  const API = import.meta.env.VITE_API_BASE_URL;
+  const login = useAuthStore((s) => s.login);
+  
+  // Use consistent API base URL
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,30 +19,43 @@ export default function Login() {
     setError(null);
     
     try {
-      console.log('API URL:', API); // Debug log
-      console.log('Attempting login with:', { usernameOrEmail, password: '***' });
+      console.log('Login attempt:', {
+        API_BASE,
+        usernameOrEmail,
+        endpoint: `${API_BASE}/auth/login`
+      });
       
-      const res = await fetch(`${API}/auth/login`, {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ usernameOrEmail, password }),
       });
       
       console.log('Response status:', res.status);
+      console.log('Response headers:', Object.fromEntries(res.headers.entries()));
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ message: 'Login failed' }));
-        throw new Error(errorData.message || 'Login failed');
+        throw new Error(errorData.message || `Login failed with status: ${res.status}`);
       }
 
       const user = await res.json();
       console.log('Login successful:', user);
       login(user);
-      navigate('/dashboard'); // Navigate to dashboard instead of profile
+      navigate('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.message || 'Login failed. Please check your credentials.');
+      
+      // Handle specific CORS errors
+      if (err.message.includes('CORS') || err.name === 'TypeError') {
+        setError('Connection error. Please check if the server is running and accessible.');
+      } else {
+        setError(err.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -49,6 +64,14 @@ export default function Login() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
       <h1 className="text-4xl font-bold mb-6">Log in to Reverberate</h1>
+
+      {/* Debug info in development */}
+      {import.meta.env.DEV && (
+        <div className="mb-4 p-2 bg-gray-800 rounded text-xs text-gray-300">
+          <div>API Base: {API_BASE}</div>
+          <div>Mode: {import.meta.env.MODE}</div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
         <input
