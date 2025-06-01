@@ -16,13 +16,27 @@ import { useAuthStore } from './state/authStore';
 
 import './App.css';
 
-
 function App() {
-  const fetchUser = useAuthStore((s) => s.fetchUser);
+  const { fetchUser, hasCheckedSession, isLoading, user } = useAuthStore();
 
   useEffect(() => {
-    fetchUser(); // fetch session user on initial load
-  }, []);
+    // Only fetch user session if we haven't checked yet
+    // This prevents unnecessary API calls on every reload
+    if (!hasCheckedSession) {
+      fetchUser();
+    }
+  }, [fetchUser, hasCheckedSession]);
+
+  // Optional: Show loading spinner while checking session
+  if (!hasCheckedSession && isLoading) {
+    return (
+      <div className="relative w-full h-screen overflow-hidden">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-white text-lg">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -47,6 +61,5 @@ function App() {
     </div>
   );
 }
-
 
 export default App;
