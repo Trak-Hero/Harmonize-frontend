@@ -46,7 +46,7 @@ export default function Login() {
       const user = await res.json();
       console.log('Login successful:', user);
       login(user);
-      navigate('/dashboard');
+      navigate('/profile');
     } catch (err) {
       console.error('Login error:', err);
       
