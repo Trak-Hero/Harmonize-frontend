@@ -2,61 +2,53 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 /* ──────────────────────────────────────────────────────────────────────────────
-  Home.jsx  –fetch real data
-  ----------------------------------------------------------------------------
-  • replace the placeholder arrays with data from your Express API
-  • expects you already mounted these routes on the server side:
-        GET /api/recommendations      → [{ id, title, coverUrl, ... }]
-        GET /api/recent              → [{ id, title, coverUrl, ... }]
-        GET /api/friends/activity    → [{ friendName, track, coverUrl, ... }]
-  • cookies are sent via `withCredentials: true` so session auth keeps working
-  • uses a Vite env var VITE_API_BASE_URL ("http://localhost:8080" in dev)
-  ─────────────────────────────────────────────────────────────────────────────*/
+  Home.jsx  – Fetch data for homepage
+──────────────────────────────────────────────────────────────────────────────── */
 
-/* replace with your own UI components or keep simple <img>/<p> */
 import MediaCard   from "../components/MediaCard";
 import Carousel    from "../components/Carousel";
 import FriendFeed  from "../components/FriendFeed";
 
-
-const API = import.meta.env.VITE_API_BASE_URL ?? ""; // empty → same origin
+const API = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export default function Home() {
   const [recommendations, setRecommendations] = useState([]);
   const [recent,         setRecent]          = useState([]);
   const [friendActivity, setFriendActivity]  = useState([]);
   const [loading,        setLoading]         = useState(true);
+  const [error,          setError]           = useState(false);
 
-  /* ------------------------------------------------------------------------- */
-  /* grab all 3 lists in parallel                                              */
-  /* ------------------------------------------------------------------------- */
   useEffect(() => {
     let cancelled = false;
 
-    (async () => {
+    const fetchData = async () => {
       try {
-        const [{ data: rec }, { data: recents }, { data: friends }] = await Promise.all([
-          axios.get(`${API}/api/recommendations`,      { withCredentials: true }),
-          axios.get(`${API}/api/recent`,               { withCredentials: true }),
-          axios.get(`${API}/api/friends/activity`,     { withCredentials: true }),
+        const [recRes, recentRes, friendsRes] = await Promise.all([
+          axios.get(`${API}/api/recommendations`,  { withCredentials: true }),
+          axios.get(`${API}/api/recent`,           { withCredentials: true }),
+          axios.get(`${API}/api/friends/activity`, { withCredentials: true }),
         ]);
+
         if (!cancelled) {
-          setRecommendations(rec);
-          setRecent(recents);
-          setFriendActivity(friends);
-          setLoading(false);
+          setRecommendations(recRes.data ?? []);
+          setRecent(recentRes.data ?? []);
+          setFriendActivity(friendsRes.data ?? []);
         }
       } catch (err) {
-        console.error("/home fetch error", err);
+        console.error("Error fetching homepage data:", err);
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    })();
+    };
 
-    return () => (cancelled = true);
+    fetchData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  /* ------------------------------------------------------------------------- */
-  /* simple skeleton while waiting for data                                    */
-  /* ------------------------------------------------------------------------- */
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen text-white">
@@ -65,13 +57,16 @@ export default function Home() {
     );
   }
 
-  /* ------------------------------------------------------------------------- */
-  /* real page                                                                 */
-  /* ------------------------------------------------------------------------- */
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-400 font-semibold text-lg">
+        Failed to load homepage. Please try refreshing.
+      </div>
+    );
+  }
+
   return (
     <main className="pb-24 space-y-16">
-      {/* hero banner stays the same (see top of file if you have one) */}
-
       {/* ── personalised mixes ─────────────────────────────────────── */}
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-4">Made for you</h2>
