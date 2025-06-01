@@ -1,15 +1,19 @@
 export default function MediaCard({ media }) {
+  if (!media || !media.name) return null;
+
   return (
-    <div className="bg-zinc-800 rounded-lg p-4 w-40 shrink-0 text-white text-sm">
+    <div className="bg-white/10 rounded-lg p-4 shadow-md">
       <img
-        src={media.image}
+        src={media.image || '/placeholder.jpg'}
         alt={media.name}
-        className="w-full aspect-square rounded mb-2 object-cover"
+        className="w-full h-40 object-cover rounded-md mb-2"
       />
-      <p className="font-semibold truncate">{media.name}</p>
-      <p className="text-zinc-400 text-xs truncate">
-        {media.artists?.join(', ') ?? 'Unknown Artist'}
-      </p>
+      <h3 className="text-white text-lg font-bold truncate">{media.name}</h3>
+      {media.artists && (
+        <p className="text-white/70 text-sm truncate">
+          {media.artists.join(', ')}
+        </p>
+      )}
     </div>
   );
 }

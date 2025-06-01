@@ -4,6 +4,7 @@ import axios from "axios";
 import MediaCard   from "../components/MediaCard";
 import Carousel    from "../components/Carousel";
 import FriendFeed  from "../components/FriendFeed";
+import mapTrack    from "../utils/mapTrack"; // ✅ import the frontend version
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -27,8 +28,9 @@ export default function Home() {
 
         if (cancelled) return;
 
-        setRecommendations(recRes.data ?? []);
-        setRecent(recentRes.data ?? []);
+        // ✅ Normalize each track using frontend mapTrack
+        setRecommendations((recRes.data ?? []).map(mapTrack));
+        setRecent((recentRes.data ?? []).map(mapTrack));
         setFriendActivity(friendsRes.data ?? []);
       } catch (err) {
         console.error("/home fetch error:", err);
@@ -61,7 +63,6 @@ export default function Home() {
 
   return (
     <main className="pb-24 space-y-16">
-      {/* ── personalised mixes ─────────────────────────────────────── */}
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-4">Made for you</h2>
         {recommendations.length > 0 ? (
@@ -74,7 +75,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* ── recently played ─────────────────────────────────────────── */}
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-4">Recently played</h2>
         {recent.length > 0 ? (
@@ -88,7 +88,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* ── friend activity ─────────────────────────────────────────── */}
       <aside className="lg:fixed lg:right-6 lg:top-28 lg:w-72">
         <FriendFeed activity={friendActivity} />
       </aside>
