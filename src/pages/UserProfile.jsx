@@ -12,6 +12,7 @@ import FavoriteSongs   from '../components/FavoriteSongs';
 import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed  from '../components/RecentlyPlayed';
 import FriendActivity  from '../components/FriendActivity';
+import ProfileEditor   from '../components/ProfileEditor';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -35,6 +36,7 @@ export default function UserProfile() {
 
   const [activeTab,   setActiveTab]   = useState('recent');
   const [spotifyData, setSpotifyData] = useState(null);
+  const [showEditor,  setShowEditor]  = useState(false);
 
   /* ────────────────────────────────── load tiles ────────────────────────────────── */
   useEffect(() => {
@@ -105,16 +107,29 @@ export default function UserProfile() {
       {/* ──────────────── main column ──────────────── */}
       <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
         {/* header */}
-        <header className="space-y-2">
-          <h1 className="text-5xl font-extrabold">
-            {isOwner ? authUser.name ?? 'Your Profile' : 'Artist Profile'}
-          </h1>
-          <p className="text-white/70">0 Followers • — Following</p>
-          {!isOwner && (
-            <button className="px-5 py-2 mt-3 rounded-full bg-white text-black font-medium">
-              Follow
-            </button>
+        <header className="space-y-3 flex items-center gap-6">
+          {/* avatar */}
+          {authUser.avatar && (
+            <img src={authUser.avatar}
+                className="h-24 w-24 rounded-full object-cover border border-white/20" />
           )}
+
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center gap-3">
+              <h1 className="text-5xl font-extrabold">
+                {authUser.displayName || 'Your Profile'}
+              </h1>
+              {isOwner && (
+                <button
+                  onClick={() => setShowEditor(true)}
+                  className="px-4 py-2 bg-white text-black rounded-full text-sm hover:bg-zinc-200">
+                  Edit
+                </button>
+              )}
+            </div>
+            {authUser.bio && <p className="text-white/70">{authUser.bio}</p>}
+            <p className="text-white/40 text-sm">0 Followers • — Following</p>
+          </div>
         </header>
 
         {/* tab selector */}
@@ -185,6 +200,7 @@ export default function UserProfile() {
       {editorOpen && isOwner && (
         <TileEditor tile={tileBeingEdited} />
       )}
+      {showEditor && isOwner && <ProfileEditor onClose={() => setShowEditor(false)} />}
     </div>
   );
 }
