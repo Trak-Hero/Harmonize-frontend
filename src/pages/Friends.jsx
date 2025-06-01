@@ -7,10 +7,10 @@ const Friends = () => {
 
   useEffect(() => {
     fetchFriends?.();
-  }, []);
+  });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
+    <div className="px-10 py-8">
       <h1 className="text-3xl font-bold text-center mb-10">Your Friends</h1>
 
       {friends && friends.length > 0 ? (

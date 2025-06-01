@@ -19,20 +19,16 @@ const FriendCard = ({ friend }) => {
         <span className="font-medium text-gray-400">Top Artists:</span> {friend.artists.join(', ')}
       </p>
 
-      {friend.sharedPlaylists?.length > 0 && (
-        <div className="text-left mt-4">
-          <h4 className="text-sm font-semibold mb-1 text-gray-300">Shared Playlists</h4>
-          <ul className="list-none list-inside text-sm text-blue-600 space-y-1">
-            {friend.sharedPlaylists.map((playlist) => (
-              <li key={playlist.id}>
-                <Link to={`/playlists/${playlist.id}`} className="hover:underline">
-                  {playlist.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <div className="mt-2">
+          <p className="text-sm text-gray-300 font-medium">Percent Match:</p>
+          <p className="text-xl font-bold text-green-400">{friend.matchPercent || 0}%</p>
+
+          <Link
+            to={`/blendmode/${friend.id}`}
+            className="mt-1 inline-block text-sm text-blue-400 hover:underline">
+            See More
+          </Link>
+      </div>
     </div>
   );
 };

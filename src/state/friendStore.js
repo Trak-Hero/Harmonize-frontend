@@ -7,10 +7,7 @@ const mockFriends = [
     avatar: 'feature spec/mruno.png',
     genres: ['Indie', 'Jazz'],
     artists: ['Phoebe Bridgers', 'Tom Misch'],
-    sharedPlaylists: [
-      { id: 'p1', name: 'Late Night Vibes' },
-      { id: 'p2', name: 'Roadtrip Mix' },
-    ],
+    matchPercent: 75,
   },
   {
     id: '2',
@@ -18,9 +15,7 @@ const mockFriends = [
     avatar: 'feature spec/chad.png',
     genres: ['Hip-Hop', 'R&B'],
     artists: ['Kendrick Lamar', 'SZA'],
-    sharedPlaylists: [
-      { id: 'p3', name: 'Chill Beats' },
-    ],
+    matchPercent: 42,
   },
   {
     id: '3',
@@ -28,7 +23,7 @@ const mockFriends = [
     avatar: 'feature spec/lena.png',
     genres: ['Rock', 'Electronic'],
     artists: ['Tame Impala', 'The Valley'],
-    sharedPlaylists: [],
+    matchPercent: 2,
   },
 ];
 
