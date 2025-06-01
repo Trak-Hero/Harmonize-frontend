@@ -3,6 +3,14 @@ import { persist } from 'zustand/middleware';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
+// Debug logging
+console.log('Auth Store - API_BASE:', API_BASE);
+console.log('Environment variables:', {
+  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+  MODE: import.meta.env.MODE,
+  DEV: import.meta.env.DEV
+});
+
 export const useAuthStore = create(
   persist(
     (set, get) => ({
