@@ -1,152 +1,101 @@
-// src/state/profileStore.js
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import axios from 'axios';
 
-export const useProfileStore = create(
-  persist(
-    (set, get) => ({
-      /* ──────────── STATE ──────────── */
-      tiles: [],
-      currentUserId: null,
-      editorOpen: false,
-      editingTileId: null,
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-      /* ──────────── MUTATORS ──────────── */
-      setCurrentUserId: (id) => set({ currentUserId: id }),
+export const useProfileStore = create((set, get) => ({
+  tiles: [],
+  currentUserId: null,
+  editorOpen: false,
+  editingTileId: null,
 
-      setEditorOpen: (open, tileId = null) =>
-        set({ editorOpen: open, editingTileId: tileId }),
+  setCurrentUserId: (id) => set({ currentUserId: id }),
 
-      /* ──────────── SERVER ACTIONS ──────────── */
-      /**
-       * Fetch all tiles that belong to `profileUserId`.
-       * `viewerId` is passed so the backend can decide what is public.
-       */
-      addTempTile: (tileData) => {
-              const tempId = `tmp_${Date.now()}`;       // simple unique id
-              const newTile = { id: tempId, ...tileData };
-              set((state) => ({ tiles: [...state.tiles, newTile] }));
-              return tempId;                            // return so caller can open editor
-            },
-      fetchTiles: async (profileUserId, viewerId) => {
-        try {
-          const res = await axios.get(
-            `${import.meta.env.VITE_API_BASE_URL}/api/users/${profileUserId}/tiles`,
-            { params: { viewerId }, withCredentials: true }
-          );
-          set({ tiles: res.data, currentUserId: profileUserId });
-        } catch (err) {
-          console.error('Failed to fetch tiles:', err);
-        }
-      },
+  setEditorOpen: (isOpen, id = null) =>
+    set({ editorOpen: isOpen, editingTileId: id }),
 
-      /**
-       * Create a new tile that belongs to the *current* profile.
-       * Falls back to the cached currentUserId if caller does not pass one.
-       */
-      addTile: async (tileData, tempId = null) => {
-        // Prefer an explicit userId from the caller; otherwise fall back to the one cached
-        const userId = tileData.userId || get().currentUserId;
-        if (!userId) {
-          console.error('Tile add failed: No user ID set in profileStore');
-          console.log('Current state:', get());
-          return;
-        }
-
-        try {
-          console.log('Adding tile with userId:', userId, 'tileData:', tileData);
-          const res = await axios.post(
-            `${import.meta.env.VITE_API_BASE_URL}/api/tiles`,
-            { ...tileData, userId },
-            { withCredentials: true }
-          );
-          set((state) => ({
-                      tiles: tempId
-                        ? state.tiles.map((t) => (t.id === tempId ? res.data : t)) // replace placeholder
-                        : [...state.tiles, res.data],                              // normal create
-                    }));
-        } catch (err) {
-          console.error('Failed to add tile:', err);
-        }
-      },
-
-      /** Update a single tile */
-      updateTile: async (id, updates) => {
-        try {
-          const res = await axios.patch(
-            `${import.meta.env.VITE_API_BASE_URL}/api/tiles/${id}`,
-            updates,
-            { withCredentials: true }
-          );
-          set((state) => ({
-            tiles: state.tiles.map((tile) => (tile._id === id ? res.data : tile)),
-          }));
-        } catch (err) {
-          console.error('Failed to update tile:', err);
-        }
-      },
-
-      /** Delete a tile */
-      deleteTile: async (id) => {
-        try {
-          await axios.delete(
-            `${import.meta.env.VITE_API_BASE_URL}/api/tiles/${id}`,
-            { withCredentials: true }
-          );
-          set((state) => ({
-            tiles: state.tiles.filter((tile) => tile._id !== id),
-          }));
-        } catch (err) {
-          console.error('Failed to delete tile:', err);
-        }
-      },
-
-      /**
-       * Persist new x/y/w/h for a *bunch* of tiles after a layout drag.
-       * We only send valid ObjectIds to the backend.
-       */
-      updateLayout: async (layout) => {
-        const state = get();
-        const updates = layout
-          .map(({ i, x, y, w, h }) => {
-            const tile = state.tiles.find((t) => (t._id || t.id) === i);
-            if (!tile) {
-              console.warn(`Tile not found for layout item: ${i}`);
-              return null;
-            }
-            return { _id: tile._id, x, y, w, h }; 
-          })
-          .filter(Boolean);
-
-        if (updates.length === 0) {
-          console.warn('No valid tiles found for layout update');
-          return;
-        }
-
-        try {
-          await axios.patch(
-            `${import.meta.env.VITE_API_BASE_URL}/api/tiles/bulk-layout`,
-            { updates },
-            { withCredentials: true }
-          );
-          set((state) => ({
-            tiles: state.tiles.map((tile) => {
-              const match = updates.find((u) => u.id === (tile._id || tile.id));
-              return match
-                ? { ...tile, x: match.x, y: match.y, w: match.w, h: match.h }
-                : tile;
-            }),
-          }));
-        } catch (err) {
-          console.error('Failed to update layout:', err);
-        }
-      },
-    }),
-    {
-      name: 'profile-store',
-      // Only persist the user the profile page is currently showing, nothing more
-      partialize: (state) => ({ currentUserId: state.currentUserId }),
+  fetchTiles: async (userId, ownerId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/tiles?userId=${userId}`, {
+        credentials: 'include',
+      });
+      const data = await res.json();
+      set({ tiles: data.tiles || [] });
+    } catch (err) {
+      console.error('[fetchTiles] failed:', err);
     }
-  )
-);
+  },
+
+  addTempTile: (tileData) => {
+    const tempId = `tmp_${Date.now()}`;
+    set((s) => ({
+      tiles: [
+        ...s.tiles,
+        {
+          ...tileData,
+          id: tempId,
+        },
+      ],
+    }));
+    return tempId;
+  },
+
+  addTile: async (tileData, tempId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/tiles`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(tileData),
+      });
+      const saved = await res.json();
+      set((s) => ({
+        tiles: s.tiles.map((t) =>
+          t.id === tempId ? saved : t
+        ),
+      }));
+    } catch (err) {
+      console.error('[addTile] failed:', err);
+    }
+  },
+
+  updateTile: async (id, tileData) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/tiles/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(tileData),
+      });
+      const updated = await res.json();
+      set((s) => ({
+        tiles: s.tiles.map((t) =>
+          (t._id || t.id) === id ? updated : t
+        ),
+      }));
+    } catch (err) {
+      console.error('[updateTile] failed:', err);
+    }
+  },
+
+  updateLayout: (layout) => {
+    const updated = get().tiles.map((tile) => {
+      const item = layout.find((l) => l.i === (tile._id || tile.id));
+      return item ? { ...tile, ...item } : tile;
+    });
+    set({ tiles: updated });
+  },
+
+  deleteTile: async (id) => {
+    try {
+      await fetch(`${API_BASE}/api/tiles/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+    } catch (err) {
+      console.error('[deleteTile] failed:', err);
+    }
+    set((s) => ({
+      tiles: s.tiles.filter((t) => (t._id || t.id) !== id),
+    }));
+  },
+}));
