@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import './ArtistProfile.css';
+import { FlagBannerFoldIcon } from '@phosphor-icons/react';
 
 export default function ArtistProfile() {
   const { id } = useParams();                        // Spotify artist ID
@@ -14,6 +15,14 @@ export default function ArtistProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedBio, setEditedBio] = useState('');
   const [isSpotify, setIsSpotify] = useState(false);
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventGenre, setEventGenre] = useState('');
+  const [eventUrl, setEventUrl] = useState('');
+  const [eventImage, setEventImage] = useState('');
+  const [lat, setLat] = useState('');
+  const [lng, setLng] = useState('');
+
 
   const pick = (...urls) => urls.find(Boolean);
 
@@ -61,7 +70,7 @@ export default function ArtistProfile() {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, baseURL]);
 
   // ---- FOLLOW / UNFOLLOW HANDLER (Mongo artists only) ----
   const canFollow = !isSpotify && Array.isArray(artist?.followers);
@@ -112,6 +121,38 @@ export default function ArtistProfile() {
     } catch (err) {
       console.error(err);
       alert('Could not save bio.');
+    }
+  };
+
+  const handleEventSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${baseURL}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: eventTitle,
+          date: eventDate,
+          genre: eventGenre,
+          description: '',
+          ticketUrl: eventUrl,
+          image: eventImage,
+          lat, lng,
+          artistId: id,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to upload event');
+      alert('Event uploaded!');
+      setEventTitle('');
+      setEventDate('');
+      setEventGenre('');
+      setEventUrl('');
+      setEventImage('');
+      setLat('');
+      setLng('');
+    } catch (err) {
+      console.error('Error uploading event:', err);
+      alert('Error uploading event');
     }
   };
 
@@ -179,6 +220,21 @@ export default function ArtistProfile() {
           {/* ABOUT */}
           <div className="about-card glass">
             <h2>About Me</h2>
+            {canFollow && (
+              <div className="event-upload glass" style={{ marginTop: '2rem' }}>
+                <h3>Post an Event</h3>
+                <form onSubmit={handleEventSubmit} className="event-form">
+                  <input type="text" placeholder="Event Title" required value={eventTitle} onChange={e => setEventTitle(e.target.value)} />
+                  <input type="datetime-local" required value={eventDate} onChange={e => setEventDate(e.target.value)} />
+                  <input type="text" placeholder="Genre" required value={eventGenre} onChange={e => setEventGenre(e.target.value)} />
+                  <input type="url" placeholder="Ticket URL" value={eventUrl} onChange={e => setEventUrl(e.target.value)} />
+                  <input type="text" placeholder="Image URL" value={eventImage} onChange={e => setEventImage(e.target.value)} />
+                  <input type="number" step="any" placeholder="Latitude" required value={lat} onChange={e => setLat(e.target.value)} />
+                  <input type="number" step="any" placeholder="Longitude" required value={lng} onChange={e => setLng(e.target.value)} />
+                  <button type="submit" className="btn-primary">Upload Event</button>
+                </form>
+              </div>
+            )}
             {isEditing ? (
               <div className="bio-edit-container">
                 <textarea
