@@ -9,11 +9,12 @@ import MapView from '../components/map/mapView';
 
 const sampleEvents = [
   {
+    _id: 'rockapellas', // ✅ Add ID
     title: 'The Rockapellas',
-    artistId: '60af8840c45e2f001f4d32b1', // example ObjectId
+    artistId: '60af8840c45e2f001f4d32b1',
     location: {
       type: 'Point',
-      coordinates: [-72.2896, 43.7025]  // [lng, lat]
+      coordinates: [-72.2896, 43.7025]
     },
     date: new Date('2024-05-20T22:00:00'),
     genre: 'pop',
@@ -21,6 +22,7 @@ const sampleEvents = [
     image: '/images/rockapellas.jpg'
   },
   {
+    _id: 'sheba',
     title: 'Sheba',
     artistId: '60af8840c45e2f001f4d32b2',
     location: {
@@ -33,6 +35,7 @@ const sampleEvents = [
     image: '/images/sheba.jpg'
   },
   {
+    _id: 'coast-jazz',
     title: 'Coast Jazz Orchestra',
     artistId: '60af8840c45e2f001f4d32b3',
     location: {
@@ -46,15 +49,51 @@ const sampleEvents = [
   }
 ];
 
+
 const sampleFriends = [
   {
+    _id: 'john-doe-1',
     displayName: 'John Doe',
     location: {
       type: 'Point',
-      coordinates: [-72.2896, 43.7025]
+      coordinates: [-72.2802, 43.7025]
+    }
+  },
+  {
+    _id: 'jane-smith-2',
+    displayName: 'Jane Smith',
+    location: {
+      type: 'Point',
+      coordinates: [-72.2840, 43.7040]
+    }
+  },
+  {
+    _id: 'emily-johnson-3',
+    displayName: 'Emily Johnson',
+    location: {
+      type: 'Point',
+      coordinates: [-72.2815, 43.7060]
+    }
+  },
+  {
+    _id: 'michael-brown-4',
+    displayName: 'Michael Brown',
+    location: {
+      type: 'Point',
+      coordinates: [-72.2830, 43.7010]
+    }
+  },
+  {
+    _id: 'sarah-williams-5',
+    displayName: 'Sarah Williams',
+    location: {
+      type: 'Point',
+      coordinates: [-72.2865, 43.7035]
     }
   }
 ];
+
+
 
 const MapPage = () => {
   const [events, setEvents] = useState([]);
@@ -62,6 +101,9 @@ const MapPage = () => {
   const [showFriends, setShowFriends] = useState(true);
   const [filters, setFilters] = useState({ genre: '', sortBy: '' });
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [selectedFriendId, setSelectedFriendId] = useState(null);
+
 
 
   useEffect(() => {
@@ -105,8 +147,12 @@ const MapPage = () => {
         <div className="w-[24rem] min-w-[300px] top-50 p-6 space-y-6 bg-black/30 backdrop-blur-lg">
           <SearchBar onSearchChange={handleSearchChange} />
           <FilterBar onFilterChange={handleFilterChange} />
-          <EventList events={showEvents ? events : []} />
-          <FriendList friends={showFriends ? sampleFriends : []} />
+          <EventList 
+            events={showEvents ? events : []} 
+            onSelect={setSelectedEventId} 
+            visible={showEvents}
+          />
+          <FriendList friends={showFriends ? sampleFriends : []} visible={showFriends} onSelect={setSelectedFriendId}  />
         </div>
 
         {/* Main area (map will eventually go here) */}
@@ -117,6 +163,9 @@ const MapPage = () => {
             setShowEvents={setShowEvents}
             showFriends={showFriends}
             setShowFriends={setShowFriends}
+            selectedEventId={selectedEventId} 
+            friends={sampleFriends}
+            selectedFriendId={selectedFriendId}
           />
         </div>
 

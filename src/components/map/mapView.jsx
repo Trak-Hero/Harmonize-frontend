@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
@@ -33,38 +33,66 @@ const MapResizeFix = () => {
   return null;
 };
 
-const FriendsMarkers = ({ visible }) => {
-  const [friends, setFriends] = useState([]);
+const getInitials = (name = '') => {
+  const words = name.trim().split(' ');
+  if (words.length === 0) return '';
+  if (words.length === 1) return words[0][0]?.toUpperCase() || '';
+  return (words[0][0] + words[1][0]).toUpperCase();
+};
+
+const getColor = (name) => {
+  // Pick color based on name hash
+  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
+const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
+  const markerRefs = useRef({});
 
   useEffect(() => {
-    const fetchFriends = async () => {
-      try {
-        const response = await fetch('http://localhost:8080/api/friends', {
-          credentials: 'include'
-        });        
-        const data = await response.json();
-        setFriends(data);
-      } catch (error) {
-        console.error("Failed to fetch friends:", error);
-      }
-    };
-
-    fetchFriends();
-  }, []);
+    if (selectedFriendId && markerRefs.current[selectedFriendId]) {
+      markerRefs.current[selectedFriendId].openPopup();
+    }
+  }, [selectedFriendId]);
 
   if (!visible) return null;
 
-  return friends.map(friend =>
-    friend.location?.coordinates?.length === 2 ? (
+  return friends.map((friend) => {
+    const initials = getInitials(friend.displayName || friend.username);
+    const bgColor = getColor(friend.displayName || friend.username);
+    const icon = L.divIcon({
+      html: `<div style="
+        background-color: ${bgColor};
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+        border: 2px solid white;
+        box-shadow: 0 0 3px rgba(0,0,0,0.3);
+      ">${initials}</div>`,
+      className: '',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32],
+    });
+
+    return friend.location?.coordinates?.length === 2 ? (
       <Marker
         key={friend._id}
         position={[friend.location.coordinates[1], friend.location.coordinates[0]]}
-        icon={L.icon({
-          iconUrl: 'https://cdn-icons-png.flaticon.com/512/1946/1946429.png',
-          iconSize: [30, 30],
-          iconAnchor: [15, 30],
-          popupAnchor: [0, -30],
-        })}
+        icon={icon}
+        ref={(ref) => {
+          if (ref) markerRefs.current[friend._id] = ref;
+        }}
       >
         <Popup>
           <div>
@@ -72,62 +100,53 @@ const FriendsMarkers = ({ visible }) => {
           </div>
         </Popup>
       </Marker>
-    ) : null
-  );
+    ) : null;
+  });
 };
 
-const EventMarkers = ({ visible }) => {
-  const [events, setEvents] = useState([]);
+const EventMarkers = ({ visible, events = [], selectedEventId }) => {
+  const markerRefs = useRef({});
 
   useEffect(() => {
-    // Static mock data for now
-    setEvents([
-      {
-        title: 'The Rockapellas',
-        location: { coordinates: [-72.2896, 43.7025] },
-        date: new Date('2024-05-20T22:00:00'),
-        description: 'A capella group performance'
-      },
-      {
-        title: 'Sheba',
-        location: { coordinates: [-72.2880, 43.7030] },
-        date: new Date('2024-05-20T20:00:00'),
-        description: 'Smooth jazz evening'
-      },
-      {
-        title: 'Coast Jazz Orchestra',
-        location: { coordinates: [-72.2850, 43.7050] },
-        date: new Date('2024-05-24T19:00:00'),
-        description: 'Live performance by the coast'
-      }
-    ]);
-  }, []);
+    if (selectedEventId && markerRefs.current[selectedEventId]) {
+      const marker = markerRefs.current[selectedEventId];
+      marker.openPopup();
+    }
+  }, [selectedEventId]);
 
   if (!visible) return null;
 
-  return events.map((event, idx) => (
-    <Marker
-      key={`event-${idx}`}
-      position={[event.location.coordinates[1], event.location.coordinates[0]]}
-      icon={L.icon({
-        iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
-        iconSize: [30, 30],
-        iconAnchor: [15, 30],
-        popupAnchor: [0, -30],
-      })}
-    >
-      <Popup>
-        <div>
-          <h2 className="font-bold">{event.title}</h2>
-          <p>{event.description}</p>
-          <p>{new Date(event.date).toLocaleString()}</p>
-        </div>
-      </Popup>
-    </Marker>
-  ));
+  return events.map((event, idx) => {
+    const id = event._id || `event-${idx}`;
+    const [lng, lat] = event.location.coordinates;
+
+    return (
+      <Marker
+        key={id}
+        position={[lat, lng]}
+        ref={(ref) => {
+          if (ref) markerRefs.current[id] = ref;
+        }}
+        icon={L.icon({
+          iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+          iconSize: [30, 30],
+          iconAnchor: [15, 30],
+          popupAnchor: [0, -30],
+        })}
+      >
+        <Popup>
+          <div>
+            <h2 className="font-bold">{event.title}</h2>
+            <p>{event.description}</p>
+            <p>{new Date(event.date).toLocaleString()}</p>
+          </div>
+        </Popup>
+      </Marker>
+    );
+  });
 };
 
-const MapView = ({ events, showEvents, setShowEvents, showFriends, setShowFriends }) => {
+const MapView = ({ events, showEvents, setShowEvents, showFriends, setShowFriends, selectedEventId, friends, selectedFriendId }) => {
   return (
     <div className="w-full h-full relative">
       <div className="absolute top-4 left-4 z-[999] space-x-2">
@@ -161,8 +180,12 @@ const MapView = ({ events, showEvents, setShowEvents, showFriends, setShowFriend
         />
         <MapResizeFix />
         <LocationMarker />
-        <FriendsMarkers visible={showFriends} />
-        <EventMarkers visible={showEvents} events={events} />
+        <FriendsMarkers
+          visible={showFriends}
+          friends={friends} // from props
+          selectedFriendId={selectedFriendId}
+        />
+        <EventMarkers visible={showEvents} events={events} selectedEventId={selectedEventId} />
       </MapContainer>
     </div>
   );

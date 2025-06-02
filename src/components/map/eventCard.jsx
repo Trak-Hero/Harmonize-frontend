@@ -5,14 +5,12 @@ import PeopleIcon from '@mui/icons-material/People';
 function distance(lat1, lon1, lat2, lon2) {
   const r = 6371;
   const p = Math.PI / 180;
-
   const a =
     0.5 -
     Math.cos((lat2 - lat1) * p) / 2 +
     Math.cos(lat1 * p) *
       Math.cos(lat2 * p) *
       (1 - Math.cos((lon2 - lon1) * p)) / 2;
-
   return 2 * r * Math.asin(Math.sqrt(a));
 }
 
@@ -23,16 +21,12 @@ const getInitials = (title = '') => {
   return (words[0][0] + words[1][0]).toUpperCase();
 };
 
-const EventCard = ({ event }) => {
+const EventCard = ({ event, onSelect }) => {
   const [userLocation, setUserLocation] = useState(null);
   const [eventDistance, setEventDistance] = useState(null);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      console.error('Geolocation is not supported by this browser.');
-      return;
-    }
-
+    if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -60,8 +54,17 @@ const EventCard = ({ event }) => {
 
   const hasImage = !!event.image;
 
+  const handleClick = () => {
+    if (onSelect) {
+      onSelect(event._id); // Pass the ID to parent map handler
+    }
+  };
+
   return (
-    <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border-l-4 border-green-500 text-black shadow-sm">
+    <div
+      onClick={handleClick}
+      className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border-l-4 border-green-500 text-black shadow transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-95 cursor-pointer"
+    >
       {hasImage ? (
         <img
           src={event.image}
@@ -78,9 +81,7 @@ const EventCard = ({ event }) => {
         <h3 className="text-base font-semibold text-black">{event.title}</h3>
         <p className="text-sm text-gray-700">
           {eventDistance && (
-            <span className="text-green-600 font-medium">
-              {eventDistance} km
-            </span>
+            <span className="text-green-600 font-medium">{eventDistance} km</span>
           )}
           {eventDistance && ' • '}
           {formattedDate}
