@@ -16,13 +16,20 @@ const Tile = ({ tile }) => {
     const showTitle = !!displayTitle;
     const id = tile._id || tile.id;
 
-    // Prefer bgImage always for consistency
-    let chosenImage = tile.bgImage || tile.albumCover || tile.artistImage || tile.image || '';
+    // Simplified image logic - prioritize bgImage since that's what we're setting in the modals
+    let chosenImage = '';
+    
+    if (tile.bgImage && tile.bgImage.trim() && tile.bgImage !== '/') {
+      chosenImage = tile.bgImage.trim();
+    } else if (tile.albumCover && tile.albumCover.trim() && tile.albumCover !== '/') {
+      chosenImage = tile.albumCover.trim();
+    } else if (tile.artistImage && tile.artistImage.trim() && tile.artistImage !== '/') {
+      chosenImage = tile.artistImage.trim();
+    } else if (tile.image && tile.image.trim() && tile.image !== '/') {
+      chosenImage = tile.image.trim();
+    }
 
-    const safeImageSrc =
-      chosenImage && chosenImage !== '/' && chosenImage !== ''
-        ? chosenImage
-        : '/placeholder.jpg';
+    const safeImageSrc = chosenImage || '/placeholder.jpg';
 
     console.log('[Tile.jsx] Image logic for tile:', {
       type: tile.type,
@@ -42,64 +49,58 @@ const Tile = ({ tile }) => {
           fontFamily: tile.font || 'sans-serif',
         }}
       >
-        {/* Always render image in container */}
-        {safeImageSrc && (
+        {/* Background image for all tiles that have one */}
+        {chosenImage && (
           <div className="absolute inset-0 z-0">
             <img
               src={safeImageSrc}
               alt=""
               crossOrigin="anonymous"
-              onLoad={() => console.log('[Tile.jsx] image loaded:', safeImageSrc)}
+              onLoad={() => console.log('[Tile.jsx] image loaded successfully:', safeImageSrc)}
               onError={(e) => {
                 console.warn('[Tile.jsx] Image failed to load:', safeImageSrc);
+                console.warn('[Tile.jsx] Original tile data:', tile);
                 e.currentTarget.src = '/placeholder.jpg';
               }}
               className="w-full h-full object-cover"
-              // style={{ border: '2px solid red' }} // Uncomment to debug image box
             />
           </div>
         )}
 
-        {/* ARTIST or SONG TILE: overlay title */}
-        {(tile.type === 'artist' || tile.type === 'song') && showTitle && (
-          <div className="absolute inset-0 flex items-end p-4 bg-black/40 backdrop-blur-sm z-10">
-            <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
+        {/* ARTIST TILE: overlay title over background image */}
+        {tile.type === 'artist' && showTitle && (
+          <div className="absolute inset-0 flex items-end p-4 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10">
+            <h3 className="text-xl font-bold text-white drop-shadow-lg">{displayTitle}</h3>
+          </div>
+        )}
+
+        {/* SONG TILE: overlay title over album cover */}
+        {tile.type === 'song' && showTitle && (
+          <div className="absolute inset-0 flex items-end p-4 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10">
+            <h3 className="text-xl font-bold text-white drop-shadow-lg">{displayTitle}</h3>
           </div>
         )}
 
         {/* TEXT TILE */}
         {tile.type === 'text' && (
           <div className="relative z-10 p-4 text-white break-words whitespace-pre-wrap h-full flex items-center justify-center">
-            <div className="text-center">
+            <div className="text-center drop-shadow-lg">
               {tile.content || 'Click Edit to add text'}
             </div>
           </div>
         )}
 
-        {/* PICTURE TILE */}
-        {tile.type === 'picture' && (
-          <div className="relative z-10 h-full w-full">
-            {tile.bgImage && tile.bgImage !== '/' ? (
-              <img
-                src={tile.bgImage}
-                alt=""
-                className="w-full h-full object-cover"
-                crossOrigin="anonymous"
-                onError={(e) => {
-                  console.warn('[Tile.jsx] Image failed to load:', tile.bgImage);
-                  e.currentTarget.src = '/placeholder.jpg';
-                }}
-              />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center text-white bg-gray-600">
-                <span>Click Edit to add image</span>
-              </div>
-            )}
+        {/* PICTURE TILE - no overlay, just the image */}
+        {tile.type === 'picture' && !chosenImage && (
+          <div className="relative z-10 h-full w-full flex items-center justify-center text-white bg-gray-600">
+            <span>Click Edit to add image</span>
           </div>
         )}
 
         {/* SPACER TILE */}
-        {tile.type === 'spacer' && null}
+        {tile.type === 'spacer' && (
+          <div className="h-full w-full bg-transparent"></div>
+        )}
 
         {/* EDIT / DELETE BUTTONS */}
         <button
@@ -107,7 +108,7 @@ const Tile = ({ tile }) => {
             e.stopPropagation();
             setEditorOpen(true, id);
           }}
-          className="absolute top-2 right-2 z-20 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70"
+          className="absolute top-2 right-2 z-20 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
         >
           Edit
         </button>
@@ -117,7 +118,7 @@ const Tile = ({ tile }) => {
             e.stopPropagation();
             if (window.confirm('Delete this tile?')) deleteTile(id);
           }}
-          className="absolute top-2 left-2 z-20 bg-red-500/70 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+          className="absolute top-2 left-2 z-20 bg-red-500/70 text-white px-2 py-1 rounded text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
         >
           Delete
         </button>
