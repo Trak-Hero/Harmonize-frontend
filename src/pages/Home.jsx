@@ -1,3 +1,4 @@
+// src/pages/Home.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -10,80 +11,142 @@ const API = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export default function Home() {
   const [recommendations, setRecommendations] = useState([]);
-  const [recent, setRecent] = useState([]);
-  const [friendActivity, setFriendActivity] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [recent,          setRecent]          = useState([]);
+  const [friendActivity,  setFriendActivity]  = useState([]);
+  const [topAlbums,       setTopAlbums]       = useState([]);
+  const [loading,         setLoading]         = useState(true);
+  const [error,           setError]           = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
     const fetchData = async () => {
       try {
-        console.log('Home: Fetching data from API:', API);
-        
-        // Make requests with proper error handling
-        const requests = [
-          axios.get(`${API}/api/recommendations`, { 
-            withCredentials: true,
-            timeout: 10000 
-          }).catch(err => {
-            console.warn('Recommendations request failed:', err.response?.status || err.message);
-            return { data: [] };
-          }),
-          
-          axios.get(`${API}/api/recent`, { 
-            withCredentials: true,
-            timeout: 10000 
-          }).catch(err => {
-            console.warn('Recent tracks request failed:', err.response?.status || err.message);
-            return { data: [] };
-          }),
-          
-          axios.get(`${API}/api/friends/activity`, { 
-            withCredentials: true,
-            timeout: 10000 
-          }).catch(err => {
-            console.warn('Friend activity request failed:', err.response?.status || err.message);
-            return { data: [] };
-          }),
-        ];
+        console.log("Home: Fetching data from API:", API);
 
-        const [recRes, recentRes, friendsRes] = await Promise.all(requests);
+        // 1) Fetch recommendations, recent, and friend activity in parallel
+        const [recRes, recentRes, friendsRes] = await Promise.all([
+          axios
+            .get(`${API}/api/recommendations`, {
+              withCredentials: true,
+              timeout: 10000,
+            })
+            .catch((err) => {
+              console.warn(
+                "Home: Recommendations request failed:",
+                err.response?.status || err.message
+              );
+              return { data: [] };
+            }),
+          axios
+            .get(`${API}/api/recent`, {
+              withCredentials: true,
+              timeout: 10000,
+            })
+            .catch((err) => {
+              console.warn(
+                "Home: Recent tracks request failed:",
+                err.response?.status || err.message
+              );
+              return { data: [] };
+            }),
+          axios
+            .get(`${API}/api/friends/activity`, {
+              withCredentials: true,
+              timeout: 10000,
+            })
+            .catch((err) => {
+              console.warn(
+                "Home: Friend activity request failed:",
+                err.response?.status || err.message
+              );
+              return { data: [] };
+            }),
+        ]);
 
         if (cancelled) return;
 
-        console.log('Home: Raw API responses:', {
+        console.log("Home: Raw API responses:", {
           recommendations: recRes.data?.length || 0,
-          recent: recentRes.data?.length || 0,
-          friends: friendsRes.data?.length || 0
+          recent:         recentRes.data?.length || 0,
+          friends:        friendsRes.data?.length || 0,
         });
 
-        // Safely map tracks, filtering out any null results
+        // 2) Map recommendations and recent → MediaCard format
         const mappedRecommendations = (recRes.data ?? [])
           .map(mapTrack)
-          .filter(track => track !== null);
-          
+          .filter((track) => track !== null);
+
         const mappedRecent = (recentRes.data ?? [])
           .map(mapTrack)
-          .filter(track => track !== null);
+          .filter((track) => track !== null);
 
-        console.log('Home: Mapped tracks:', {
+        console.log("Home: Mapped tracks:", {
           recommendations: mappedRecommendations.length,
-          recent: mappedRecent.length
+          recent:         mappedRecent.length,
         });
 
-        setRecommendations(mappedRecommendations);
-        setRecent(mappedRecent);
-        setFriendActivity(friendsRes.data ?? []);
-        
+        // 3) Separately fetch /api/me/spotify to get “top tracks” from Spotify → then derive unique albums
+        let albumsArray = [];
+        try {
+          const spotifyRes = await axios.get(`${API}/api/me/spotify`, {
+            withCredentials: true,
+            timeout: 10000,
+          });
+          if (!cancelled && spotifyRes.data?.top) {
+            const topTracks = spotifyRes.data.top; // array of track‐objects
+
+            // Build a map of albumId → albumObject
+            const albumMap = {};
+            topTracks.forEach((track) => {
+              // Some track objects might be wrapped in { track: {...} }, but
+              // in our /api/me/spotify implementation, we returned track directly.
+              const t = track; // if wrapped, use track.track instead
+              const album = t.album || {};
+
+              // Compose an “album key”—use album.id or fallback to name
+              const albumId = album.id || album.name || String(Math.random());
+              if (!albumMap[albumId]) {
+                // Find the primary image (first in the array)
+                const imgUrl = Array.isArray(album.images) && album.images.length > 0
+                  ? album.images[0].url
+                  : "";
+
+                // Join all artist names into one string
+                const artistNames = Array.isArray(t.artists)
+                  ? t.artists.map((a) => a.name).join(", ")
+                  : "";
+
+                albumMap[albumId] = {
+                  id:           albumId,
+                  name:         album.name || "Unknown Album",
+                  image:        imgUrl,
+                  artistNames, // e.g. “Radiohead”
+                };
+              }
+            });
+
+            albumsArray = Object.values(albumMap);
+          }
+        } catch (spotifyErr) {
+          console.warn(
+            "Home: Error fetching top tracks from /api/me/spotify:",
+            spotifyErr.response?.status || spotifyErr.message
+          );
+        }
+
+        if (!cancelled) {
+          setRecommendations(mappedRecommendations);
+          setRecent(mappedRecent);
+          setFriendActivity(friendsRes.data ?? []);
+          setTopAlbums(albumsArray);
+        }
       } catch (err) {
         console.error("Home: Fetch error:", err);
-        
-        // Set a more specific error message
+
+        // Determine a user‐friendly error message
         let errorMessage = "Failed to load data.";
-        
-        if (err.code === 'ECONNABORTED') {
+        if (err.code === "ECONNABORTED") {
           errorMessage = "Request timed out. Please try again.";
         } else if (err.response?.status === 401) {
           errorMessage = "Please log in to access your music data.";
@@ -94,15 +157,13 @@ export default function Home() {
         } else if (!navigator.onLine) {
           errorMessage = "No internet connection. Please check your connection.";
         }
-        
-        setError(errorMessage);
+        if (!cancelled) setError(errorMessage);
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
     fetchData();
-
     return () => {
       cancelled = true;
     };
@@ -125,8 +186,8 @@ export default function Home() {
         <div className="space-y-4">
           <p className="text-lg font-semibold">Oops! Something went wrong</p>
           <p className="text-sm text-white/70">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
           >
             Try Again
@@ -138,6 +199,41 @@ export default function Home() {
 
   return (
     <main className="pb-24 space-y-16">
+      {/* ────────────── New “Top Albums” Carousel ────────────── */}
+      {topAlbums.length > 0 && (
+        <section className="container mx-auto px-4">
+          <h2 className="text-2xl font-bold mb-4 text-white">Top Albums</h2>
+          <Carousel
+            items={topAlbums}
+            renderItem={(album) => (
+              <div
+                key={album.id}
+                className="bg-black/50 rounded-xl p-4 backdrop-blur-md text-white flex flex-col items-center w-40"
+              >
+                {album.image ? (
+                  <img
+                    src={album.image}
+                    alt={album.name}
+                    className="w-full h-40 object-cover rounded mb-2"
+                  />
+                ) : (
+                  <div className="w-full h-40 bg-gray-800 flex items-center justify-center rounded mb-2">
+                    <span className="text-gray-400 text-sm">No Cover</span>
+                  </div>
+                )}
+                <div className="font-medium text-sm truncate w-full text-center">
+                  {album.name}
+                </div>
+                <div className="text-xs text-gray-400 truncate w-full text-center">
+                  {album.artistNames}
+                </div>
+              </div>
+            )}
+          />
+        </section>
+      )}
+
+      {/* ───────── “Made for you” Carousel ───────── */}
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-4 text-white">Made for you</h2>
         {recommendations.length > 0 ? (
@@ -148,11 +244,14 @@ export default function Home() {
         ) : (
           <div className="text-center py-8 text-white/60">
             <p>No recommendations available.</p>
-            <p className="text-sm mt-2">Connect your Spotify account to see personalized recommendations.</p>
+            <p className="text-sm mt-2">
+              Connect your Spotify account to see personalized recommendations.
+            </p>
           </div>
         )}
       </section>
 
+      {/* ───────── “Recently played” Grid ───────── */}
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-4 text-white">Recently played</h2>
         {recent.length > 0 ? (
@@ -164,11 +263,14 @@ export default function Home() {
         ) : (
           <div className="text-center py-8 text-white/60">
             <p>No recent tracks found.</p>
-            <p className="text-sm mt-2">Start listening to music on Spotify to see your recent tracks here.</p>
+            <p className="text-sm mt-2">
+              Start listening to music on Spotify to see your recent tracks here.
+            </p>
           </div>
         )}
       </section>
 
+      {/* ───────── Fixed “Friend activity” Sidebar ───────── */}
       <aside className="lg:fixed lg:right-6 lg:top-28 lg:w-72">
         <FriendFeed activity={friendActivity} />
       </aside>
