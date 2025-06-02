@@ -1,62 +1,61 @@
 import { create } from 'zustand';
-import { fetchTopArtists } from '../api/spotify';
 
-const useStore = create((set) => ({
+const useFriendStore = create((set, get) => ({
   userSlice: {
-    friends: [],
-    fetchFriends: async () => {
-      try {
-        const baseFriends = [
-          {
-            id: '1',
-            name: 'Alex Kim',
-            avatar: 'https://i.pravatar.cc/150?img=1',
-            genres: ['Indie', 'Jazz'],
-            artists: [],
-            matchPercent: 82,
-          },
-          {
-            id: '2',
-            name: 'Jordan Lee',
-            avatar: 'https://i.pravatar.cc/150?img=2',
-            genres: ['Hip-Hop'],
-            artists: [],
-            matchPercent: 57,
-          },
-        ];
+    friends: [
+      {
+        id: '1',
+        name: 'Alex Kim',
+        avatar: 'https://i.pravatar.cc/150?img=1',
+        genres: ['Indie', 'Jazz'],
+        artists: ['Phoebe Bridgers', 'Tom Misch'],
+        matchPercent: 82,
+        followers: [],
+        following: [],
+        bio: 'Indie music lover',
+      },
+      {
+        id: '2',
+        name: 'Jordan Lee',
+        avatar: 'https://i.pravatar.cc/150?img=2',
+        genres: ['Hip-Hop'],
+        artists: ['Kendrick Lamar', 'SZA'],
+        matchPercent: 57,
+        followers: [],
+        following: [],
+        bio: 'Hip-Hop and R&B enthusiast',
+      },
+    ],
+    currentUserId: '1',
 
-        let spotifyArtists = [];
-        try {
-          const res = await fetch('/api/spotify/top-artists');
-          const contentType = res.headers.get('content-type');
-          if (!res.ok || !contentType?.includes('application/json')) {
-            const fallback = await res.text();
-            console.warn('Non-JSON response from Spotify API:', fallback);
-            throw new Error('Spotify API did not return JSON');
-          }
-
-          const data = await res.json();
-          spotifyArtists = Array.isArray(data) ? data : data.items || [];
-        } catch (error) {
-          console.error('Failed to fetch top artists:', error);
+    followUser: (targetId) => {
+      const { friends, currentUserId } = get().userSlice;
+      const updated = friends.map(friend => {
+        if (friend.id === targetId && !friend.followers.includes(currentUserId)) {
+          return { ...friend, followers: [...friend.followers, currentUserId] };
         }
+        if (friend.id === currentUserId && !friend.following.includes(targetId)) {
+          return { ...friend, following: [...friend.following, targetId] };
+        }
+        return friend;
+      });
+      set((state) => ({ userSlice: { ...state.userSlice, friends: updated } }));
+    },
 
-        const friendsWithSpotify = baseFriends.map((friend, index) => ({
-          ...friend,
-          artists: spotifyArtists.slice(index * 2, index * 2 + 2).map((artist) => artist.name),
-        }));
-
-        set((state) => ({
-          userSlice: {
-            ...state.userSlice,
-            friends: friendsWithSpotify,
-          },
-        }));
-      } catch (err) {
-        console.error('Error loading Spotify-enhanced friends:', err);
-      }
+    unfollowUser: (targetId) => {
+      const { friends, currentUserId } = get().userSlice;
+      const updated = friends.map(friend => {
+        if (friend.id === targetId) {
+          return { ...friend, followers: friend.followers.filter(id => id !== currentUserId) };
+        }
+        if (friend.id === currentUserId) {
+          return { ...friend, following: friend.following.filter(id => id !== targetId) };
+        }
+        return friend;
+      });
+      set((state) => ({ userSlice: { ...state.userSlice, friends: updated } }));
     },
   },
 }));
 
-export default useStore;
+export default useFriendStore;

@@ -11,6 +11,7 @@ import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import FriendProfile from './pages/FriendProfile';
 import { useEffect } from 'react';
 import { useAuthStore } from './state/authStore';
 
@@ -56,6 +57,7 @@ function App() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/friends/:id" element={<FriendProfile />} />
         </Routes>
       </div>
     </div>
