@@ -5,14 +5,15 @@ const API = import.meta.env.VITE_API_BASE_URL;
 
 export default function ArtistSearchModal({ onClose, userId }) {
   const addTile = useProfileStore((s) => s.addTile);
-  const [query, setQuery]       = useState('');
-  const [results, setResults]   = useState([]);
-  const [loading, setLoading]   = useState(false);
-  const [error,   setError]     = useState('');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const search = async () => {
     if (!query.trim()) return;
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
     try {
       const url = `${API}/spotify/search?q=${encodeURIComponent(query)}&type=artist`;
       const res = await fetch(url, { credentials: 'include' });
@@ -29,14 +30,20 @@ export default function ArtistSearchModal({ onClose, userId }) {
   };
 
   const pickArtist = async (artist) => {
-    const imageUrl = artist.image || artist.images?.[0]?.url || '';
+    const imageUrl = artist.images?.[0]?.url || artist.image || '';
+    console.log('[pickArtist] using image:', imageUrl);
+
     await addTile({
       userId,
-      type:     'artist',
-      title:    artist.name,
-      bgImage:  imageUrl,
-      x: 0, y: Infinity, w: 2, h: 2,
+      type: 'artist',
+      title: artist.name,
+      bgImage: imageUrl,
+      x: 0,
+      y: Infinity,
+      w: 2,
+      h: 2,
     });
+
     onClose();
   };
 
@@ -59,7 +66,7 @@ export default function ArtistSearchModal({ onClose, userId }) {
         </div>
 
         {loading && <p className="text-white">Searching…</p>}
-        {error   && <p className="text-red-400">{error}</p>}
+        {error && <p className="text-red-400">{error}</p>}
         {!loading && !results.length && !error && (
           <p className="text-white/60">No results yet – try a search.</p>
         )}
@@ -72,7 +79,7 @@ export default function ArtistSearchModal({ onClose, userId }) {
               className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
             >
               <img
-                src={a.image || a.images?.[0]?.url || 'https://placehold.co/48x48?text=Artist'}
+                src={a.images?.[0]?.url || a.image || 'https://placehold.co/48x48?text=Artist'}
                 alt={a.name}
                 className="w-12 h-12 object-cover rounded"
               />
