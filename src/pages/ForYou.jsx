@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import MusicCard from '../components/MusicCard';
 import midnightCityCover from '../assets/covers/midnight-city.jpg';
 import midnightCityVideo from '../assets/videos/midnight-city-video.mp4';
@@ -54,16 +55,26 @@ const dummyFeed = [
 const ForYou = () => {
   return (
     <div className="bg-black text-white min-h-screen">
-        <div>
-        <h1 className="text-3xl font-bold text-center py-6">Discover New Music For You</h1>
+        {/* Header with Create Post Tab */}
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-800">
+            <h1 className="text-3xl font-bold text-center flex-grow">Discover New Music For You</h1>
+            <Link
+                to="/create"
+                className="ml-4 px-4 py-2 text-sm rounded-full bg-white text-black hover:bg-gray-200 transition"
+            >
+                Create a post
+            </Link>
         </div>
-      <div className="flex flex-col items-center snap-y snap-mandatory overflow-y-scroll h-screen px-4 py-6 space-y-6">
-        {dummyFeed.map((item) => (
-        <div key={item.id} className="snap-start h-screen flex items-center justify-center">
-          <MusicCard key={item.id} item={item} />
+
+        {/* Feed */}
+        <div className="flex flex-col items-center snap-y snap-mandatory overflow-y-scroll h-screen px-4 py-6 space-y-6">
+            {dummyFeed.map((item) => (
+            <div key={item.id} className="snap-start h-screen flex items-center justify-center">
+                <MusicCard key={item.id} item={item} />
+            </div>
+            ))}
         </div>
-        ))}
-      </div>
+      
     </div>
   );
 };

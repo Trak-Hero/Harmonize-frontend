@@ -9,6 +9,7 @@ import ConnectSpotify from './pages/ConnectSpotify';
 import SpotifyDashboard from './pages/SpotifyDashboard';
 import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
+import CreatePost from './pages/CreatePost';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import { useEffect } from 'react';
@@ -56,6 +57,7 @@ function App() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/create" element={<CreatePost />} />
         </Routes>
       </div>
     </div>
