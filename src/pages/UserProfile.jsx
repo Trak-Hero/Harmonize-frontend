@@ -25,15 +25,22 @@ const cols        = { xxs: 1, xs: 2, sm: 4,  md: 8,  lg: 12 };
 
 export default function UserProfile() {
   /* ─────────────────────────────────── state & stores ────────────────────────────────── */
-  const { user: authUser, isLoading: authLoading, hasCheckedSession, API_BASE } = useAuthStore();
+  const {
+    user: authUser,
+    isLoading: authLoading,
+    hasCheckedSession,
+    API_BASE
+  } = useAuthStore();
   const { userId: paramUserId } = useParams();
 
-  // Grab backend base-URL from authStore
+  // Our backend’s base URL (e.g., "https://project-music-and-memories-api.onrender.com")
   const API = API_BASE;
 
-  // Build targetUserId and check ownership
+  // Determine whose profile we’re viewing (owner vs. viewing another’s)
   const targetUserId = paramUserId || (authUser?.id || authUser?._id);
-  const isOwner = !paramUserId || (authUser && targetUserId === (authUser.id || authUser._id));
+  const isOwner =
+    !paramUserId ||
+    (authUser && targetUserId === (authUser.id || authUser._id));
 
   const {
     tiles,
@@ -81,26 +88,26 @@ export default function UserProfile() {
     setSpotifyLoading(true);
     try {
       const res = await withTokenRefresh(
-        // ← CHANGE THIS LINE to match your real backend route:
-        // If your backend is `app.get('/spotify/me', …)`, use `/spotify/me`
-        // If your backend is `app.get('/api/spotify/me', …)`, use `/api/spotify/me`
-        () => fetch(`${API}/spotify/me`,        { credentials: 'include' }),
+        // ← This must exactly match your backend route in me.js: GET /api/me/spotify
+        () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
         () => fetch(`${API}/auth/refresh`,   { credentials: 'include' })
       );
 
       if (!res?.ok) {
-        console.warn('[UserProfile] /spotify/me returned status:', res?.status);
+        console.warn(
+          '[UserProfile] /api/me/spotify returned status:',
+          res?.status
+        );
         setSpotifyData(null);
         return;
       }
 
-      // Check content‐type before calling res.json()
+      // If the server gave us HTML (index.html) or anything non-JSON, bail out
       const contentType = res.headers.get('Content-Type') || '';
       if (!contentType.includes('application/json')) {
-        // Response is not JSON (we got HTML instead)
         const textBody = await res.text();
         console.warn(
-          '[UserProfile] /spotify/me returned non-JSON. Body starts with:',
+          '[UserProfile] /api/me/spotify returned non-JSON. Body starts with:',
           textBody.slice(0, 200).replace(/\s+/g, ' ')
         );
         setSpotifyData(null);
@@ -112,7 +119,10 @@ export default function UserProfile() {
       try {
         data = await res.json();
       } catch (parseErr) {
-        console.error('[UserProfile] JSON parse error from /spotify/me:', parseErr);
+        console.error(
+          '[UserProfile] JSON parse error from /api/me/spotify:',
+          parseErr
+        );
         setSpotifyData(null);
         return;
       }
@@ -120,27 +130,29 @@ export default function UserProfile() {
       setSpotifyData({
         top:         Array.isArray(data.top)         ? data.top         : [],
         top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
-        recent:      Array.isArray(data.recent)      ? data.recent      : [],
+        recent:      Array.isArray(data.recent)      ? data.recent      : []
       });
     } catch (error) {
-      console.error('[UserProfile] Error loading Spotify data:', error);
+      console.error(
+        '[UserProfile] Unexpected error loading Spotify data:',
+        error
+      );
       setSpotifyData(null);
     } finally {
       setSpotifyLoading(false);
     }
   }, [API, isOwner]);
-  // Removed `spotifyLoading` from dependencies so toggling loading state doesn't re-trigger this.
+  // Note: we did NOT include spotifyLoading in dependencies so toggling that state doesn’t re-create this callback.
 
   useEffect(() => {
-    // Only attempt to load if:
-    //   • session check is done
-    //   • user is authenticated
-    //   • this is the owner view
-    //   • AND we have not already fetched spotifyData
+    // Only fetch once, once we know:
+    //  • session check is done
+    //  • user is authenticated
+    //  • this is the owner’s own profile
+    //  • spotifyData is still null
     if (!hasCheckedSession || !authUser) return;
     if (!isOwner) return;
-    if (spotifyData !== null) return; 
-    // Once spotifyData goes from null → array, we will not re-fetch.
+    if (spotifyData !== null) return; // already fetched
 
     loadSpotify();
   }, [hasCheckedSession, authUser, isOwner, spotifyData, loadSpotify]);
@@ -149,7 +161,9 @@ export default function UserProfile() {
   const handleAddTile = useCallback(
     (tileData = {}) => {
       if (!targetUserId) {
-        console.warn('[UserProfile] Cannot add tile: targetUserId not set yet');
+        console.warn(
+          '[UserProfile] Cannot add tile: targetUserId not set yet'
+        );
         return;
       }
       const tempId = addTempTile({
@@ -159,7 +173,7 @@ export default function UserProfile() {
         y: Infinity,
         w: 2,
         h: 2,
-        content: '',
+        content: ''
       });
       setEditorOpen(true, tempId);
     },
@@ -207,17 +221,17 @@ export default function UserProfile() {
 
   /* ────────────────────────────────── 5) actual render ────────────────────────────────── */
   const layoutItems = Array.isArray(tiles)
-    ? tiles.map(t => ({
+    ? tiles.map((t) => ({
         i:    t._id || t.id,
         x:    t.x || 0,
         y:    t.y || 0,
         w:    t.w || 1,
-        h:    t.h || 1,
+        h:    t.h || 1
       }))
     : [];
 
   const tileBeingEdited = Array.isArray(tiles)
-    ? tiles.find(t => (t._id || t.id) === editingTileId)
+    ? tiles.find((t) => (t._id || t.id) === editingTileId)
     : null;
 
   return (
@@ -226,6 +240,7 @@ export default function UserProfile() {
       <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
         {/* header */}
         <header className="space-y-3 flex items-center gap-6">
+          {/* avatar */}
           {authUser.avatar && (
             <img
               src={authUser.avatar}
@@ -249,13 +264,15 @@ export default function UserProfile() {
               )}
             </div>
             {authUser.bio && <p className="text-white/70">{authUser.bio}</p>}
-            <p className="text-white/40 text-sm">0 Followers • 0 Following</p>
+            <p className="text-white/40 text-sm">
+              0 Followers • 0 Following
+            </p>
           </div>
         </header>
 
         {/* tab selector */}
         <nav className="flex gap-3 mt-4">
-          {['recent', 'space'].map(tab => (
+          {['recent', 'space'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -325,7 +342,7 @@ export default function UserProfile() {
                 isDraggable={isOwner}
                 isResizable={isOwner}
               >
-                {tiles.map(t => (
+                {tiles.map((t) => (
                   <div
                     key={t._id || t.id}
                     data-grid={{
@@ -333,7 +350,7 @@ export default function UserProfile() {
                       y: t.y || 0,
                       w: t.w || 1,
                       h: t.h || 1,
-                      i: t._id || t.id,
+                      i: t._id || t.id
                     }}
                   >
                     <div className="card h-full">
