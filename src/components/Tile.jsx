@@ -12,22 +12,23 @@ const Tile = ({ tile }) => {
     const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
     const deleteTile    = useProfileStore((s) => s.deleteTile);
 
-    // If the tile has a “title” (used for artist/song/text), use that:
     const displayTitle = tile.title ?? tile.name ?? tile.content ?? '';
     const showTitle    = !!displayTitle;
-    const id           = tile._id || tile.id;
+    const id = tile._id || tile.id;
 
-    // ────────────── CHANGED HERE ──────────────
-    // Always prefer tile.bgImage (that’s what is actually saved in Mongo).
-    // We no longer look at tile.image, because our schema does NOT store “image”.
+    // ―――――――――――――――――――――――――――――――――――
+    // CHANGED HERE: prefer bgImage if set, otherwise use tile.image as fallback
     let chosenImage = '';
     if (tile.bgImage && tile.bgImage !== '/') {
       chosenImage = tile.bgImage;
+    } else if (tile.image) {
+      chosenImage = tile.image;
     }
-    // If chosenImage is empty or literally “/”, we’ll show a placeholder later:
+
+    // If the chosenImage is literally “/” or empty, show placeholder instead
     const safeImageSrc =
       chosenImage && chosenImage !== '/' ? chosenImage : '/placeholder.jpg';
-    // ───────────────────────────────────────────
+    // ―――――――――――――――――――――――――――――――――――
 
     return (
       <div
@@ -37,7 +38,7 @@ const Tile = ({ tile }) => {
           fontFamily: tile.font || 'sans-serif',
         }}
       >
-        {/* ── Background Image (all tile types except “picture”) ── */}
+        {/* Background Image: now uses safeImageSrc (either bgImage or fallback to .image) */}
         {tile.type !== 'picture' && chosenImage && (
           <img
             src={safeImageSrc}
@@ -47,14 +48,14 @@ const Tile = ({ tile }) => {
           />
         )}
 
-        {/* ── Artist or Song tile: show the title overlay at the bottom ── */}
+        {/* ARTIST or SONG TILE: overlay the title on top of the background image */}
         {(tile.type === 'artist' || tile.type === 'song') && showTitle && (
           <div className="absolute inset-0 flex items-end p-4 bg-black/40 backdrop-blur-sm z-10">
             <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
           </div>
         )}
 
-        {/* ── Text tile: center the text on a plain background ── */}
+        {/* TEXT TILE */}
         {tile.type === 'text' && (
           <div className="relative z-10 p-4 text-white break-words whitespace-pre-wrap h-full flex items-center justify-center">
             <div className="text-center">
@@ -63,7 +64,7 @@ const Tile = ({ tile }) => {
           </div>
         )}
 
-        {/* ── Picture tile: honors its own bgImage field ── */}
+        {/* PICTURE TILE */}
         {tile.type === 'picture' && (
           <div className="relative z-10 h-full w-full">
             {tile.bgImage && tile.bgImage !== '/' ? (
@@ -81,15 +82,12 @@ const Tile = ({ tile }) => {
           </div>
         )}
 
-        {/* ── Spacer tile: nothing to render ── */}
+        {/* SPACER TILE */}
         {tile.type === 'spacer' && null}
 
-        {/* ── Edit / Delete buttons (owner only can see these) ── */}
+        {/* EDIT / DELETE BUTTONS */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setEditorOpen(true, id);
-          }}
+          onClick={(e) => { e.stopPropagation(); setEditorOpen(true, id); }}
           className="absolute top-2 right-2 z-20 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70"
         >
           Edit
