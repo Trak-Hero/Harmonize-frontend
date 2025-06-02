@@ -30,18 +30,19 @@ export default function ArtistSearchModal({ onClose, userId }) {
   };
 
   const pickArtist = async (artist) => {
-    const imageUrl = artist.images?.[0]?.url?.trim?.() || '';
+    const displayImage =
+      artist.images?.[0]?.url ||
+      artist.image ||
+      (Array.isArray(artist.images) && artist.images.length > 0 ? artist.images[0].url : '') ||
+      '';
   
-    console.log('[pickArtist] Using:', {
-      title: artist.name,
-      bgImage: imageUrl,
-    });
+    console.log('[pickArtist] using displayImage:', displayImage);
   
     await addTile({
       userId,
       type: 'artist',
       title: artist.name,
-      bgImage: imageUrl,
+      bgImage: displayImage, 
       x: 0,
       y: Infinity,
       w: 2,
