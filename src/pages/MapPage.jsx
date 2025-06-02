@@ -8,11 +8,11 @@ import { fetchEventsByLocation } from '../api/ticketmaster';
 import useLocationStore from '../state/locationStore';
 
 const sampleFriends = [
-  { _id: 'john-doe-1', displayName: 'John Doe', location: { type: 'Point', coordinates: [-72.2802, 43.7025] } },
-  { _id: 'jane-smith-2', displayName: 'Jane Smith', location: { type: 'Point', coordinates: [-72.2840, 43.7040] } },
-  { _id: 'emily-johnson-3', displayName: 'Emily Johnson', location: { type: 'Point', coordinates: [-72.2815, 43.7060] } },
-  { _id: 'michael-brown-4', displayName: 'Michael Brown', location: { type: 'Point', coordinates: [-72.2830, 43.7010] } },
-  { _id: 'sarah-williams-5', displayName: 'Sarah Williams', location: { type: 'Point', coordinates: [-72.2865, 43.7035] } }
+  { _id: 'giselle-wu-1', displayName: 'Giselle Wu', location: { type: 'Point', coordinates: [-72.2802, 43.7025] } },
+  { _id: 'echoi-2', displayName: 'Evelyn Choi', location: { type: 'Point', coordinates: [-72.2840, 43.7040] } },
+  { _id: 'rhuang-3', displayName: 'Rachael Huang', location: { type: 'Point', coordinates: [-72.2815, 43.7060] } },
+  { _id: 'trak-4', displayName: 'Trak Prateepmanowong', location: { type: 'Point', coordinates: [-72.2830, 43.7010] } },
+  { _id: 'storii-5', displayName: 'Shisui Torii', location: { type: 'Point', coordinates: [-72.2865, 43.7035] } }
 ];
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {

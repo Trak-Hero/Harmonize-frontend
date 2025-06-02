@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 import PeopleIcon from '@mui/icons-material/People';
+import useLocationStore from '../../state/locationStore';
 
 function distance(lat1, lon1, lat2, lon2) {
   const r = 6371;
@@ -22,27 +23,17 @@ const getInitials = (title = '') => {
 };
 
 const EventCard = ({ event, onSelect }) => {
-  const [userLocation, setUserLocation] = useState(null);
+  const { userLocation } = useLocationStore();
   const [eventDistance, setEventDistance] = useState(null);
-
+  
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setUserLocation({ latitude, longitude });
+    if (userLocation && event.location?.coordinates?.length === 2) {
+      const [lng, lat] = event.location.coordinates;
+      const dist = distance(userLocation.latitude, userLocation.longitude, lat, lng);
+      setEventDistance(dist.toFixed(2));
+    }
+  }, [userLocation, event]);
 
-        if (event.location?.coordinates?.length === 2) {
-          const [lng, lat] = event.location.coordinates;
-          const dist = distance(latitude, longitude, lat, lng);
-          setEventDistance(dist.toFixed(2));
-        }
-      },
-      (error) => {
-        console.error('Error getting user location:', error);
-      }
-    );
-  }, [event]);
 
   const formattedDate = new Date(event.date).toLocaleString('en-US', {
     month: 'short',

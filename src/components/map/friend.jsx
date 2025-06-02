@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 import PeopleIcon from '@mui/icons-material/People';
+import useLocationStore from '../../state/locationStore';
 
 function distance(lat1, lon1, lat2, lon2) {
   const r = 6371;
@@ -23,27 +24,19 @@ const getInitials = (name = '') => {
 
 const Friend = ({ friend, onSelect }) => {
   const hasImage = !!friend.image;
-  const [userLocation, setUserLocation] = useState(null);
+  const { userLocation } = useLocationStore();
   const [friendDistance, setFriendDistance] = useState(null);
 
   useEffect(() => {
-      if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ latitude, longitude });
-  
-          if (friend.location?.coordinates?.length === 2) {
-            const [lng, lat] = friend.location.coordinates;
-            const dist = distance(latitude, longitude, lat, lng);
-            setFriendDistance(dist.toFixed(2));
-          }
-        },
-        (error) => {
-          console.error('Error getting user location:', error);
-        }
-      );
-    }, [friend]);
+    if (
+      userLocation &&
+      friend.location?.coordinates?.length === 2
+    ) {
+      const [lng, lat] = friend.location.coordinates;
+      const dist = distance(userLocation.latitude, userLocation.longitude, lat, lng);
+      setFriendDistance(dist.toFixed(2));
+    }
+  }, [userLocation, friend]);
 
   const handleClick = () => {
     if (onSelect) onSelect(friend._id); // Trigger the marker popup by ID
@@ -69,7 +62,11 @@ const Friend = ({ friend, onSelect }) => {
       <div className="flex-1">
         <h3 className="text-base font-semibold">{friend.displayName}</h3>
         <p className="text-sm text-gray-700">
-          {friendDistance} km • {friend.lastActive || 'Active now'}
+          {friendDistance && (
+            <span className="text-green-600 font-medium">{friendDistance} km</span>
+          )}
+          {friendDistance && ' • '}
+          {friend.lastActive || 'Active now'}
         </p>
       </div>
 
