@@ -51,17 +51,19 @@ export default function UserProfile() {
     setCurrentUserId
   } = useProfileStore();
 
-  // Spotify data from /api/me/spotify:
+  // Spotify data from /api/me/spotify
   const [spotifyData,    setSpotifyData]   = useState(null);
   const [spotifyLoading, setSpotifyLoading] = useState(false);
 
   // “appRecent” = data from GET /api/recent
   const [appRecent, setAppRecent] = useState([]);
 
-  const [activeTab,   setActiveTab]   = useState('recent');
-  const [showEditor,  setShowEditor]  = useState(false);
+  const [activeTab,  setActiveTab]  = useState('recent');
+  const [showEditor, setShowEditor] = useState(false);
 
-  const API = API_BASE; // e.g. "https://project-music-and-memories-api.onrender.com"
+  // Make absolutely sure this is pointing at your back end
+  const API = API_BASE; 
+  console.log('[UserProfile] API is:', API);
 
   /* ────────────────────────────────── 1) load tiles ────────────────────────────────── */
   useEffect(() => {
@@ -83,24 +85,25 @@ export default function UserProfile() {
     setCurrentUserId
   ]);
 
-  /* ────────────────────────────────── 2) load “app‐recent” ────────────────────────────────── */
+  /* ────────────────────────────────── 2) load “app‐recent” from your API ────────────────────────────────── */
   useEffect(() => {
     if (!hasCheckedSession || authLoading) return;
     if (!authUser) return;
     if (!targetUserId) return;
 
+    // Always call the absolute URL: `${API}/api/recent`
     fetch(`${API}/api/recent`, { credentials: 'include' })
-      .then(res => {
+      .then((res) => {
         if (!res.ok) {
           console.warn('[UserProfile] GET /api/recent returned', res.status);
           return [];
         }
         return res.json();
       })
-      .then(data => {
+      .then((data) => {
         setAppRecent(Array.isArray(data) ? data : []);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('[UserProfile] Error fetching /api/recent:', err);
         setAppRecent([]);
       });
@@ -113,6 +116,7 @@ export default function UserProfile() {
 
     setSpotifyLoading(true);
     try {
+      // Always call the absolute URL: `${API}/api/me/spotify`
       const res = await withTokenRefresh(
         () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
         () => fetch(`${API}/auth/refresh`,   { credentials: 'include' })
@@ -126,6 +130,7 @@ export default function UserProfile() {
 
       const contentType = res.headers.get('Content-Type') || '';
       if (!contentType.includes('application/json')) {
+        // We got HTML (index.html) or something else → bail out
         const textBody = await res.text();
         console.warn(
           '[UserProfile] /api/me/spotify returned non-JSON. Body starts with:',
@@ -148,9 +153,9 @@ export default function UserProfile() {
       }
 
       setSpotifyData({
-        top:         Array.isArray(data.top)         ? data.top : [],
+        top:         Array.isArray(data.top)         ? data.top         : [],
         top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
-        recent:      Array.isArray(data.recent)      ? data.recent : []
+        recent:      Array.isArray(data.recent)      ? data.recent      : []
       });
     } catch (error) {
       console.error('[UserProfile] Unexpected error loading Spotify data:', error);
@@ -243,9 +248,7 @@ export default function UserProfile() {
     ? tiles.find((t) => (t._id || t.id) === editingTileId)
     : null;
 
-  // Choose which “recent” array to show:
-  // • If Spotify data exists (and has items), use spotifyData.recent
-  // • Otherwise, fall back to appRecent (from GET /api/recent)
+  // Which “recent” list to show: prefer Spotify’s if nonempty, else fall back to appRecent
   const effectiveRecent =
     Array.isArray(spotifyData?.recent) && spotifyData.recent.length > 0
       ? spotifyData.recent
