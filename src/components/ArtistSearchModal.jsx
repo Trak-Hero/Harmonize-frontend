@@ -31,28 +31,29 @@ export default function ArtistSearchModal({ onClose, userId }) {
 
   const pickArtist = async (artist) => {
     const displayImage =
-      artist.images?.[0]?.url ||
-      artist.image ||
-      (Array.isArray(artist.images) && artist.images.length > 0 ? artist.images[0].url : '') ||
+      artist.images?.[0]?.url?.trim?.() ||
+      artist.image?.trim?.() ||
+      (Array.isArray(artist.images) && artist.images.length > 0 ? artist.images[0].url?.trim?.() : '') ||
       '';
-  
-    console.log('[pickArtist] using displayImage:', displayImage);
-  
-    await addTile({
+
+    const tileData = {
       userId,
       type: 'artist',
       title: artist.name,
-      bgImage: displayImage, 
+      bgImage: displayImage,
       x: 0,
       y: Infinity,
       w: 2,
       h: 2,
-    });
-  
+    };
+
+    console.log('[pickArtist] Using tileData:', tileData);
+
+    await addTile(tileData);
+
     onClose();
   };
-  
-  
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-zinc-900 w-full max-w-xl rounded-xl p-6 space-y-4">
@@ -79,11 +80,11 @@ export default function ArtistSearchModal({ onClose, userId }) {
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
           {results.map((a) => {
-            const displayImage = 
-              a.images?.[0]?.url || 
-              a.image || 
+            const displayImage =
+              a.images?.[0]?.url ||
+              a.image ||
               'https://placehold.co/48x48?text=Artist';
-            
+
             return (
               <li
                 key={a.id}
