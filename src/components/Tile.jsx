@@ -17,17 +17,32 @@ const Tile = ({ tile }) => {
     const id = tile._id || tile.id;
 
     // ―――――――――――――――――――――――――――――――――――
-    // CHANGED HERE: prefer bgImage if set, otherwise use tile.image as fallback
+    // FIXED: Better image selection logic for different tile types
     let chosenImage = '';
-    if (tile.bgImage && tile.bgImage !== '/') {
-      chosenImage = tile.bgImage;
-    } else if (tile.image) {
-      chosenImage = tile.image;
+    
+    // For artist/song tiles, check multiple possible image field names
+    if (tile.type === 'artist' || tile.type === 'song') {
+      chosenImage = tile.bgImage || tile.image || tile.albumCover || tile.artistImage || '';
+    } else {
+      // For other tiles, prefer bgImage first
+      chosenImage = tile.bgImage || tile.image || '';
     }
 
-    // If the chosenImage is literally “/” or empty, show placeholder instead
+    // If the chosenImage is literally "/" or empty, show placeholder instead
     const safeImageSrc =
-      chosenImage && chosenImage !== '/' ? chosenImage : '/placeholder.jpg';
+      chosenImage && chosenImage !== '/' && chosenImage !== '' 
+        ? chosenImage 
+        : '/placeholder.jpg';
+    
+    console.log('[Tile.jsx] Image logic for tile:', {
+      type: tile.type,
+      bgImage: tile.bgImage,
+      image: tile.image,
+      albumCover: tile.albumCover,
+      artistImage: tile.artistImage,
+      chosenImage,
+      safeImageSrc
+    });
     // ―――――――――――――――――――――――――――――――――――
 
     return (
@@ -38,12 +53,15 @@ const Tile = ({ tile }) => {
           fontFamily: tile.font || 'sans-serif',
         }}
       >
-        {/* Background Image: now uses safeImageSrc (either bgImage or fallback to .image) */}
-        {tile.type !== 'picture' && chosenImage && (
+        {/* Background Image: now uses improved safeImageSrc logic */}
+        {tile.type !== 'picture' && chosenImage && chosenImage !== '/' && (
           <img
             src={safeImageSrc}
             alt=""
-            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+            onError={(e) => { 
+              console.warn('[Tile.jsx] Image failed to load:', safeImageSrc);
+              e.target.src = '/placeholder.jpg'; 
+            }}
             className="absolute inset-0 w-full h-full object-cover z-0"
           />
         )}
