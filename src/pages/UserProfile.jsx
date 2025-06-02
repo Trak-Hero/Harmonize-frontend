@@ -88,14 +88,37 @@ export default function UserProfile() {
       if (!res?.ok) {
         console.warn('[UserProfile] /api/me/spotify returned status:', res?.status);
         setSpotifyData(null);
-      } else {
-        const data = await res.json();
-        setSpotifyData({
-          top:         Array.isArray(data.top)         ? data.top         : [],
-          top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
-          recent:      Array.isArray(data.recent)      ? data.recent      : [],
-        });
+        return;
       }
+
+      // Check content‐type before calling res.json()
+      const contentType = res.headers.get('Content-Type') || '';
+      if (!contentType.includes('application/json')) {
+        // Response is not JSON (likely HTML)
+        const textBody = await res.text();
+        console.warn(
+          '[UserProfile] /api/me/spotify returned non-JSON. Body starts with:',
+          textBody.slice(0, 200).replace(/\s+/g, ' ')
+        );
+        setSpotifyData(null);
+        return;
+      }
+
+      // Safely parse JSON
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        console.error('[UserProfile] JSON parse error from /api/me/spotify:', parseErr);
+        setSpotifyData(null);
+        return;
+      }
+
+      setSpotifyData({
+        top:         Array.isArray(data.top)         ? data.top         : [],
+        top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
+        recent:      Array.isArray(data.recent)      ? data.recent      : [],
+      });
     } catch (error) {
       console.error('[UserProfile] Error loading Spotify data:', error);
       setSpotifyData(null);
@@ -103,23 +126,22 @@ export default function UserProfile() {
       setSpotifyLoading(false);
     }
   }, [API, isOwner]);
-  // Notice: we removed `spotifyLoading` from the dependency array.
+  // Notice: `spotifyLoading` was removed from dependencies.
 
   useEffect(() => {
     // Only attempt to load if:
     //   • session check is done
     //   • user is authenticated
     //   • this is the owner view
-    //   • AND we have not already fetched spotifyData
+    //   • AND spotifyData is still null
     if (!hasCheckedSession || !authUser) return;
     if (!isOwner) return;
     if (spotifyData !== null) return; 
-    // If spotifyData is already non-null, skip! (we fetched it once.)
+    // If spotifyData is already non-null, skip—prevents re-fetch.
 
     loadSpotify();
   }, [hasCheckedSession, authUser, isOwner, spotifyData, loadSpotify]);
-  // We included `spotifyData` here so that once it goes from `null` → `[...]`,
-  // this effect will not re‐run. That stops the “spam.”
+  // Including `spotifyData` ensures that once it transitions away from null, this effect won't run again.
 
   /* ────────────────────────────────── 3) add‐tile handler ────────────────────────────────── */
   const handleAddTile = useCallback(
