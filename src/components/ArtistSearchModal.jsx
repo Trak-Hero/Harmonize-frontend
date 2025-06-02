@@ -14,13 +14,10 @@ export default function ArtistSearchModal({ onClose, userId }) {
     if (!query.trim()) return;
     setLoading(true); setError('');
     try {
-      const url =
-        `${API}/spotify/search?q=${encodeURIComponent(query)}&type=artist`;
+      const url = `${API}/spotify/search?q=${encodeURIComponent(query)}&type=artist`;
       const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      
-      // Backend returns array directly for artists, not wrapped in object
       console.log('[ArtistSearchModal] received data:', data);
       setResults(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -32,14 +29,14 @@ export default function ArtistSearchModal({ onClose, userId }) {
   };
 
   const pickArtist = async (artist) => {
+    const imageUrl = artist.image || artist.images?.[0]?.url || '';
     await addTile({
-            userId,
-            type:     'artist',
-            title:    artist.name,                   
-            bgImage:  artist.image || '',  // Backend sends 'image' not 'images'
-        
-            x: 0, y: Infinity, w: 2, h: 2,
-          });
+      userId,
+      type:     'artist',
+      title:    artist.name,
+      bgImage:  imageUrl,
+      x: 0, y: Infinity, w: 2, h: 2,
+    });
     onClose();
   };
 
@@ -75,7 +72,7 @@ export default function ArtistSearchModal({ onClose, userId }) {
               className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
             >
               <img
-                src={a.image || 'https://placehold.co/48x48?text=Artist'}
+                src={a.image || a.images?.[0]?.url || 'https://placehold.co/48x48?text=Artist'}
                 alt={a.name}
                 className="w-12 h-12 object-cover rounded"
               />
