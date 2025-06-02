@@ -28,12 +28,10 @@ export default function UserProfile() {
   const { user: authUser, isLoading: authLoading, hasCheckedSession, API_BASE } = useAuthStore();
   const { userId: paramUserId } = useParams();
 
-  // Now we grab our backend base‐URL straight out of the auth store,
-  // rather than from `import.meta.env`. This ensures the fetches go to the same
-  // place your login/refresh logic is already pointed at.
+  // Grab backend base-URL from authStore
   const API = API_BASE;
 
-  // Build the “targetUserId” and check ownership
+  // Build targetUserId and check ownership
   const targetUserId = paramUserId || (authUser?.id || authUser?._id);
   const isOwner = !paramUserId || (authUser && targetUserId === (authUser.id || authUser._id));
 
@@ -50,33 +48,22 @@ export default function UserProfile() {
     setCurrentUserId
   } = useProfileStore();
 
-  const [activeTab,        setActiveTab]   = useState('recent');
-  const [spotifyData,      setSpotifyData] = useState(null);
-  const [showEditor,       setShowEditor]  = useState(false);
-  const [spotifyLoading,   setSpotifyLoading] = useState(false);
+  const [activeTab,      setActiveTab]   = useState('recent');
+  const [spotifyData,    setSpotifyData] = useState(null);
+  const [showEditor,     setShowEditor]  = useState(false);
+  const [spotifyLoading, setSpotifyLoading] = useState(false);
 
   /* ────────────────────────────────── 1) load tiles ────────────────────────────────── */
   useEffect(() => {
-    // Don’t run until we have confirmed session‐check & a valid authUser
-    if (!hasCheckedSession || authLoading) {
-      return;
-    }
-    // If user is not logged in, don’t attempt to fetch tiles
-    if (!authUser) {
-      return;
-    }
-    // If, for some reason, targetUserId is still falsy, bail
+    if (!hasCheckedSession || authLoading) return;
+    if (!authUser) return;
     if (!targetUserId) {
       console.log('[UserProfile] No targetUserId yet; skipping fetchTiles');
       return;
     }
 
-    // Now that we have a valid user, tell the store which user’s profile to load...
     setCurrentUserId(targetUserId);
-
-    // And only then fetch their tiles once
     fetchTiles(targetUserId, authUser.id || authUser._id);
-  // We *only* want to run this once per mount, as soon as authUser & hasCheckedSession become "true"
   }, [
     hasCheckedSession,
     authLoading,
@@ -86,17 +73,12 @@ export default function UserProfile() {
     setCurrentUserId
   ]);
 
-  /* ──────────────────────────────── 2) load Spotify (owner only) ──────────────────────────────── */
+  /* ────────────────────────────────── 2) load Spotify (owner only, once) ────────────────────────────────── */
   const loadSpotify = useCallback(async () => {
-    if (!isOwner) {
-      return;
-    }
-    // Avoid double‐fetch
-    if (spotifyLoading) {
-      return;
-    }
-    setSpotifyLoading(true);
+    if (!isOwner) return;
+    if (spotifyLoading) return;
 
+    setSpotifyLoading(true);
     try {
       const res = await withTokenRefresh(
         () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
@@ -106,32 +88,38 @@ export default function UserProfile() {
       if (!res?.ok) {
         console.warn('[UserProfile] /api/me/spotify returned status:', res?.status);
         setSpotifyData(null);
-        return;
+      } else {
+        const data = await res.json();
+        setSpotifyData({
+          top:         Array.isArray(data.top)         ? data.top         : [],
+          top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
+          recent:      Array.isArray(data.recent)      ? data.recent      : [],
+        });
       }
-
-      const data = await res.json();
-      setSpotifyData({
-        top:         Array.isArray(data.top)         ? data.top         : [],
-        top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
-        recent:      Array.isArray(data.recent)      ? data.recent      : [],
-      });
     } catch (error) {
       console.error('[UserProfile] Error loading Spotify data:', error);
       setSpotifyData(null);
     } finally {
       setSpotifyLoading(false);
     }
-  }, [API, isOwner, spotifyLoading]);
+  }, [API, isOwner]);
+  // Notice: we removed `spotifyLoading` from the dependency array.
 
   useEffect(() => {
-    if (!hasCheckedSession || !authUser) {
-      return;
-    }
-    // Only the owner should see their own Spotify
-    if (isOwner) {
-      loadSpotify();
-    }
-  }, [hasCheckedSession, authUser, isOwner, loadSpotify]);
+    // Only attempt to load if:
+    //   • session check is done
+    //   • user is authenticated
+    //   • this is the owner view
+    //   • AND we have not already fetched spotifyData
+    if (!hasCheckedSession || !authUser) return;
+    if (!isOwner) return;
+    if (spotifyData !== null) return; 
+    // If spotifyData is already non-null, skip! (we fetched it once.)
+
+    loadSpotify();
+  }, [hasCheckedSession, authUser, isOwner, spotifyData, loadSpotify]);
+  // We included `spotifyData` here so that once it goes from `null` → `[...]`,
+  // this effect will not re‐run. That stops the “spam.”
 
   /* ────────────────────────────────── 3) add‐tile handler ────────────────────────────────── */
   const handleAddTile = useCallback(
@@ -154,8 +142,7 @@ export default function UserProfile() {
     [targetUserId, addTempTile, setEditorOpen]
   );
 
-  /* ──────────────────────────────── 4) loading & redirect logic ──────────────────────────────── */
-  // First, show a spinner until we’ve at least checked “isLoggedIn?”
+  /* ────────────────────────────────── 4) loading & redirect logic ────────────────────────────────── */
   if (!hasCheckedSession || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -167,7 +154,6 @@ export default function UserProfile() {
     );
   }
 
-  // If sessionCheck is done but authUser is null ⇒ force to /login UI
   if (hasCheckedSession && !authUser) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -184,7 +170,6 @@ export default function UserProfile() {
     );
   }
 
-  // If we still don’t have a targetUserId (should only happen briefly)
   if (!targetUserId) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -197,7 +182,6 @@ export default function UserProfile() {
   }
 
   /* ────────────────────────────────── 5) actual render ────────────────────────────────── */
-  // If we got here, hasCheckedSession=true, authUser is non‐null, and targetUserId is set
   const layoutItems = Array.isArray(tiles)
     ? tiles.map(t => ({
         i:    t._id || t.id,
@@ -218,7 +202,6 @@ export default function UserProfile() {
       <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
         {/* header */}
         <header className="space-y-3 flex items-center gap-6">
-          {/* avatar */}
           {authUser.avatar && (
             <img
               src={authUser.avatar}
@@ -272,7 +255,6 @@ export default function UserProfile() {
                 <p>Loading Spotify data...</p>
               </div>
             ) : spotifyData ? (
-              // Only render these three cards if spotifyData is non-null
               <>
                 <div className="card">
                   <FavoriteSongs songs={spotifyData.top} />
@@ -285,7 +267,6 @@ export default function UserProfile() {
                 </div>
               </>
             ) : (
-              // If we have no spotifyData (e.g. user never connected Spotify), show a placeholder
               <div className="text-center py-8 text-white/60">
                 <p>No Spotify data available.</p>
                 {isOwner && (
