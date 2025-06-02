@@ -24,30 +24,35 @@ export default function Home() {
       try {
         console.log("Home: Fetching data from API:", API);
 
-        // 1) Fetch recommendations, recent, and friend activity in parallel
-        const [recRes, recentRes, friendsRes] = await Promise.all([
-          axios
-            .get(`${API}/api/recommendations`, {
-              withCredentials: true,
-              timeout: 10000,
-            })
-            .catch((err) => {
-              console.warn(
-                "Home: Recommendations request failed:",
-                err.response?.status || err.message
-              );
-              return { data: [] };
-            }),
+        let recRes;
+        try {
+          recRes = await axios.get(`${API}/api/recommendations`, {
+            withCredentials: true,
+            timeout: 10000,
+          });
+        } catch (err) {
+          const status = err.response?.status;
+          console.warn("Home: Recommendations request failed:", status || err.message);
+
+          if (status === 403) {
+            setError("Please connect your Spotify account to see recommendations.");
+          } else if (status === 204) {
+            setError("We couldn't generate recommendations yet. Try listening to more music!");
+          } else {
+            setError("Unable to load recommendations. Please try again later.");
+          }
+
+          recRes = { data: [] };
+        }
+
+        const [recentRes, friendsRes] = await Promise.all([
           axios
             .get(`${API}/api/recent`, {
               withCredentials: true,
               timeout: 10000,
             })
             .catch((err) => {
-              console.warn(
-                "Home: Recent tracks request failed:",
-                err.response?.status || err.message
-              );
+              console.warn("Home: Recent tracks request failed:", err.response?.status || err.message);
               return { data: [] };
             }),
           axios
@@ -56,10 +61,7 @@ export default function Home() {
               timeout: 10000,
             })
             .catch((err) => {
-              console.warn(
-                "Home: Friend activity request failed:",
-                err.response?.status || err.message
-              );
+              console.warn("Home: Friend activity request failed:", err.response?.status || err.message);
               return { data: [] };
             }),
         ]);
@@ -72,10 +74,7 @@ export default function Home() {
           friends:        friendsRes.data?.length || 0,
         });
 
-        // 2) Map recommendations and recent → MediaCard format
-        const mappedRecommendations = (recRes.data ?? [])
-          .map(mapTrack)
-          .filter((track) => track !== null);
+        const mappedRecommendations = recRes.data ?? [];
 
         const mappedRecent = (recentRes.data ?? [])
           .map(mapTrack)
@@ -86,7 +85,7 @@ export default function Home() {
           recent:         mappedRecent.length,
         });
 
-        // 3) Separately fetch /api/me/spotify to get “top tracks” from Spotify → then derive unique albums
+        // Get top tracks and extract album info
         let albumsArray = [];
         try {
           const spotifyRes = await axios.get(`${API}/api/me/spotify`, {
@@ -94,38 +93,27 @@ export default function Home() {
             timeout: 10000,
           });
           if (!cancelled && spotifyRes.data?.top) {
-            const topTracks = spotifyRes.data.top; // array of track‐objects
+            const topTracks = spotifyRes.data.top;
 
-            // Build a map of albumId → albumObject
             const albumMap = {};
-            topTracks.forEach((track) => {
-              // Some track objects might be wrapped in { track: {...} }, but
-              // in our /api/me/spotify implementation, we returned track directly.
-              const t = track; // if wrapped, use track.track instead
+            topTracks.forEach((t) => {
               const album = t.album || {};
-
-              // Compose an “album key”—use album.id or fallback to name
               const albumId = album.id || album.name || String(Math.random());
               if (!albumMap[albumId]) {
-                // Find the primary image (first in the array)
                 const imgUrl = Array.isArray(album.images) && album.images.length > 0
                   ? album.images[0].url
                   : "";
-
-                // Join all artist names into one string
                 const artistNames = Array.isArray(t.artists)
                   ? t.artists.map((a) => a.name).join(", ")
                   : "";
-
                 albumMap[albumId] = {
-                  id:           albumId,
-                  name:         album.name || "Unknown Album",
-                  image:        imgUrl,
-                  artistNames, // e.g. “Radiohead”
+                  id: albumId,
+                  name: album.name || "Unknown Album",
+                  image: imgUrl,
+                  artistNames,
                 };
               }
             });
-
             albumsArray = Object.values(albumMap);
           }
         } catch (spotifyErr) {
@@ -144,16 +132,11 @@ export default function Home() {
       } catch (err) {
         console.error("Home: Fetch error:", err);
 
-        // Determine a user‐friendly error message
         let errorMessage = "Failed to load data.";
         if (err.code === "ECONNABORTED") {
           errorMessage = "Request timed out. Please try again.";
         } else if (err.response?.status === 401) {
           errorMessage = "Please log in to access your music data.";
-        } else if (err.response?.status === 403) {
-          errorMessage = "Please connect your Spotify account.";
-        } else if (err.response?.status >= 500) {
-          errorMessage = "Server error. Please try again later.";
         } else if (!navigator.onLine) {
           errorMessage = "No internet connection. Please check your connection.";
         }
@@ -199,7 +182,7 @@ export default function Home() {
 
   return (
     <main className="pb-24 space-y-16">
-      {/* ────────────── New “Top Albums” Carousel ────────────── */}
+      {/* ────────────── Top Albums ────────────── */}
       {topAlbums.length > 0 && (
         <section className="container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-4 text-white">Top Albums</h2>
@@ -233,7 +216,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* ───────── “Made for you” Carousel ───────── */}
+      {/* ───────── Made for You ───────── */}
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-4 text-white">Made for you</h2>
         {recommendations.length > 0 ? (
@@ -245,13 +228,13 @@ export default function Home() {
           <div className="text-center py-8 text-white/60">
             <p>No recommendations available.</p>
             <p className="text-sm mt-2">
-              Connect your Spotify account to see personalized recommendations.
+              Connect your Spotify account or listen to more music to get personalized picks.
             </p>
           </div>
         )}
       </section>
 
-      {/* ───────── “Recently played” Grid ───────── */}
+      {/* ───────── Recently Played ───────── */}
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-4 text-white">Recently played</h2>
         {recent.length > 0 ? (
@@ -270,7 +253,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* ───────── Fixed “Friend activity” Sidebar ───────── */}
+      {/* ───────── Friend Activity ───────── */}
       <aside className="lg:fixed lg:right-6 lg:top-28 lg:w-72">
         <FriendFeed activity={friendActivity} />
       </aside>
