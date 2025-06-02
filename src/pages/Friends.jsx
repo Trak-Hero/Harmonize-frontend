@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import useStore from '../state/friendStore';
-import FriendCard from "./components/FriendsPage/friendCard";
+import FriendCard from '../components/FriendsPage/friendCard';
 
 const Friends = () => {
   const { friends, fetchFriends } = useStore((s) => s.userSlice);
