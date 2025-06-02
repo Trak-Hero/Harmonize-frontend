@@ -87,8 +87,7 @@ export const useProfileStore = create(
        * Falls back to the cached currentUserId if caller does not pass one.
        */
       addTile: async (tileData, tempId = null) => {
-        console.log('[profileStore] addTile sending payload:', tile);
-
+        console.log('[profileStore] addTile sending payload:', tileData);
         // Prefer an explicit userId from the caller; otherwise fall back to the one cached
         const userId = tileData.userId || get().currentUserId;
         
