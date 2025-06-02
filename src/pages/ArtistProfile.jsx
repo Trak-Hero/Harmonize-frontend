@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import './ArtistProfile.css';
+import { FlagBannerFoldIcon } from '@phosphor-icons/react';
 
 export default function ArtistProfile() {
   const { id } = useParams();                        // Spotify artist ID

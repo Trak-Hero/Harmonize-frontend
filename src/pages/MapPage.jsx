@@ -29,20 +29,21 @@ const MapPage = () => {
   const [userCoords, setUserCoords] = useState({ lat: 43.7, lon: -72.28 }); // fallback default
   const [showEvents, setShowEvents] = useState(true);
   const [showFriends, setShowFriends] = useState(true);
-  const [filters, setFilters] = useState({ genre: '', sortBy: '' });
+  const [filters, setFilters] = useState({ genre: '', sortBy: '', distance: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedFriendId, setSelectedFriendId] = useState(null);
 
   useEffect(() => {
     async function loadEvents() {
+      const radius = filters.distance || 100;
       try {
         const pos = await new Promise((resolve, reject) =>
           navigator.geolocation.getCurrentPosition(resolve, reject)
         );
         const { latitude, longitude } = pos.coords;
         setUserCoords({ lat: latitude, lon: longitude });
-        const rawEvents = await fetchEventsByLocation(latitude, longitude);
+        const rawEvents = await fetchEventsByLocation(latitude, longitude, radius);
         const enriched = rawEvents.map(e => ({
           ...e,
           distance: calculateDistance(latitude, longitude, e.location.coordinates[1], e.location.coordinates[0])
@@ -51,7 +52,7 @@ const MapPage = () => {
         setAllEvents(enriched);
       } catch (err) {
         console.error("Geolocation or fetch failed, using fallback", err);
-        const fallback = await fetchEventsByLocation(43.7, -72.28);
+        const fallback = await fetchEventsByLocation(43.7, -72.28, radius);
         const enriched = fallback.map(e => ({
           ...e,
           distance: calculateDistance(43.7, -72.28, e.location.coordinates[1], e.location.coordinates[0])
@@ -61,41 +62,47 @@ const MapPage = () => {
       }
     }
     loadEvents();
-  }, []);
+  }, [filters.distance]);
 
   useEffect(() => {
-    let filtered = [...allEvents];
+  let filtered = [...allEvents];
 
-    const normalizeGenre = str => str?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
+  if (filters.genre) {
+    const genreKey = filters.genre.toLowerCase().replace(/[^a-z0-9]/g, '');
+    filtered = filtered.filter(event => event.genreKey === genreKey);
+  }
 
-    if (filters.genre) {
-      const filterGenre = normalizeGenre(filters.genre);
-      filtered = filtered.filter(event => normalizeGenre(event.genre) === filterGenre);
-    }
+  if (searchTerm) {
+    const term = searchTerm.toLowerCase();
+    filtered = filtered.filter(event =>
+      event.title.toLowerCase().includes(term) ||
+      event.description?.toLowerCase().includes(term)
+    );
+  }
 
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(term) ||
-        event.description?.toLowerCase().includes(term)
-      );
-    }
+  if (filters.sortBy === 'nearest') {
+    filtered.sort((a, b) => a.distance - b.distance);
+  } else if (filters.sortBy === 'date') {
+    filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+  }
 
-    if (filters.sortBy === 'nearest') {
-      filtered.sort((a, b) => a.distance - b.distance);
-    } else if (filters.sortBy === 'date') {
-      filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
-    }
+  if (filters.distance) {
+    const maxDistance = parseFloat(filters.distance);
+    filtered = filtered.filter(event => event.distance <= maxDistance);
+  }
 
-    setEvents(filtered);
-  }, [filters, searchTerm, allEvents]);
+
+  setEvents(filtered);
+}, [filters, searchTerm, allEvents]);
+
+const genreOptions = Array.from(new Set(allEvents.map(e => e.genre))).sort();
 
   return (
     <div className="w-screen h-screen flex bg-gradient-to-b from-[#012e40] via-[#001c29] to-black text-white">
       <div className="flex flex-1 overflow-hidden h-full">
         <div className="w-[24rem] min-w-[300px] top-50 p-6 space-y-6 bg-black/30 backdrop-blur-lg overflow-y-auto max-h-screen">
           <SearchBar onSearchChange={setSearchTerm} />
-          <FilterBar onFilterChange={setFilters} />
+          <FilterBar onFilterChange={setFilters} genres={genreOptions} />
           <EventList events={showEvents ? events : []} onSelect={setSelectedEventId} visible={showEvents} />
           <FriendList friends={showFriends ? sampleFriends : []} visible={showFriends} onSelect={setSelectedFriendId} />
         </div>

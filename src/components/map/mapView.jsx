@@ -106,11 +106,28 @@ const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
 
 const EventMarkers = ({ visible, events = [], selectedEventId }) => {
   const markerRefs = useRef({});
+  const fetchedKeysRef = useRef(new Set());
+  const [cityMap, setCityMap] = useState({});
+
+  useEffect(() => {
+    events.forEach(async (event) => {
+      const key = `${event.location.coordinates[1]},${event.location.coordinates[0]}`;
+      if (!fetchedKeysRef.current.has(key)) {
+        fetchedKeysRef.current.add(key);
+        try {
+          const res = await fetch(`http://localhost:8080/api/geocode/reverse?lat=${event.location.coordinates[1]}&lon=${event.location.coordinates[0]}&addressdetails=1}`);
+          const data = await res.json();
+          setCityMap(prev => ({ ...prev, [key]: data.city }));
+        } catch (error) {
+          setCityMap(prev => ({ ...prev, [key]: 'Unknown' }));
+        }
+      }
+    });
+  }, [events]);
 
   useEffect(() => {
     if (selectedEventId && markerRefs.current[selectedEventId]) {
-      const marker = markerRefs.current[selectedEventId];
-      marker.openPopup();
+      markerRefs.current[selectedEventId].openPopup();
     }
   }, [selectedEventId]);
 
@@ -119,14 +136,14 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
   return events.map((event, idx) => {
     const id = event._id || `event-${idx}`;
     const [lng, lat] = event.location.coordinates;
+    const key = `${lat},${lng}`;
+    const city = cityMap[key] || 'Loading...';
 
     return (
       <Marker
         key={id}
         position={[lat, lng]}
-        ref={(ref) => {
-          if (ref) markerRefs.current[id] = ref;
-        }}
+        ref={(ref) => { if (ref) markerRefs.current[id] = ref; }}
         icon={L.icon({
           iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
           iconSize: [30, 30],
@@ -134,11 +151,19 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
           popupAnchor: [0, -30],
         })}
       >
-        <Popup>
-          <div>
-            <h2 className="font-bold">{event.title}</h2>
-            <p>{event.description}</p>
-            <p>{new Date(event.date).toLocaleString()}</p>
+        <Popup minWidth={260} maxWidth={300}>
+          <div className="backdrop-blur-sm bg-black/50 rounded-2xl p-4 shadow-xl space-y-3 text-white font-sans">
+            <h2 className="text-lg font-semibold">{event.title}</h2>
+            <p className="text-sm text-gray-300">{new Date(event.date).toLocaleString()}</p>
+            <p className="text-sm italic text-gray-400">📍 {city}</p>
+            <a
+              href={event.ticketUrl || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-center bg-white text-black font-medium py-2 rounded-lg hover:bg-gray-200 transition"
+            >
+              Buy Ticket
+            </a>
           </div>
         </Popup>
       </Marker>

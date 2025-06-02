@@ -1,8 +1,10 @@
+// src/components/map/filterBar.js
 import React, { useState } from 'react';
 
-const FilterBar = ({ onFilterChange }) => {
+const FilterBar = ({ onFilterChange, genres = [] }) => {
   const [genre, setGenre] = useState('');
   const [sortBy, setSortBy] = useState('');
+  const [distance, setDistance] = useState('');
 
   const handleGenreChange = (e) => {
     const selectedGenre = e.target.value;
@@ -16,6 +18,11 @@ const FilterBar = ({ onFilterChange }) => {
     onFilterChange({ genre, sortBy: selectedSort });
   };
 
+  const handleDistanceChange = (e) => {
+    const selectedDistance = e.target.value;
+    setDistance(selectedDistance);
+    onFilterChange({ genre, sortBy, distance: selectedDistance });
+  };
   return (
     <div className="flex flex-row gap-4">
       <div className="flex flex-col">
@@ -29,11 +36,11 @@ const FilterBar = ({ onFilterChange }) => {
           className="px-3 py-2 rounded-full text-sm text-white bg-transparent border border-white focus:outline-none"
         >
           <option value="">All Genres</option>
-          <option value="rock">Rock</option>
-          <option value="jazz">Jazz</option>
-          <option value="classical">Classical</option>
-          <option value="pop">Pop</option>
-          <option value="indie">Indie</option>
+          {genres.map((g) => (
+            <option key={g} value={g.toLowerCase()}>
+              {g}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -52,6 +59,27 @@ const FilterBar = ({ onFilterChange }) => {
           <option value="date">Date</option>
         </select>
       </div>
+      
+      <div className="flex flex-col">
+        <label htmlFor="distance-filter" className="text-sm font-medium text-white mb-1 self-start">
+          Distance:
+        </label>
+        <select
+          id="distance-filter"
+          value={distance}
+          onChange={handleDistanceChange}
+          className="px-3 py-2 rounded-full text-sm text-white bg-transparent border border-white focus:outline-none"
+        >
+          <option value="">Any</option>
+          <option value="5">5 mi</option>
+          <option value="10">10 mi</option>
+          <option value="25">25 mi</option>
+          <option value="50">50 mi</option>
+          <option value="100">100 mi</option>
+          <option value="200">200 mi</option>
+        </select>
+      </div>
+
     </div>
   );
 };
