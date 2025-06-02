@@ -29,6 +29,7 @@ export default function UserProfile() {
     user: authUser,
     isLoading: authLoading,
     hasCheckedSession,
+    // We no longer trust API_BASE here; it comes in as undefined in production.
     API_BASE
   } = useAuthStore();
 
@@ -61,8 +62,9 @@ export default function UserProfile() {
   const [activeTab,  setActiveTab]  = useState('recent');
   const [showEditor, setShowEditor] = useState(false);
 
-  // Make absolutely sure this is pointing at your back end
-  const API = API_BASE; 
+  // ─── HERE IS THE CRUCIAL FIX ───
+  // Instead of using `API_BASE` (which was undefined), pull the Vite env var DIRECTLY:
+  const API = import.meta.env.VITE_API_BASE_URL || '';
   console.log('[UserProfile] API is:', API);
 
   /* ────────────────────────────────── 1) load tiles ────────────────────────────────── */
@@ -73,7 +75,6 @@ export default function UserProfile() {
       console.log('[UserProfile] No targetUserId; skipping fetchTiles');
       return;
     }
-
     setCurrentUserId(targetUserId);
     fetchTiles(targetUserId, authUser.id || authUser._id);
   }, [
@@ -85,13 +86,13 @@ export default function UserProfile() {
     setCurrentUserId
   ]);
 
-  /* ────────────────────────────────── 2) load “app‐recent” from your API ────────────────────────────────── */
+  /* ────────────────────────────────── 2) load “app‐recent” from your own API ────────────────────────────────── */
   useEffect(() => {
     if (!hasCheckedSession || authLoading) return;
     if (!authUser) return;
     if (!targetUserId) return;
 
-    // Always call the absolute URL: `${API}/api/recent`
+    // ALWAYS prefix with the absolute API URL, never a relative path
     fetch(`${API}/api/recent`, { credentials: 'include' })
       .then((res) => {
         if (!res.ok) {
@@ -116,7 +117,7 @@ export default function UserProfile() {
 
     setSpotifyLoading(true);
     try {
-      // Always call the absolute URL: `${API}/api/me/spotify`
+      // → ALWAYS prefix with `${API}` so we don’t accidentally land on React’s HTML
       const res = await withTokenRefresh(
         () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
         () => fetch(`${API}/auth/refresh`,   { credentials: 'include' })
@@ -130,7 +131,6 @@ export default function UserProfile() {
 
       const contentType = res.headers.get('Content-Type') || '';
       if (!contentType.includes('application/json')) {
-        // We got HTML (index.html) or something else → bail out
         const textBody = await res.text();
         console.warn(
           '[UserProfile] /api/me/spotify returned non-JSON. Body starts with:',
@@ -153,9 +153,9 @@ export default function UserProfile() {
       }
 
       setSpotifyData({
-        top:         Array.isArray(data.top)         ? data.top         : [],
+        top:         Array.isArray(data.top)         ? data.top : [],
         top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
-        recent:      Array.isArray(data.recent)      ? data.recent      : []
+        recent:      Array.isArray(data.recent)      ? data.recent : []
       });
     } catch (error) {
       console.error('[UserProfile] Unexpected error loading Spotify data:', error);
@@ -168,8 +168,7 @@ export default function UserProfile() {
   useEffect(() => {
     if (!hasCheckedSession || !authUser) return;
     if (!isOwner) return;
-    if (spotifyData !== null) return; // already fetched
-
+    if (spotifyData !== null) return; // already fetched once
     loadSpotify();
   }, [hasCheckedSession, authUser, isOwner, spotifyData, loadSpotify]);
 
@@ -200,7 +199,7 @@ export default function UserProfile() {
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-          <p>Loading...</p>
+          <p>Loading…</p>
         </div>
       </div>
     );
@@ -210,7 +209,7 @@ export default function UserProfile() {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
         <div className="text-center space-y-4">
-          <p>Please log in to view profiles</p>
+          <p>Please log in to view profiles.</p>
           <a
             href="/login"
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
@@ -227,7 +226,7 @@ export default function UserProfile() {
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-          <p>Loading profile...</p>
+          <p>Loading profile…</p>
         </div>
       </div>
     );
@@ -248,7 +247,9 @@ export default function UserProfile() {
     ? tiles.find((t) => (t._id || t.id) === editingTileId)
     : null;
 
-  // Which “recent” list to show: prefer Spotify’s if nonempty, else fall back to appRecent
+  // Choose which “recent” list to show:
+  // • If SpotifyData.recent has items, show that
+  // • Otherwise fall back to appRecent (from GET /api/recent)
   const effectiveRecent =
     Array.isArray(spotifyData?.recent) && spotifyData.recent.length > 0
       ? spotifyData.recent
@@ -310,7 +311,7 @@ export default function UserProfile() {
             {spotifyLoading ? (
               <div className="text-center py-8 text-white/60">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-                <p>Loading Spotify data...</p>
+                <p>Loading Spotify data…</p>
               </div>
             ) : effectiveRecent.length > 0 ? (
               <>
@@ -346,7 +347,7 @@ export default function UserProfile() {
             {tilesLoading ? (
               <div className="text-center py-8 text-white/60">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-                <p>Loading tiles...</p>
+                <p>Loading tiles…</p>
               </div>
             ) : Array.isArray(tiles) && tiles.length > 0 ? (
               <ResponsiveGrid
