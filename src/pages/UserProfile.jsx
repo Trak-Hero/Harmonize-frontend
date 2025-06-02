@@ -33,7 +33,7 @@ export default function UserProfile() {
   } = useAuthStore();
   const { userId: paramUserId } = useParams();
 
-  // Our backend’s base URL (e.g., "https://project-music-and-memories-api.onrender.com")
+  // Our backend’s base URL (e.g. "https://project-music-and-memories-api.onrender.com")
   const API = API_BASE;
 
   // Determine whose profile we’re viewing (owner vs. viewing another’s)
@@ -55,10 +55,14 @@ export default function UserProfile() {
     setCurrentUserId
   } = useProfileStore();
 
-  const [activeTab,      setActiveTab]   = useState('recent');
-  const [spotifyData,    setSpotifyData] = useState(null);
-  const [showEditor,     setShowEditor]  = useState(false);
+  // We’ll keep two “recent” lists:
+  //   • spotifyRecent  = the data returned from /api/me/spotify (if Spotify is connected)
+  //   • appRecent      = the data returned from /api/recent (your own backend’s “recent”)
+  const [spotifyData,   setSpotifyData] = useState(null);
   const [spotifyLoading, setSpotifyLoading] = useState(false);
+  const [appRecent,     setAppRecent]   = useState([]);    // tracks from GET /api/recent
+  const [showEditor,    setShowEditor]  = useState(false);
+  const [activeTab,     setActiveTab]   = useState('recent');
 
   /* ────────────────────────────────── 1) load tiles ────────────────────────────────── */
   useEffect(() => {
@@ -80,7 +84,34 @@ export default function UserProfile() {
     setCurrentUserId
   ]);
 
-  /* ────────────────────────────────── 2) load Spotify (owner only, once) ────────────────────────────────── */
+  /* ────────────────────────────────── 2) load “app‐recent” from your API ────────────────────────────────── */
+  useEffect(() => {
+    if (!hasCheckedSession || authLoading) return;
+    if (!authUser) return;
+    if (!targetUserId) return;
+
+    // Exactly like Home.jsx’s “/api/recent” call
+    fetch(`${API}/api/recent`, {
+      credentials: 'include'
+    })
+      .then((res) => {
+        if (!res.ok) {
+          console.warn('[UserProfile] GET /api/recent returned', res.status);
+          return [];
+        }
+        return res.json();
+      })
+      .then((data) => {
+        // “data” is an array of track objects (like mapTrack outputs)
+        setAppRecent(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.error('[UserProfile] Error fetching /api/recent:', err);
+        setAppRecent([]);
+      });
+  }, [hasCheckedSession, authLoading, authUser, targetUserId, API]);
+
+  /* ────────────────────────────────── 3) load Spotify (owner only, once) ────────────────────────────────── */
   const loadSpotify = useCallback(async () => {
     if (!isOwner) return;
     if (spotifyLoading) return;
@@ -88,7 +119,7 @@ export default function UserProfile() {
     setSpotifyLoading(true);
     try {
       const res = await withTokenRefresh(
-        // ← This must exactly match your backend route in me.js: GET /api/me/spotify
+        // This must match your backend route in me.js: GET /api/me/spotify
         () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
         () => fetch(`${API}/auth/refresh`,   { credentials: 'include' })
       );
@@ -102,7 +133,7 @@ export default function UserProfile() {
         return;
       }
 
-      // If the server gave us HTML (index.html) or anything non-JSON, bail out
+      // If the server returned HTML (index.html) or something non‐JSON, bail out
       const contentType = res.headers.get('Content-Type') || '';
       if (!contentType.includes('application/json')) {
         const textBody = await res.text();
@@ -127,6 +158,7 @@ export default function UserProfile() {
         return;
       }
 
+      // Set spotifyData to an object containing arrays “top”, “top_artists”, and “recent”
       setSpotifyData({
         top:         Array.isArray(data.top)         ? data.top         : [],
         top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
@@ -142,22 +174,22 @@ export default function UserProfile() {
       setSpotifyLoading(false);
     }
   }, [API, isOwner]);
-  // Note: we did NOT include spotifyLoading in dependencies so toggling that state doesn’t re-create this callback.
+  // Note: we do NOT include spotifyLoading in the dependencies, so toggling that state doesn’t re-create the callback.
 
   useEffect(() => {
-    // Only fetch once, once we know:
-    //  • session check is done
-    //  • user is authenticated
-    //  • this is the owner’s own profile
-    //  • spotifyData is still null
+    // Only load from Spotify once, once we know:
+    //   • session check is done
+    //   • user is authenticated
+    //   • this is the owner’s own profile
+    //   • spotifyData is still null (never fetched)
     if (!hasCheckedSession || !authUser) return;
     if (!isOwner) return;
-    if (spotifyData !== null) return; // already fetched
+    if (spotifyData !== null) return;
 
     loadSpotify();
   }, [hasCheckedSession, authUser, isOwner, spotifyData, loadSpotify]);
 
-  /* ────────────────────────────────── 3) add‐tile handler ────────────────────────────────── */
+  /* ────────────────────────────────── 4) add‐tile handler ────────────────────────────────── */
   const handleAddTile = useCallback(
     (tileData = {}) => {
       if (!targetUserId) {
@@ -180,7 +212,7 @@ export default function UserProfile() {
     [targetUserId, addTempTile, setEditorOpen]
   );
 
-  /* ────────────────────────────────── 4) loading & redirect logic ────────────────────────────────── */
+  /* ────────────────────────────────── 5) loading & redirect logic ────────────────────────────────── */
   if (!hasCheckedSession || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -219,7 +251,8 @@ export default function UserProfile() {
     );
   }
 
-  /* ────────────────────────────────── 5) actual render ────────────────────────────────── */
+  /* ────────────────────────────────── 6) actual render ────────────────────────────────── */
+  // Build the grid layout for “Space” tiles
   const layoutItems = Array.isArray(tiles)
     ? tiles.map((t) => ({
         i:    t._id || t.id,
@@ -230,9 +263,18 @@ export default function UserProfile() {
       }))
     : [];
 
+  // Which tile is currently being edited (if the modal is open)
   const tileBeingEdited = Array.isArray(tiles)
     ? tiles.find((t) => (t._id || t.id) === editingTileId)
     : null;
+
+  // We decide what to pass into <RecentlyPlayed>:
+  //   • If spotifyData exists (and spotifyData.recent is non‐empty), show that.
+  //   • Otherwise, show “appRecent” (the data from /api/recent).
+  const effectiveRecent =
+    Array.isArray(spotifyData?.recent) && spotifyData.recent.length > 0
+      ? spotifyData.recent
+      : appRecent;
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
@@ -290,24 +332,33 @@ export default function UserProfile() {
         {/* tab content */}
         {activeTab === 'recent' ? (
           <div className="space-y-6 mt-6">
+            {/* If we’re still waiting for Spotify to load, show a spinner */}
             {spotifyLoading ? (
               <div className="text-center py-8 text-white/60">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
                 <p>Loading Spotify data...</p>
               </div>
-            ) : spotifyData ? (
+
+            {/* Once spotifyData is loaded (or if we skipped it), show three cards */}
+            ) : effectiveRecent.length > 0 ? (
               <>
+                {/* Favorite Songs (top from Spotify) */}
                 <div className="card">
-                  <FavoriteSongs songs={spotifyData.top} />
+                  <FavoriteSongs songs={spotifyData?.top ?? []} />
                 </div>
+
+                {/* Favorite Artists (top_artists from Spotify) */}
                 <div className="card">
-                  <FavoriteArtists artists={spotifyData.top_artists} />
+                  <FavoriteArtists artists={spotifyData?.top_artists ?? []} />
                 </div>
+
+                {/* Recently Played (either Spotify’s “recent” or fallback to appRecent) */}
                 <div className="card">
-                  <RecentlyPlayed recent={spotifyData.recent} />
+                  <RecentlyPlayed recent={effectiveRecent} />
                 </div>
               </>
             ) : (
+              /* No data found in either source */
               <div className="text-center py-8 text-white/60">
                 <p>No Spotify data available.</p>
                 {isOwner && (
@@ -319,6 +370,7 @@ export default function UserProfile() {
             )}
           </div>
         ) : (
+          /* ───────── “Space” tab content ───────── */
           <div className="space-y-6 mt-6">
             {isOwner && (
               <div className="mb-4">
