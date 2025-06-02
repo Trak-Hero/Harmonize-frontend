@@ -30,7 +30,14 @@ export default function ArtistSearchModal({ onClose, userId }) {
   };
 
   const pickArtist = async (artist) => {
-    const imageUrl = artist.images?.[0]?.url || artist.image || '';
+    // Try multiple ways to get the image URL
+    const imageUrl = 
+      artist.images?.[0]?.url || 
+      artist.image || 
+      (Array.isArray(artist.images) && artist.images.length > 0 ? artist.images[0].url : '') ||
+      '';
+    
+    console.log('[pickArtist] artist object:', artist);
     console.log('[pickArtist] using image:', imageUrl);
 
     await addTile({
@@ -72,20 +79,27 @@ export default function ArtistSearchModal({ onClose, userId }) {
         )}
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
-          {results.map((a) => (
-            <li
-              key={a.id}
-              onClick={() => pickArtist(a)}
-              className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
-            >
-              <img
-                src={a.images?.[0]?.url || a.image || 'https://placehold.co/48x48?text=Artist'}
-                alt={a.name}
-                className="w-12 h-12 object-cover rounded"
-              />
-              <span className="text-white">{a.name}</span>
-            </li>
-          ))}
+          {results.map((a) => {
+            const displayImage = 
+              a.images?.[0]?.url || 
+              a.image || 
+              'https://placehold.co/48x48?text=Artist';
+            
+            return (
+              <li
+                key={a.id}
+                onClick={() => pickArtist(a)}
+                className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
+              >
+                <img
+                  src={displayImage}
+                  alt={a.name}
+                  className="w-12 h-12 object-cover rounded"
+                />
+                <span className="text-white">{a.name}</span>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="text-right">

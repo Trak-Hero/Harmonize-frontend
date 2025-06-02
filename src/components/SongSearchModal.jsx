@@ -29,7 +29,16 @@ export default function SongSearchModal({ onClose, userId }) {
   };
 
   const pickSong = async (track) => {
-    const albumCover = track.album?.image || track.album?.images?.[0]?.url || '';
+    // Try multiple ways to get the album cover
+    const albumCover = 
+      track.album?.images?.[0]?.url || 
+      track.album?.image ||
+      (Array.isArray(track.album?.images) && track.album.images.length > 0 ? track.album.images[0].url : '') ||
+      '';
+    
+    console.log('[pickSong] track object:', track);
+    console.log('[pickSong] using album cover:', albumCover);
+    
     await addTile({
       userId,
       type: 'song',
@@ -65,25 +74,32 @@ export default function SongSearchModal({ onClose, userId }) {
         )}
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
-          {results.map((t) => (
-            <li
-              key={t.id}
-              onClick={() => pickSong(t)}
-              className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
-            >
-              <img
-                src={t.album?.image || t.album?.images?.[0]?.url || 'https://placehold.co/48x48?text=Song'}
-                alt={t.name}
-                className="w-12 h-12 object-cover rounded"
-              />
-              <div className="flex flex-col">
-                <span className="text-white font-medium">{t.name}</span>
-                <span className="text-gray-400 text-sm">
-                  {t.artists?.map(a => a.name).join(', ')}
-                </span>
-              </div>
-            </li>
-          ))}
+          {results.map((t) => {
+            const displayImage = 
+              t.album?.images?.[0]?.url || 
+              t.album?.image || 
+              'https://placehold.co/48x48?text=Song';
+            
+            return (
+              <li
+                key={t.id}
+                onClick={() => pickSong(t)}
+                className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
+              >
+                <img
+                  src={displayImage}
+                  alt={t.name}
+                  className="w-12 h-12 object-cover rounded"
+                />
+                <div className="flex flex-col">
+                  <span className="text-white font-medium">{t.name}</span>
+                  <span className="text-gray-400 text-sm">
+                    {t.artists?.map(a => a.name).join(', ')}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="text-right">
