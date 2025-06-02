@@ -16,7 +16,19 @@ const Tile = ({ tile }) => {
     const showTitle    = !!displayTitle;
     const id = tile._id || tile.id;
 
-    const safeImageSrc = tile.bgImage === '/' ? '/placeholder.jpg' : tile.bgImage;
+    // ―――――――――――――――――――――――――――――――――――
+    // CHANGED HERE: prefer bgImage if set, otherwise use tile.image as fallback
+    let chosenImage = '';
+    if (tile.bgImage && tile.bgImage !== '/') {
+      chosenImage = tile.bgImage;
+    } else if (tile.image) {
+      chosenImage = tile.image;
+    }
+
+    // If the chosenImage is literally “/” or empty, show placeholder instead
+    const safeImageSrc =
+      chosenImage && chosenImage !== '/' ? chosenImage : '/placeholder.jpg';
+    // ―――――――――――――――――――――――――――――――――――
 
     return (
       <div
@@ -26,8 +38,8 @@ const Tile = ({ tile }) => {
           fontFamily: tile.font || 'sans-serif',
         }}
       >
-        {/* Background Image */}
-        {tile.type !== 'picture' && tile.bgImage && (
+        {/* Background Image: now uses safeImageSrc (either bgImage or fallback to .image) */}
+        {tile.type !== 'picture' && chosenImage && (
           <img
             src={safeImageSrc}
             alt=""
@@ -36,7 +48,7 @@ const Tile = ({ tile }) => {
           />
         )}
 
-        {/* ARTIST or SONG TILE */}
+        {/* ARTIST or SONG TILE: overlay the title on top of the background image */}
         {(tile.type === 'artist' || tile.type === 'song') && showTitle && (
           <div className="absolute inset-0 flex items-end p-4 bg-black/40 backdrop-blur-sm z-10">
             <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
@@ -73,7 +85,7 @@ const Tile = ({ tile }) => {
         {/* SPACER TILE */}
         {tile.type === 'spacer' && null}
 
-        {/* Buttons */}
+        {/* EDIT / DELETE BUTTONS */}
         <button
           onClick={(e) => { e.stopPropagation(); setEditorOpen(true, id); }}
           className="absolute top-2 right-2 z-20 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70"
