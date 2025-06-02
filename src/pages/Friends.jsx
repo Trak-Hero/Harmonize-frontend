@@ -60,7 +60,7 @@ export default function Friends() {
                         : 'bg-green-500 hover:bg-green-600'
                     } text-white text-sm`}
                   >
-                    {iFollowThem ? 'Unfollow' : 'Add Friend'}
+                    {iFollowThem ? 'Unfollow' : 'Follow'}
                   </button>
                 )}
               </div>
