@@ -12,24 +12,25 @@ const FriendCard = ({ friend }) => {
         />
       </div>
       <h2 className="text-lg font-semibold mb-2">{friend.name}</h2>
-      <p className="text-sm text-gray-500 mb-1">
-        <span className="font-medium text-gray-400">Genres:</span> {friend.genres.join(', ')}
+      <p className="text-sm text-gray-100 mb-1">
+        <span className="font-medium text-gray-300">Genres:</span> {friend.genres.join(', ')}
       </p>
       <p className="text-sm text-gray-500 mb-4">
-        <span className="font-medium text-gray-400">Top Artists:</span> {friend.artists.join(', ')}
+        <span className="font-medium text-gray-300">Top Artists:</span> {friend.artists.join(', ')}
       </p>
 
-      <div className="mt-2">
+            <div className="mt-2">
           <p className="text-sm text-gray-300 font-medium">Percent Match:</p>
           <p className="text-xl font-bold text-green-400">{friend.matchPercent || 0}%</p>
 
           <Link
             to={`/blendmode/${friend.id}`}
-            className="mt-1 inline-block text-sm text-blue-400 hover:underline">
+            className="mt-1 inline-block text-sm text-blue-400 hover:underline"
+          >
             See More
           </Link>
+        </div>
       </div>
-    </div>
   );
 };
 
