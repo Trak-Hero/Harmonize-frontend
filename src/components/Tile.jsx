@@ -16,21 +16,20 @@ const Tile = ({ tile }) => {
     const showTitle    = !!displayTitle;
     const id = tile._id || tile.id;
 
-
+    // ⬇ Updated image source selection logic
     let chosenImage = '';
     if (tile.type === 'artist' || tile.type === 'song') {
-      chosenImage = tile.bgImage || tile.image || tile.albumCover || tile.artistImage || '';
+      chosenImage = tile.bgImage || tile.albumCover || tile.artistImage || tile.image || '';
     } else {
       chosenImage = tile.bgImage || tile.image || '';
     }
 
-
-    // If the chosenImage is literally "/" or empty, show placeholder instead
     const safeImageSrc =
-      chosenImage && chosenImage !== '/' && chosenImage !== '' 
-        ? chosenImage 
+      chosenImage && chosenImage !== '/' && chosenImage !== ''
+        ? chosenImage
         : '/placeholder.jpg';
-    
+
+    // ⬇ Log details for debugging
     console.log('[Tile.jsx] Image logic for tile:', {
       type: tile.type,
       bgImage: tile.bgImage,
@@ -38,9 +37,8 @@ const Tile = ({ tile }) => {
       albumCover: tile.albumCover,
       artistImage: tile.artistImage,
       chosenImage,
-      safeImageSrc
+      safeImageSrc,
     });
-    // ―――――――――――――――――――――――――――――――――――
 
     return (
       <div
@@ -50,20 +48,20 @@ const Tile = ({ tile }) => {
           fontFamily: tile.font || 'sans-serif',
         }}
       >
-        {/* Background Image: now uses improved safeImageSrc logic */}
-        {tile.type !== 'picture' && chosenImage && chosenImage !== '/' && (
+        {/* Always try rendering background image */}
+        {safeImageSrc && (
           <img
             src={safeImageSrc}
             alt=""
-            onError={(e) => { 
+            onError={(e) => {
               console.warn('[Tile.jsx] Image failed to load:', safeImageSrc);
-              e.target.src = '/placeholder.jpg'; 
+              e.currentTarget.src = '/placeholder.jpg';
             }}
             className="absolute inset-0 w-full h-full object-cover z-0"
           />
         )}
 
-        {/* ARTIST or SONG TILE: overlay the title on top of the background image */}
+        {/* ARTIST or SONG TILE: overlay title */}
         {(tile.type === 'artist' || tile.type === 'song') && showTitle && (
           <div className="absolute inset-0 flex items-end p-4 bg-black/40 backdrop-blur-sm z-10">
             <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
@@ -87,7 +85,7 @@ const Tile = ({ tile }) => {
                 src={tile.bgImage}
                 alt=""
                 className="w-full h-full object-cover"
-                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }}
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-white bg-gray-600">
