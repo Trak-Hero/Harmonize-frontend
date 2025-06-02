@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 import MediaCard   from "../components/MediaCard";
-import Carousel    from "../components/Carousel";   // ← updated
+import Carousel    from "../components/Carousel";   // <— our new scrollable carousel
 import FriendFeed  from "../components/FriendFeed";
 import mapTrack    from "../utils/mapTrack";
 
@@ -19,24 +19,55 @@ export default function Home() {
 
   useEffect(() => {
     let cancelled = false;
-    const fetchData = async () => {
-      try {
-        // … your existing recommendations / recent / friend activity fetch logic …
 
-        // ─── New: Fetch Spotify “top tracks” to derive topAlbums ───
-        let albumsArray = [];
+    async function fetchData() {
+      try {
+        // ─── 1) fetch “Made for you” + “Recently played” + “Friend activity” ───
+        const [recRes, recentRes, friendRes] = await Promise.all([
+          axios
+            .get(`${API}/spotify/recommendations`, { withCredentials: true })
+            .catch((e) => {
+              console.warn("[Home] recommendations failed:", e);
+              return { data: [] };
+            }),
+          axios
+            .get(`${API}/spotify/recent`, { withCredentials: true })
+            .catch((e) => {
+              console.warn("[Home] recent tracks failed:", e);
+              return { data: { items: [] } };
+            }),
+          axios
+            .get(`${API}/spotify/friend-activity`, { withCredentials: true })
+            .catch((e) => {
+              console.warn("[Home] friend activity failed:", e);
+              return { data: [] };
+            }),
+        ]);
+
+        if (cancelled) return;
+
+        const mappedRecommendations = (recRes.data ?? []).map(mapTrack).filter((x) => x);
+        const mappedRecent = (recentRes.data.items ?? []).map(mapTrack).filter((x) => x);
+
+        setRecommendations(mappedRecommendations);
+        setRecent(mappedRecent);
+        setFriendActivity(friendRes.data ?? []);
+
+        // ─── 2) fetch “Top Tracks” from /api/me/spotify → derive unique Top Albums ───
         try {
           const spotifyRes = await axios.get(`${API}/api/me/spotify`, {
             withCredentials: true,
-            timeout: 10000,
           });
           if (!cancelled && spotifyRes.data?.top) {
             const topTracks = spotifyRes.data.top;
             const albumMap = {};
+
             topTracks.forEach((t) => {
               const album = t.album || {};
-              const albumId = album.id || album.name || String(Math.random());
+              // Use album.id as key (or fallback to album.name + first artist)
+              const albumId = album.id || `${album.name}-${(t.artists?.[0]?.name)||""}`;
               if (!albumMap[albumId]) {
+                // pick the first image (if any)
                 const imgUrl =
                   Array.isArray(album.images) && album.images.length > 0
                     ? album.images[0].url
@@ -44,33 +75,29 @@ export default function Home() {
                 const artistNames = Array.isArray(t.artists)
                   ? t.artists.map((a) => a.name).join(", ")
                   : "";
+
                 albumMap[albumId] = {
                   id:           albumId,
                   name:         album.name || "Unknown Album",
                   image:        imgUrl,
-                  artistNames:  artistNames,
+                  artistNames, // e.g. "Radiohead"
                 };
               }
             });
-            albumsArray = Object.values(albumMap);
+
+            const dedupedAlbums = Object.values(albumMap);
+            setTopAlbums(dedupedAlbums);
           }
         } catch (spotifyErr) {
-          console.warn(
-            "Home: Error fetching top tracks from /api/me/spotify:",
-            spotifyErr.response?.status || spotifyErr.message
-          );
-        }
-
-        if (!cancelled) {
-          setTopAlbums(albumsArray);
-          // … setRecommendations, setRecent, setFriendActivity, etc. …
+          console.warn("[Home] Top tracks (for albums) failed:", spotifyErr);
         }
       } catch (err) {
-        // … existing error handling …
+        console.error("[Home] fetchData error:", err);
+        setError("Could not load data. Please try again.");
       } finally {
         if (!cancelled) setLoading(false);
       }
-    };
+    }
 
     fetchData();
     return () => {
@@ -80,31 +107,44 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen text-white text-lg">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-          <p>Loading your music...</p>
+      <div className="flex items-center justify-center h-screen bg-gray-900">
+        <div className="text-center space-y-4 text-white">
+          <div className="animate-spin h-12 w-12 border-b-2 border-white rounded-full mx-auto"></div>
+          <p>Loading your music…</p>
         </div>
       </div>
     );
   }
 
   if (error) {
-    /* … existing error UI … */
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-900">
+        <div className="text-center space-y-4 px-4">
+          <p className="text-red-500 text-lg font-semibold">Oops! Something went wrong</p>
+          <p className="text-white/70">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Reload
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <main className="pb-24 space-y-16">
-      {/* ────────────── New “Top Albums” Carousel ────────────── */}
+    <main className="min-h-screen bg-gray-900 text-white pb-24 space-y-12">
+      {/* ────────────── Top Albums (scrollable) ────────────── */}
       {topAlbums.length > 0 && (
         <section className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-4 text-white">Top Albums</h2>
+          <h2 className="text-2xl font-bold mb-4">Top Albums</h2>
           <Carousel
             items={topAlbums}
-            speed={25}      // 25s per full loop (adjust if you want it faster/slower)
-            gap={12}        // 12px between each album card (adjust if desired)
+            gap={12}         // 12px between each album card
+            hideScrollbar={false} // set to true if you want to hide native scrollbar
             renderItem={(album) => (
-              <div className="bg-black/50 rounded-lg p-2 flex flex-col items-center w-40">
+              <div className="bg-black/60 rounded-xl p-2 flex flex-col items-center w-40">
                 {album.image ? (
                   <img
                     src={album.image}
@@ -116,7 +156,7 @@ export default function Home() {
                     <span className="text-gray-400 text-sm">No Cover</span>
                   </div>
                 )}
-                <div className="font-medium text-sm truncate w-full text-center text-white">
+                <div className="font-medium text-sm truncate w-full text-center">
                   {album.name}
                 </div>
                 <div className="text-xs text-gray-400 truncate w-full text-center">
@@ -128,14 +168,14 @@ export default function Home() {
         </section>
       )}
 
-      {/* ───────── “Made for you” Carousel ───────── */}
+      {/* ───────── “Made for you” (scrollable) ───────── */}
       <section className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold mb-4 text-white">Made for you</h2>
+        <h2 className="text-2xl font-bold mb-4">Made for you</h2>
         {recommendations.length > 0 ? (
           <Carousel
             items={recommendations}
-            speed={30}  // slower loop if you want to savor each card
             gap={16}
+            hideScrollbar={false}
             renderItem={(item) => (
               <div className="w-40">
                 <MediaCard media={item} />
@@ -146,15 +186,15 @@ export default function Home() {
           <div className="text-center py-8 text-white/60">
             <p>No recommendations available.</p>
             <p className="text-sm mt-2">
-              Connect your Spotify account to see personalized recommendations.
+              Connect your Spotify account to see personalized picks.
             </p>
           </div>
         )}
       </section>
 
-      {/* ───────── “Recently played” Grid ───────── */}
+      {/* ───────── “Recently played” (static grid) ───────── */}
       <section className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold mb-4 text-white">Recently played</h2>
+        <h2 className="text-2xl font-bold mb-4">Recently played</h2>
         {recent.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {recent.map((track) => (
@@ -167,14 +207,14 @@ export default function Home() {
           <div className="text-center py-8 text-white/60">
             <p>No recent tracks found.</p>
             <p className="text-sm mt-2">
-              Start listening to music on Spotify to see your recent tracks here.
+              Start listening on Spotify to see your recent tracks here.
             </p>
           </div>
         )}
       </section>
 
-      {/* ───────── “Friend activity” Sidebar ───────── */}
-      <aside className="lg:fixed lg:right-6 lg:top-28 lg:w-72">
+      {/* ───────── Fixed “Friend activity” Sidebar ───────── */}
+      <aside className="lg:fixed lg:right-4 lg:top-28 lg:w-72">
         <FriendFeed activity={friendActivity} />
       </aside>
     </main>
