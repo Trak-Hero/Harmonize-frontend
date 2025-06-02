@@ -25,10 +25,15 @@ const cols        = { xxs: 1, xs: 2, sm: 4,  md: 8,  lg: 12 };
 
 export default function UserProfile() {
   /* ─────────────────────────────────── state & stores ────────────────────────────────── */
+  const { user: authUser, isLoading: authLoading, hasCheckedSession, API_BASE } = useAuthStore();
   const { userId: paramUserId } = useParams();
-  const { user: authUser, isLoading: authLoading, hasCheckedSession } = useAuthStore();
-  
-  // Only proceed once we know whether the user is logged in or not
+
+  // Now we grab our backend base‐URL straight out of the auth store,
+  // rather than from `import.meta.env`. This ensures the fetches go to the same
+  // place your login/refresh logic is already pointed at.
+  const API = API_BASE;
+
+  // Build the “targetUserId” and check ownership
   const targetUserId = paramUserId || (authUser?.id || authUser?._id);
   const isOwner = !paramUserId || (authUser && targetUserId === (authUser.id || authUser._id));
 
@@ -49,8 +54,6 @@ export default function UserProfile() {
   const [spotifyData,      setSpotifyData] = useState(null);
   const [showEditor,       setShowEditor]  = useState(false);
   const [spotifyLoading,   setSpotifyLoading] = useState(false);
-
-  const API = import.meta.env.VITE_API_BASE_URL ?? '';
 
   /* ────────────────────────────────── 1) load tiles ────────────────────────────────── */
   useEffect(() => {
@@ -130,7 +133,7 @@ export default function UserProfile() {
     }
   }, [hasCheckedSession, authUser, isOwner, loadSpotify]);
 
-  /* ────────────────────────────────── 3) add-tile handler ────────────────────────────────── */
+  /* ────────────────────────────────── 3) add‐tile handler ────────────────────────────────── */
   const handleAddTile = useCallback(
     (tileData = {}) => {
       if (!targetUserId) {
