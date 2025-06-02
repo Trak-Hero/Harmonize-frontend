@@ -32,10 +32,10 @@ export default function ArtistSearchModal({ onClose, userId }) {
   const pickArtist = async (artist) => {
     // Try multiple ways to get the image URL
     const imageUrl = 
-  artist.images?.[0]?.url || 
-  artist.image || 
-  (Array.isArray(artist.images) && artist.images.length > 0 ? artist.images[0].url : '') ||
-  'https://placehold.co/300x300?text=Artist';
+      artist.images?.[0]?.url || 
+      artist.image || 
+      (Array.isArray(artist.images) && artist.images.length > 0 ? artist.images[0].url : '') ||
+      '';
     
     console.log('[pickArtist] artist object:', artist);
     console.log('[pickArtist] using image:', imageUrl);

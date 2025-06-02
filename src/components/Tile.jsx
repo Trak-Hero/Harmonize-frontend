@@ -16,17 +16,14 @@ const Tile = ({ tile }) => {
     const showTitle    = !!displayTitle;
     const id = tile._id || tile.id;
 
-    // ―――――――――――――――――――――――――――――――――――
-    // FIXED: Better image selection logic for different tile types
+
     let chosenImage = '';
-    
-    // For artist/song tiles, check multiple possible image field names
     if (tile.type === 'artist' || tile.type === 'song') {
       chosenImage = tile.bgImage || tile.image || tile.albumCover || tile.artistImage || '';
     } else {
-      // For other tiles, prefer bgImage first
       chosenImage = tile.bgImage || tile.image || '';
     }
+
 
     // If the chosenImage is literally "/" or empty, show placeholder instead
     const safeImageSrc =
