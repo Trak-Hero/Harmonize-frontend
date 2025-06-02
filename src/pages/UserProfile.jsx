@@ -81,12 +81,15 @@ export default function UserProfile() {
     setSpotifyLoading(true);
     try {
       const res = await withTokenRefresh(
-        () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
+        // ← CHANGE THIS LINE to match your real backend route:
+        // If your backend is `app.get('/spotify/me', …)`, use `/spotify/me`
+        // If your backend is `app.get('/api/spotify/me', …)`, use `/api/spotify/me`
+        () => fetch(`${API}/spotify/me`,        { credentials: 'include' }),
         () => fetch(`${API}/auth/refresh`,   { credentials: 'include' })
       );
 
       if (!res?.ok) {
-        console.warn('[UserProfile] /api/me/spotify returned status:', res?.status);
+        console.warn('[UserProfile] /spotify/me returned status:', res?.status);
         setSpotifyData(null);
         return;
       }
@@ -94,10 +97,10 @@ export default function UserProfile() {
       // Check content‐type before calling res.json()
       const contentType = res.headers.get('Content-Type') || '';
       if (!contentType.includes('application/json')) {
-        // Response is not JSON (likely HTML)
+        // Response is not JSON (we got HTML instead)
         const textBody = await res.text();
         console.warn(
-          '[UserProfile] /api/me/spotify returned non-JSON. Body starts with:',
+          '[UserProfile] /spotify/me returned non-JSON. Body starts with:',
           textBody.slice(0, 200).replace(/\s+/g, ' ')
         );
         setSpotifyData(null);
@@ -109,7 +112,7 @@ export default function UserProfile() {
       try {
         data = await res.json();
       } catch (parseErr) {
-        console.error('[UserProfile] JSON parse error from /api/me/spotify:', parseErr);
+        console.error('[UserProfile] JSON parse error from /spotify/me:', parseErr);
         setSpotifyData(null);
         return;
       }
@@ -126,7 +129,7 @@ export default function UserProfile() {
       setSpotifyLoading(false);
     }
   }, [API, isOwner]);
-  // We removed `spotifyLoading` from the dependency list so toggling loading state won't re-trigger this.
+  // Removed `spotifyLoading` from dependencies so toggling loading state doesn't re-trigger this.
 
   useEffect(() => {
     // Only attempt to load if:
@@ -137,11 +140,10 @@ export default function UserProfile() {
     if (!hasCheckedSession || !authUser) return;
     if (!isOwner) return;
     if (spotifyData !== null) return; 
-    // If spotifyData is already non-null, skip! (we fetched it once.)
+    // Once spotifyData goes from null → array, we will not re-fetch.
 
     loadSpotify();
   }, [hasCheckedSession, authUser, isOwner, spotifyData, loadSpotify]);
-  // Once spotifyData goes from null → array, we will not re-fetch.
 
   /* ────────────────────────────────── 3) add‐tile handler ────────────────────────────────── */
   const handleAddTile = useCallback(
@@ -165,7 +167,6 @@ export default function UserProfile() {
   );
 
   /* ────────────────────────────────── 4) loading & redirect logic ────────────────────────────────── */
-  // First, show a spinner until we’ve at least checked “isLoggedIn?”
   if (!hasCheckedSession || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -177,7 +178,6 @@ export default function UserProfile() {
     );
   }
 
-  // If sessionCheck is done but authUser is null ⇒ force to /login UI
   if (hasCheckedSession && !authUser) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -194,7 +194,6 @@ export default function UserProfile() {
     );
   }
 
-  // If we still don’t have a targetUserId (should only happen briefly)
   if (!targetUserId) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -227,7 +226,6 @@ export default function UserProfile() {
       <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
         {/* header */}
         <header className="space-y-3 flex items-center gap-6">
-          {/* avatar */}
           {authUser.avatar && (
             <img
               src={authUser.avatar}
