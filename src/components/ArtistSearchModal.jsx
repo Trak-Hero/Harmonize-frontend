@@ -30,20 +30,11 @@ export default function ArtistSearchModal({ onClose, userId }) {
   };
 
   const pickArtist = async (artist) => {
-    const raw = artist.images?.[0]?.url || artist.image || '';
-    const imageUrl = raw?.trim?.() || '';
+    const imageUrl = artist.images?.[0]?.url?.trim?.() || '';
   
-    console.log('[pickArtist] artist object:', artist);
-    console.log('[pickArtist] using image:', imageUrl);
-    console.log('[pickArtist] will addTile with:', {
-      userId,
-      type: 'artist',
+    console.log('[pickArtist] Using:', {
       title: artist.name,
       bgImage: imageUrl,
-      x: 0,
-      y: Infinity,
-      w: 2,
-      h: 2,
     });
   
     await addTile({
@@ -59,6 +50,7 @@ export default function ArtistSearchModal({ onClose, userId }) {
   
     onClose();
   };
+  
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">

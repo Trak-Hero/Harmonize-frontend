@@ -29,25 +29,27 @@ export default function SongSearchModal({ onClose, userId }) {
   };
 
   const pickSong = async (track) => {
-    // Try multiple ways to get the album cover
-    const albumCover = 
-      track.album?.images?.[0]?.url || 
-      track.album?.image ||
-      (Array.isArray(track.album?.images) && track.album.images.length > 0 ? track.album.images[0].url : '') ||
-      '';
-    
-    console.log('[pickSong] track object:', track);
-    console.log('[pickSong] using album cover:', albumCover);
-    
+    const albumCover = track.album?.images?.[0]?.url?.trim?.() || '';
+  
+    console.log('[pickSong] Using:', {
+      title: track.name,
+      bgImage: albumCover,
+    });
+  
     await addTile({
       userId,
       type: 'song',
       title: track.name,
       bgImage: albumCover,
-      x: 0, y: Infinity, w: 2, h: 2,
+      x: 0,
+      y: Infinity,
+      w: 2,
+      h: 2,
     });
+  
     onClose();
   };
+  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
