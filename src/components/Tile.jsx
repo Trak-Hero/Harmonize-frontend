@@ -16,13 +16,8 @@ const Tile = ({ tile }) => {
     const showTitle    = !!displayTitle;
     const id = tile._id || tile.id;
 
-    // Normalize image field priority
-    let chosenImage = '';
-    if (tile.type === 'artist' || tile.type === 'song') {
-      chosenImage = tile.bgImage || tile.albumCover || tile.artistImage || tile.image || '';
-    } else {
-      chosenImage = tile.bgImage || tile.image || '';
-    }
+    // Prefer bgImage always for consistency
+    let chosenImage = tile.bgImage || tile.albumCover || tile.artistImage || tile.image || '';
 
     const safeImageSrc =
       chosenImage && chosenImage !== '/' && chosenImage !== ''
@@ -32,9 +27,9 @@ const Tile = ({ tile }) => {
     console.log('[Tile.jsx] Image logic for tile:', {
       type: tile.type,
       bgImage: tile.bgImage,
-      image: tile.image,
       albumCover: tile.albumCover,
       artistImage: tile.artistImage,
+      image: tile.image,
       chosenImage,
       safeImageSrc
     });
@@ -47,20 +42,20 @@ const Tile = ({ tile }) => {
           fontFamily: tile.font || 'sans-serif',
         }}
       >
-        {/* Always render image if available */}
-        <img
-          src={safeImageSrc}
-          alt=""
-          onError={(e) => {
-            console.warn('[Tile.jsx] Image failed to load:', safeImageSrc);
-            e.currentTarget.src = '/placeholder.jpg';
-          }}
-          className="absolute inset-0 w-full h-full object-cover z-0"
-          onLoad={() => console.log('[Tile.jsx] image loaded successfully')}
+        {/* Always render image */}
+        {chosenImage && (
+          <img
+            src={safeImageSrc}
+            alt=""
+            onError={(e) => {
+              console.warn('[Tile.jsx] Image failed to load:', safeImageSrc);
+              e.currentTarget.src = '/placeholder.jpg';
+            }}
+            className="absolute inset-0 w-full h-full object-cover z-0"
+          />
+        )}
 
-        />
-
-        {/* ARTIST or SONG TILE: overlay title */}
+        {/* Overlay title */}
         {(tile.type === 'artist' || tile.type === 'song') && showTitle && (
           <div className="absolute inset-0 flex items-end p-4 bg-black/40 backdrop-blur-sm z-10">
             <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
