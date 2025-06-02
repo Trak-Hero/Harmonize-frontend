@@ -139,10 +139,28 @@ const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
           if (ref) markerRefs.current[friend._id] = ref;
         }}
       >
-        <Popup minWidth={200} maxWidth={260}>
+        <Popup minWidth={210} maxWidth={260}>
           <div className="backdrop-blur-sm bg-black/50 rounded-2xl p-4 shadow-xl space-y-2 text-white font-sans">
             <h2 className="text-md font-semibold">{friend.displayName || friend.username}</h2>
             <p className="text-sm italic text-gray-300">📍 {city}</p>
+            <div className="flex gap-1">
+              <a
+                href={`http://maps.apple.com/?daddr=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+              >
+                Apple Maps
+              </a>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+              >
+                Google Maps
+              </a>
+            </div>
           </div>
         </Popup>
       </Marker>

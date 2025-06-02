@@ -26,6 +26,8 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 const MapPage = () => {
   const [events, setEvents] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
+  const [allFriends, setAllFriends] = useState([]);
+  const [filteredFriends, setFilteredFriends] = useState([]);
   const [showEvents, setShowEvents] = useState(true);
   const [showFriends, setShowFriends] = useState(true);
   const [filters, setFilters] = useState({ genre: '', sortBy: '', distance: '' });
@@ -39,10 +41,10 @@ const MapPage = () => {
     fetchUserLocation();
   }, [fetchUserLocation]);
 
+  // Fetch events based on user location
   useEffect(() => {
     async function loadEvents() {
       const radius = filters.distance || 100;
-
       const fallbackCoords = { lat: 43.7, lon: -72.28 };
       const latitude = userLocation?.latitude ?? fallbackCoords.lat;
       const longitude = userLocation?.longitude ?? fallbackCoords.lon;
@@ -65,6 +67,45 @@ const MapPage = () => {
     }
   }, [userLocation, filters.distance]);
 
+  // Enrich friends with distance to user location
+  useEffect(() => {
+    if (!userLocation) return;
+
+    const enrichedFriends = sampleFriends.map(friend => {
+      const [lng, lat] = friend.location.coordinates;
+      const dist = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
+      return { ...friend, distance: dist };
+    });
+
+    setAllFriends(enrichedFriends);
+    setFilteredFriends(enrichedFriends);
+  }, [userLocation]);
+
+  // Filter and sort friends
+  useEffect(() => {
+    let filtered = [...allFriends];
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(friend =>
+        friend.displayName.toLowerCase().includes(term) ||
+        friend.userName?.toLowerCase().includes(term)
+      );
+    }
+
+    if (filters.sortBy === 'nearest') {
+      filtered.sort((a, b) => a.distance - b.distance);
+    }
+
+    if (filters.distance) {
+      const maxDistance = parseFloat(filters.distance);
+      filtered = filtered.filter(friend => friend.distance <= maxDistance);
+    }
+
+    setFilteredFriends(filtered);
+  }, [filters, searchTerm, allFriends]);
+
+  // Filter and sort events
   useEffect(() => {
     let filtered = [...allEvents];
 
@@ -104,7 +145,7 @@ const MapPage = () => {
           <SearchBar onSearchChange={setSearchTerm} />
           <FilterBar onFilterChange={setFilters} genres={genreOptions} />
           <EventList events={showEvents ? events : []} onSelect={setSelectedEventId} visible={showEvents} />
-          <FriendList friends={showFriends ? sampleFriends : []} visible={showFriends} onSelect={setSelectedFriendId} />
+          <FriendList friends={showFriends ? filteredFriends : []} visible={showFriends} onSelect={setSelectedFriendId} />
         </div>
         <div className="flex-1 relative">
           <MapView
@@ -114,7 +155,7 @@ const MapPage = () => {
             showFriends={showFriends}
             setShowFriends={setShowFriends}
             selectedEventId={selectedEventId}
-            friends={sampleFriends}
+            friends={filteredFriends}
             selectedFriendId={selectedFriendId}
           />
         </div>

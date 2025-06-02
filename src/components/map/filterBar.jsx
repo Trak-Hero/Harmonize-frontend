@@ -77,6 +77,7 @@ const FilterBar = ({ onFilterChange, genres = [] }) => {
           <option value="50">50 mi</option>
           <option value="100">100 mi</option>
           <option value="200">200 mi</option>
+          <option value="500">500 mi</option>
         </select>
       </div>
 
