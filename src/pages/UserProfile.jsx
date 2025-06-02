@@ -163,6 +163,7 @@ export default function UserProfile() {
                 <TilePicker onAdd={handleAddTile} />
               </div>
             )}
+            console.log('[UserProfile] tiles to render:', tiles);
 
             <ResponsiveGrid
               className="layout"

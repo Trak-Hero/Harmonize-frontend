@@ -16,6 +16,8 @@ const Tile = ({ tile }) => {
     const showTitle    = !!displayTitle;
     const id = tile._id || tile.id;
 
+    const safeImageSrc = tile.bgImage === '/' ? '/placeholder.jpg' : tile.bgImage;
+
     return (
       <div
         className="relative h-full w-full rounded-lg overflow-hidden border border-white/40 group"
@@ -25,10 +27,11 @@ const Tile = ({ tile }) => {
         }}
       >
         {/* Background Image */}
-        {tile.bgImage && (
+        {tile.type !== 'picture' && tile.bgImage && (
           <img
-            src={tile.bgImage}
+            src={safeImageSrc}
             alt=""
+            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
             className="absolute inset-0 w-full h-full object-cover z-0"
           />
         )}
@@ -52,11 +55,12 @@ const Tile = ({ tile }) => {
         {/* PICTURE TILE */}
         {tile.type === 'picture' && (
           <div className="relative z-10 h-full w-full">
-            {tile.bgImage ? (
+            {tile.bgImage && tile.bgImage !== '/' ? (
               <img
                 src={tile.bgImage}
                 alt=""
                 className="w-full h-full object-cover"
+                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-white bg-gray-600">
