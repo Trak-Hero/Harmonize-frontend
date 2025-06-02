@@ -45,14 +45,16 @@ const Tile = ({ tile }) => {
         {/* Always render image */}
         {chosenImage && (
           <img
-            src={safeImageSrc}
-            alt=""
-            onError={(e) => {
-              console.warn('[Tile.jsx] Image failed to load:', safeImageSrc);
-              e.currentTarget.src = '/placeholder.jpg';
-            }}
-            className="absolute inset-0 w-full h-full object-cover z-0"
-          />
+          src={safeImageSrc}
+          alt=""
+          crossOrigin="anonymous"
+          onError={(e) => {
+            console.warn('[Tile.jsx] Image failed to load:', safeImageSrc);
+            e.currentTarget.src = '/placeholder.jpg';
+          }}
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        />
+        
         )}
 
         {/* Overlay title */}
