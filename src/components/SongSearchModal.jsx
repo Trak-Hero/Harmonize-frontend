@@ -31,10 +31,10 @@ export default function SongSearchModal({ onClose, userId }) {
   const pickSong = async (track) => {
     // Try multiple ways to get the album cover
     const albumCover = 
-      track.album?.images?.[0]?.url || 
-      track.album?.image ||
-      (Array.isArray(track.album?.images) && track.album.images.length > 0 ? track.album.images[0].url : '') ||
-      '';
+  track.album?.images?.[0]?.url || 
+  track.album?.image ||
+  (Array.isArray(track.album?.images) && track.album.images.length > 0 ? track.album.images[0].url : '') ||
+  'https://placehold.co/300x300?text=Song';
     
     console.log('[pickSong] track object:', track);
     console.log('[pickSong] using album cover:', albumCover);
