@@ -22,7 +22,7 @@ const cols        = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
 
 export default function FriendProfile() {
   /* ───────── params & stores ───────── */
-  const { userId: paramUserId } = useParams();
+  const { id: paramUserId, userId } = useParams();
   const authUser = useAuthStore((s) => s.user);
   const targetUserId = paramUserId || authUser?.id;
   const isOwner = targetUserId === authUser?.id;
@@ -31,8 +31,9 @@ export default function FriendProfile() {
     tiles, fetchTiles, setCurrentUserId
   } = useProfileStore();
 
-  const { friends, followUser, unfollowUser } = useFriendStore((s) => s.userSlice);
-  const targetFriend = friends.find(f => f.id === targetUserId);
+  const { friends, getFriendById, followUser, unfollowUser } = useFriendStore((s) => s.userSlice);
+  const targetFriend = getFriendById(targetUserId);
+
   const isFollowing  = friends
     .find(f => f.id === authUser?.id)
     ?.following.includes(targetUserId);
