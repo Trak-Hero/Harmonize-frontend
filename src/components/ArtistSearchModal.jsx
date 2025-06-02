@@ -35,7 +35,7 @@ export default function ArtistSearchModal({ onClose, userId }) {
       artist.image?.trim?.() ||
       (Array.isArray(artist.images) && artist.images.length > 0 ? artist.images[0].url?.trim?.() : '') ||
       '';
-
+  
     const tileData = {
       userId,
       type: 'artist',
@@ -46,13 +46,14 @@ export default function ArtistSearchModal({ onClose, userId }) {
       w: 2,
       h: 2,
     };
-
+  
     console.log('[pickArtist] Using tileData:', tileData);
-
-    await addTile(tileData);
-
+  
+    await addTile(tileData); // ✅ this line must use tileData
+  
     onClose();
   };
+  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
