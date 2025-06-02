@@ -51,8 +51,8 @@ export default function UserProfile() {
 
   const loadSpotify = useCallback(async () => {
     const res = await withTokenRefresh(
-      () => fetch(`${API}/auth/api/me/spotify`, { credentials: 'include' }),
-      () => fetch(`${API}/auth/refresh`,        { credentials: 'include' })
+      () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
+      () => fetch(`${API}/auth/refresh`, { credentials: 'include' })
     );
     if (!res?.ok) return;
 
