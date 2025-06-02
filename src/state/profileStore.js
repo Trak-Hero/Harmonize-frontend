@@ -58,20 +58,17 @@ export const useProfileStore = create(
           console.warn('[profileStore] fetchTiles called without profileUserId');
           return;
         }
-
+      
         set({ isLoading: true });
-        
+      
         try {
-          console.log('[profileStore] Fetching tiles for user:', profileUserId, 'viewer:', viewerId);
-          
-          const res = await axios.get(
-            `${API_BASE}/api/users/${profileUserId}/tiles`,
-            { 
-              params: { viewerId },
-              timeout: 10000, // 10 second timeout
-            }
-          );
-          
+          console.log('[profileStore] Fetching tiles (using /api/tiles/:userId) for user:', profileUserId);
+      
+          // Call the working route directly
+          const res = await axios.get(`${API_BASE}/api/tiles/${profileUserId}`, {
+            timeout: 10000,
+          });
+      
           console.log('[profileStore] Fetched tiles:', res.data);
           set({ 
             tiles: res.data || [], 
@@ -79,24 +76,11 @@ export const useProfileStore = create(
             isLoading: false 
           });
         } catch (err) {
-          console.error('[profileStore] Failed to fetch tiles:', err);
-          
-          // Try alternative endpoint
-          try {
-            console.log('[profileStore] Trying alternative endpoint...');
-            const res = await axios.get(`${API_BASE}/api/tiles/${profileUserId}`);
-            console.log('[profileStore] Fetched tiles (alternative):', res.data);
-            set({ 
-              tiles: res.data || [], 
-              currentUserId: profileUserId,
-              isLoading: false 
-            });
-          } catch (err2) {
-            console.error('[profileStore] Alternative fetch also failed:', err2);
-            set({ isLoading: false });
-          }
+          console.error('[profileStore] Failed to fetch tiles (only attempted valid endpoint):', err);
+          set({ tiles: [], isLoading: false });
         }
       },
+      
 
       /**
        * Create a new tile that belongs to the *current* profile.
