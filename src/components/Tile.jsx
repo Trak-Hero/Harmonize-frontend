@@ -10,10 +10,10 @@ const Tile = ({ tile }) => {
   try {
     console.log('[Tile.jsx] rendering tile:', tile);
     const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
-    const deleteTile    = useProfileStore((s) => s.deleteTile);
+    const deleteTile = useProfileStore((s) => s.deleteTile);
 
     const displayTitle = tile.title ?? tile.name ?? tile.content ?? '';
-    const showTitle    = !!displayTitle;
+    const showTitle = !!displayTitle;
     const id = tile._id || tile.id;
 
     // Prefer bgImage always for consistency
@@ -42,22 +42,25 @@ const Tile = ({ tile }) => {
           fontFamily: tile.font || 'sans-serif',
         }}
       >
-        {/* Always render image */}
-        {chosenImage && (
-          <img
-          src={safeImageSrc}
-          alt=""
-          crossOrigin="anonymous"
-          onError={(e) => {
-            console.warn('[Tile.jsx] Image failed to load:', safeImageSrc);
-            e.currentTarget.src = '/placeholder.jpg';
-          }}
-          className="absolute inset-0 w-full h-full object-cover z-0"
-        />
-        
+        {/* Always render image in container */}
+        {safeImageSrc && (
+          <div className="absolute inset-0 z-0">
+            <img
+              src={safeImageSrc}
+              alt=""
+              crossOrigin="anonymous"
+              onLoad={() => console.log('[Tile.jsx] image loaded:', safeImageSrc)}
+              onError={(e) => {
+                console.warn('[Tile.jsx] Image failed to load:', safeImageSrc);
+                e.currentTarget.src = '/placeholder.jpg';
+              }}
+              className="w-full h-full object-cover"
+              // style={{ border: '2px solid red' }} // Uncomment to debug image box
+            />
+          </div>
         )}
 
-        {/* Overlay title */}
+        {/* ARTIST or SONG TILE: overlay title */}
         {(tile.type === 'artist' || tile.type === 'song') && showTitle && (
           <div className="absolute inset-0 flex items-end p-4 bg-black/40 backdrop-blur-sm z-10">
             <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
@@ -81,7 +84,11 @@ const Tile = ({ tile }) => {
                 src={tile.bgImage}
                 alt=""
                 className="w-full h-full object-cover"
-                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  console.warn('[Tile.jsx] Image failed to load:', tile.bgImage);
+                  e.currentTarget.src = '/placeholder.jpg';
+                }}
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-white bg-gray-600">
@@ -96,7 +103,10 @@ const Tile = ({ tile }) => {
 
         {/* EDIT / DELETE BUTTONS */}
         <button
-          onClick={(e) => { e.stopPropagation(); setEditorOpen(true, id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditorOpen(true, id);
+          }}
           className="absolute top-2 right-2 z-20 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70"
         >
           Edit
