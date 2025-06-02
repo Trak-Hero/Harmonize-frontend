@@ -5,11 +5,11 @@ import FriendList from '../components/map/friendList';
 import FilterBar from '../components/map/filterBar';
 import SearchBar from '../components/map/searchBar';
 import MapView from '../components/map/mapView';
-
+import { fetchEventsByLocation } from '../api/ticketmaster';
 
 const sampleEvents = [
   {
-    _id: 'rockapellas', // ✅ Add ID
+    _id: 'rockapellas', 
     title: 'The Rockapellas',
     artistId: '60af8840c45e2f001f4d32b1',
     location: {
@@ -105,6 +105,13 @@ const MapPage = () => {
   const [selectedFriendId, setSelectedFriendId] = useState(null);
 
 
+  useEffect(() => {
+    async function loadEvents() {
+      const fetchedEvents = await fetchEventsByLocation(43.7, -72.28);
+      setEvents(fetchedEvents);
+    }
+    loadEvents();
+  }, []);
 
   useEffect(() => {
     let filtered = [...sampleEvents];
@@ -144,7 +151,7 @@ const MapPage = () => {
     <div className="w-screen h-screen flex bg-gradient-to-b from-[#012e40] via-[#001c29] to-black text-white">
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
-        <div className="w-[24rem] min-w-[300px] top-50 p-6 space-y-6 bg-black/30 backdrop-blur-lg">
+        <div className="w-[24rem] min-w-[300px] top-50 p-6 space-y-6 bg-black/30 backdrop-blur-lg overflow-y-auto max-h-screen">
           <SearchBar onSearchChange={handleSearchChange} />
           <FilterBar onFilterChange={handleFilterChange} />
           <EventList 
