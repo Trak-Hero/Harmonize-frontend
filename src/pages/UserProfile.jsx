@@ -25,72 +25,132 @@ const cols        = { xxs: 1, xs: 2, sm: 4,  md: 8,  lg: 12 };
 export default function UserProfile() {
   /* ─────────────────────────────────── state & stores ────────────────────────────────── */
   const { userId: paramUserId } = useParams();
-  const authUser     = useAuthStore((s) => s.user);                     // undefined on first render
-  const targetUserId = paramUserId ?? authUser?.id ?? authUser?._id;    // fallback to _id too
-  const isOwner      = !paramUserId || (authUser && targetUserId === authUser.id);
+  const { user: authUser, isLoading: authLoading, hasCheckedSession } = useAuthStore();
+  
+  // Wait for auth to be checked before determining user IDs
+  const targetUserId = paramUserId || (authUser?.id || authUser?._id);
+  const isOwner = !paramUserId || (authUser && targetUserId === (authUser.id || authUser._id));
 
   const {
-    tiles, editorOpen, editingTileId,
+    tiles, editorOpen, editingTileId, isLoading: tilesLoading,
     fetchTiles, updateLayout, addTile, addTempTile, setEditorOpen, setCurrentUserId
   } = useProfileStore();
 
   const [activeTab,   setActiveTab]   = useState('recent');
   const [spotifyData, setSpotifyData] = useState(null);
   const [showEditor,  setShowEditor]  = useState(false);
+  const [spotifyLoading, setSpotifyLoading] = useState(false);
 
   /* ────────────────────────────────── load tiles ────────────────────────────────── */
   useEffect(() => {
-    if (!targetUserId || !authUser) return;
+    // Only proceed if auth has been checked and we have necessary data
+    if (!hasCheckedSession || !targetUserId || !authUser) {
+      console.log('[UserProfile] Waiting for auth check or user data:', {
+        hasCheckedSession,
+        targetUserId,
+        authUser: !!authUser
+      });
+      return;
+    }
 
+    console.log('[UserProfile] Loading tiles for user:', targetUserId);
     setCurrentUserId(targetUserId); 
-    fetchTiles(targetUserId, authUser.id);           // always pass ownerId for ACL
-  }, [targetUserId, authUser, fetchTiles, setCurrentUserId]);
+    fetchTiles(targetUserId, authUser.id || authUser._id);
+  }, [targetUserId, authUser, fetchTiles, setCurrentUserId, hasCheckedSession]);
 
   /* ────────────────────────────────── load spotify data (owner) ────────────────────────────────── */
   const API = import.meta.env.VITE_API_BASE_URL;
 
   const loadSpotify = useCallback(async () => {
-    const res = await withTokenRefresh(
-      () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
-      () => fetch(`${API}/auth/refresh`, { credentials: 'include' })
-    );
-    if (!res?.ok) return;
+    if (!isOwner || spotifyLoading) return;
+    
+    setSpotifyLoading(true);
+    try {
+      const res = await withTokenRefresh(
+        () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
+        () => fetch(`${API}/auth/refresh`, { credentials: 'include' })
+      );
+      
+      if (!res?.ok) {
+        console.warn('[UserProfile] Failed to load Spotify data:', res?.status);
+        return;
+      }
 
-    const data = await res.json();
-    setSpotifyData({
-      top:         data.top         ?? [],
-      top_artists: data.top_artists ?? [],
-      recent:      data.recent      ?? [],
-    });
-  }, [API]);
+      const data = await res.json();
+      setSpotifyData({
+        top:         data.top         ?? [],
+        top_artists: data.top_artists ?? [],
+        recent:      data.recent      ?? [],
+      });
+    } catch (error) {
+      console.error('[UserProfile] Error loading Spotify data:', error);
+    } finally {
+      setSpotifyLoading(false);
+    }
+  }, [API, isOwner, spotifyLoading]);
 
-  useEffect(() => { if (isOwner) loadSpotify(); }, [isOwner, loadSpotify]);
+  useEffect(() => {
+    if (isOwner && hasCheckedSession && authUser) {
+      loadSpotify();
+    }
+  }, [isOwner, loadSpotify, hasCheckedSession, authUser]);
 
   /* ────────────────────────────────── add‑tile handler ────────────────────────────────── */
   const handleAddTile = useCallback(
     (tileData = {}) => {
-      if (!targetUserId)
-        return console.warn('Add‑Tile blocked: user still loading');
+      if (!targetUserId) {
+        console.warn('[UserProfile] Add‑Tile blocked: user still loading');
+        return;
+      }
       const tempId = addTempTile({
-                ...tileData,
-                userId: targetUserId,
-                x: 0,
-                y: Infinity,
-                w: 2,
-                h: 2,
-                content: '',
-              });
-              /* 2️⃣ …then open the editor immediately */
-              setEditorOpen(true, tempId);
+        ...tileData,
+        userId: targetUserId,
+        x: 0,
+        y: Infinity,
+        w: 2,
+        h: 2,
+        content: '',
+      });
+      setEditorOpen(true, tempId);
     },
     [targetUserId, addTempTile, setEditorOpen]
   );
 
-  /* ────────────────────────────────── loading guard ────────────────────────────────── */
-  if (!authUser) {
+  /* ────────────────────────────────── loading states ────────────────────────────────── */
+  // Show loading if we haven't checked session yet, or if auth is loading
+  if (!hasCheckedSession || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
-        Loading your profile…
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If session has been checked but no user, redirect to login
+  if (hasCheckedSession && !authUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white text-lg">
+        <div className="text-center space-y-4">
+          <p>Please log in to view profiles</p>
+          <a href="/login" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+            Go to Login
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // If we don't have a target user ID yet, show loading
+  if (!targetUserId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white text-lg">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+          <p>Loading profile...</p>
+        </div>
       </div>
     );
   }
@@ -111,13 +171,14 @@ export default function UserProfile() {
           {/* avatar */}
           {authUser.avatar && (
             <img src={authUser.avatar}
-                className="h-24 w-24 rounded-full object-cover border border-white/20" />
+                className="h-24 w-24 rounded-full object-cover border border-white/20" 
+                alt="Profile avatar" />
           )}
 
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-3">
               <h1 className="text-5xl font-extrabold">
-                {authUser.displayName || 'Your Profile'}
+                {authUser.displayName || authUser.username || 'Your Profile'}
               </h1>
               {isOwner && (
                 <button
@@ -128,7 +189,7 @@ export default function UserProfile() {
               )}
             </div>
             {authUser.bio && <p className="text-white/70">{authUser.bio}</p>}
-            <p className="text-white/40 text-sm">0 Followers • — Following</p>
+            <p className="text-white/40 text-sm">0 Followers • 0 Following</p>
           </div>
         </header>
 
@@ -152,9 +213,18 @@ export default function UserProfile() {
         {/* tab content */}
         {activeTab === 'recent' ? (
           <div className="space-y-6 mt-6">
-            <div className="card"><FavoriteSongs   songs   ={spotifyData?.top         ?? []} /></div>
-            <div className="card"><FavoriteArtists artists ={spotifyData?.top_artists ?? []} /></div>
-            <div className="card"><RecentlyPlayed  recent  ={spotifyData?.recent      ?? []} /></div>
+            {spotifyLoading ? (
+              <div className="text-center py-8 text-white/60">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+                <p>Loading Spotify data...</p>
+              </div>
+            ) : (
+              <>
+                <div className="card"><FavoriteSongs   songs   ={spotifyData?.top         ?? []} /></div>
+                <div className="card"><FavoriteArtists artists ={spotifyData?.top_artists ?? []} /></div>
+                <div className="card"><RecentlyPlayed  recent  ={spotifyData?.recent      ?? []} /></div>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-6 mt-6">
@@ -163,29 +233,35 @@ export default function UserProfile() {
                 <TilePicker onAdd={handleAddTile} />
               </div>
             )}
-            console.log('[UserProfile] tiles to render:', tiles);
 
-            <ResponsiveGrid
-              className="layout"
-              rowHeight={100}
-              breakpoints={breakpoints}
-              cols={cols}
-              layouts={{ lg: layoutItems }}
-              onLayoutChange={isOwner ? updateLayout : undefined}
-              isDraggable={isOwner}
-              isResizable={isOwner}
-            >
-              {tiles.map((t) => (
-                <div
-                  key={t._id || t.id}
-                  data-grid={{ x: t.x || 0, y: t.y || 0, w: t.w || 1, h: t.h || 1, i: t._id || t.id }}
-                >
-                  <div className="card h-full">
-                    <Tile tile={t} />
+            {tilesLoading ? (
+              <div className="text-center py-8 text-white/60">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+                <p>Loading tiles...</p>
+              </div>
+            ) : (
+              <ResponsiveGrid
+                className="layout"
+                rowHeight={100}
+                breakpoints={breakpoints}
+                cols={cols}
+                layouts={{ lg: layoutItems }}
+                onLayoutChange={isOwner ? updateLayout : undefined}
+                isDraggable={isOwner}
+                isResizable={isOwner}
+              >
+                {tiles.map((t) => (
+                  <div
+                    key={t._id || t.id}
+                    data-grid={{ x: t.x || 0, y: t.y || 0, w: t.w || 1, h: t.h || 1, i: t._id || t.id }}
+                  >
+                    <div className="card h-full">
+                      <Tile tile={t} />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </ResponsiveGrid>
+                ))}
+              </ResponsiveGrid>
+            )}
           </div>
         )}
       </section>
