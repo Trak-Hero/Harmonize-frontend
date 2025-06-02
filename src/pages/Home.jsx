@@ -59,32 +59,14 @@ export default function Home() {
           friends: friendsRes.data?.length || 0
         });
 
-        // Safely map tracks with additional error handling
-        const safeMapTracks = (tracks, source) => {
-          if (!Array.isArray(tracks)) {
-            console.warn(`${source}: Expected array but got:`, typeof tracks);
-            return [];
-          }
+        // Safely map tracks, filtering out any null results
+        const mappedRecommendations = (recRes.data ?? [])
+          .map(mapTrack)
+          .filter(track => track !== null);
           
-          return tracks
-            .map((track, index) => {
-              try {
-                const mapped = mapTrack(track);
-                if (!mapped) {
-                  console.warn(`${source}: mapTrack returned null for track at index ${index}`);
-                  return null;
-                }
-                return mapped;
-              } catch (error) {
-                console.error(`${source}: Error mapping track at index ${index}:`, error, track);
-                return null;
-              }
-            })
-            .filter(track => track !== null && !track._error); // Filter out errors and nulls
-        };
-
-        const mappedRecommendations = safeMapTracks(recRes.data ?? [], 'Recommendations');
-        const mappedRecent = safeMapTracks(recentRes.data ?? [], 'Recent');
+        const mappedRecent = (recentRes.data ?? [])
+          .map(mapTrack)
+          .filter(track => track !== null);
 
         console.log('Home: Mapped tracks:', {
           recommendations: mappedRecommendations.length,
