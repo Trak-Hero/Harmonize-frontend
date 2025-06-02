@@ -1,4 +1,3 @@
-// src/pages/MapPage.js
 import React, { useState, useEffect } from 'react';
 import EventList from '../components/map/eventList';
 import FriendList from '../components/map/friendList';
@@ -6,6 +5,7 @@ import FilterBar from '../components/map/filterBar';
 import SearchBar from '../components/map/searchBar';
 import MapView from '../components/map/mapView';
 import { fetchEventsByLocation } from '../api/ticketmaster';
+import useLocationStore from '../state/locationStore';
 
 const sampleFriends = [
   { _id: 'john-doe-1', displayName: 'John Doe', location: { type: 'Point', coordinates: [-72.2802, 43.7025] } },
@@ -16,17 +16,16 @@ const sampleFriends = [
 ];
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // km
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
 const MapPage = () => {
   const [events, setEvents] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
-  const [userCoords, setUserCoords] = useState({ lat: 43.7, lon: -72.28 }); // fallback default
   const [showEvents, setShowEvents] = useState(true);
   const [showFriends, setShowFriends] = useState(true);
   const [filters, setFilters] = useState({ genre: '', sortBy: '', distance: '' });
@@ -34,15 +33,21 @@ const MapPage = () => {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedFriendId, setSelectedFriendId] = useState(null);
 
+  const { userLocation, fetchUserLocation } = useLocationStore();
+
+  useEffect(() => {
+    fetchUserLocation();
+  }, [fetchUserLocation]);
+
   useEffect(() => {
     async function loadEvents() {
       const radius = filters.distance || 100;
+
+      const fallbackCoords = { lat: 43.7, lon: -72.28 };
+      const latitude = userLocation?.latitude ?? fallbackCoords.lat;
+      const longitude = userLocation?.longitude ?? fallbackCoords.lon;
+
       try {
-        const pos = await new Promise((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject)
-        );
-        const { latitude, longitude } = pos.coords;
-        setUserCoords({ lat: latitude, lon: longitude });
         const rawEvents = await fetchEventsByLocation(latitude, longitude, radius);
         const enriched = rawEvents.map(e => ({
           ...e,
@@ -51,51 +56,46 @@ const MapPage = () => {
         setEvents(enriched);
         setAllEvents(enriched);
       } catch (err) {
-        console.error("Geolocation or fetch failed, using fallback", err);
-        const fallback = await fetchEventsByLocation(43.7, -72.28, radius);
-        const enriched = fallback.map(e => ({
-          ...e,
-          distance: calculateDistance(43.7, -72.28, e.location.coordinates[1], e.location.coordinates[0])
-        }));
-        setEvents(enriched);
-        setAllEvents(enriched);
+        console.error("Failed to fetch events", err);
       }
     }
-    loadEvents();
-  }, [filters.distance]);
+
+    if (userLocation || filters.distance) {
+      loadEvents();
+    }
+  }, [userLocation, filters.distance]);
 
   useEffect(() => {
-  let filtered = [...allEvents];
+    let filtered = [...allEvents];
 
-  if (filters.genre) {
-    const genreKey = filters.genre.toLowerCase().replace(/[^a-z0-9]/g, '');
-    filtered = filtered.filter(event => event.genreKey === genreKey);
-  }
+    if (filters.genre) {
+      const genreKey = filters.genre.toLowerCase().replace(/[^a-z0-9]/g, '');
+      filtered = filtered.filter(event => event.genreKey === genreKey);
+    }
 
-  if (searchTerm) {
-    const term = searchTerm.toLowerCase();
-    filtered = filtered.filter(event =>
-      event.title.toLowerCase().includes(term) ||
-      event.description?.toLowerCase().includes(term)
-    );
-  }
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(event =>
+        event.title.toLowerCase().includes(term) ||
+        event.description?.toLowerCase().includes(term)
+      );
+    }
 
-  if (filters.sortBy === 'nearest') {
-    filtered.sort((a, b) => a.distance - b.distance);
-  } else if (filters.sortBy === 'date') {
-    filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
-  }
+    if (filters.sortBy === 'nearest') {
+      filtered.sort((a, b) => a.distance - b.distance);
+    } else if (filters.sortBy === 'date') {
+      filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
 
-  if (filters.distance) {
-    const maxDistance = parseFloat(filters.distance);
-    filtered = filtered.filter(event => event.distance <= maxDistance);
-  }
+    if (filters.distance) {
+      const maxDistance = parseFloat(filters.distance);
+      filtered = filtered.filter(event => event.distance <= maxDistance);
+    }
 
+    setEvents(filtered);
+  }, [filters, searchTerm, allEvents]);
 
-  setEvents(filtered);
-}, [filters, searchTerm, allEvents]);
-
-const genreOptions = Array.from(new Set(allEvents.map(e => e.genre))).sort();
+  const genreOptions = Array.from(new Set(allEvents.map(e => e.genre))).sort();
 
   return (
     <div className="w-screen h-screen flex bg-gradient-to-b from-[#012e40] via-[#001c29] to-black text-white">

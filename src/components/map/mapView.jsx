@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import useLocationStore from '../../state/locationStore';
 
 const LocationMarker = () => {
   const [position, setPosition] = useState(null);
@@ -52,12 +53,16 @@ const getColor = (name) => {
 
 const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
   const markerRefs = useRef({});
+  const map = useMap();
 
   useEffect(() => {
     if (selectedFriendId && markerRefs.current[selectedFriendId]) {
-      markerRefs.current[selectedFriendId].openPopup();
+      const marker = markerRefs.current[selectedFriendId];
+      const latLng = marker.getLatLng();
+      map.flyTo(latLng, 15); // zoom level 15
+      marker.openPopup();
     }
-  }, [selectedFriendId]);
+  }, [selectedFriendId, map]);
 
   if (!visible) return null;
 
@@ -108,6 +113,7 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
   const markerRefs = useRef({});
   const fetchedKeysRef = useRef(new Set());
   const [cityMap, setCityMap] = useState({});
+  const map = useMap();
 
   useEffect(() => {
     events.forEach(async (event) => {
@@ -127,9 +133,12 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
 
   useEffect(() => {
     if (selectedEventId && markerRefs.current[selectedEventId]) {
-      markerRefs.current[selectedEventId].openPopup();
+      const marker = markerRefs.current[selectedEventId];
+      const latLng = marker.getLatLng();
+      map.flyTo(latLng, 15); // zoom level 15
+      marker.openPopup();
     }
-  }, [selectedEventId]);
+  }, [selectedEventId, map]);
 
   if (!visible) return null;
 
@@ -138,6 +147,12 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
     const [lng, lat] = event.location.coordinates;
     const key = `${lat},${lng}`;
     const city = cityMap[key] || 'Loading...';
+
+    const isApple = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform);
+    const mapUrl = isApple
+      ? `http://maps.apple.com/?daddr=${lat},${lng}`
+      : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
 
     return (
       <Marker
@@ -156,14 +171,37 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
             <h2 className="text-lg font-semibold">{event.title}</h2>
             <p className="text-sm text-gray-300">{new Date(event.date).toLocaleString()}</p>
             <p className="text-sm italic text-gray-400">📍 {city}</p>
-            <a
-              href={event.ticketUrl || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full text-center bg-white text-black font-medium py-2 rounded-lg hover:bg-gray-200 transition"
-            >
-              Buy Ticket
-            </a>
+
+            <div className="space-y-2">
+              {event.ticketUrl && (
+                <a
+                  href={event.ticketUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center bg-white text-black font-medium py-2 rounded-lg hover:bg-gray-200 transition"
+                >
+                  Buy Ticket
+                </a>
+              )}
+              <div className="flex gap-2">
+                <a
+                  href={`http://maps.apple.com/?daddr=${lat},${lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+                >
+                  Apple Maps
+                </a>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+                >
+                  Google Maps
+                </a>
+              </div>
+            </div>
           </div>
         </Popup>
       </Marker>
@@ -172,6 +210,9 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
 };
 
 const MapView = ({ events, showEvents, setShowEvents, showFriends, setShowFriends, selectedEventId, friends, selectedFriendId }) => {
+  const { userLocation } = useLocationStore();
+  const defaultCenter = { lat: 43.7022, lng: -72.2896 };
+  const center = userLocation ? { lat: userLocation.latitude, lng: userLocation.longitude } : defaultCenter;
   return (
     <div className="w-full h-full relative">
       <div className="absolute top-4 left-4 z-[999] space-x-2">
@@ -194,7 +235,7 @@ const MapView = ({ events, showEvents, setShowEvents, showFriends, setShowFriend
       </div>
 
       <MapContainer
-        center={{ lat: 43.7022, lng: -72.2896 }}
+        center={center}
         zoom={13}
         scrollWheelZoom={true}
         className="w-full h-full z-0"
