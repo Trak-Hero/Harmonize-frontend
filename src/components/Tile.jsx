@@ -22,10 +22,13 @@ const Tile = ({ tile }) => {
     
     // For artist/song tiles, check multiple possible image field names
     if (tile.type === 'artist' || tile.type === 'song') {
-      chosenImage = tile.bgImage || tile.image || tile.albumCover || tile.artistImage || '';
-    } else {
-      // For other tiles, prefer bgImage first
-      chosenImage = tile.bgImage || tile.image || '';
+      chosenImage =
+        tile.bgImage ||
+        tile.image ||
+        tile.albumCover ||
+        tile.artistImage ||
+        (tile.images?.[0]?.url ?? '') || // <-- Add this line
+        '';
     }
 
     // If the chosenImage is literally "/" or empty, show placeholder instead
