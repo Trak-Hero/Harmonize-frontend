@@ -11,7 +11,8 @@ import FavoriteSongs   from '../components/FavoriteSongs';
 import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed  from '../components/RecentlyPlayed';
 import FriendActivity  from '../components/FriendActivity';
-import FollowersModal  from '../components/FollowersModal';
+
+import FollowersModal  from '../components/FriendsPage/FollowersModal';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';

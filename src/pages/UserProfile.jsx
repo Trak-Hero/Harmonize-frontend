@@ -14,7 +14,8 @@ import RecentlyPlayed  from '../components/RecentlyPlayed';
 import FriendActivity  from '../components/FriendActivity';
 import ProfileEditor   from '../components/ProfileEditor';
 import TilePicker      from '../components/TilePicker';
-import FollowersModal  from '../components/FollowersModal';
+
+import FollowersModal  from '../components/FriendsPage/FollowersModal';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
