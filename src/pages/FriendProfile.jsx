@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { useAuthStore } from '../state/authStore';
 import { useProfileStore } from '../state/profileStore';
-import useFriendStore   from '../state/friendStore';
+import useFriendStore from '../state/friendStore';
 import withTokenRefresh from '../utils/withTokenRefresh';
 
 import Tile            from '../components/Tile';
@@ -11,6 +11,7 @@ import FavoriteSongs   from '../components/FavoriteSongs';
 import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed  from '../components/RecentlyPlayed';
 import FriendActivity  from '../components/FriendActivity';
+import FollowersModal  from '../components/FollowersModal';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -21,20 +22,22 @@ const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
 const cols        = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
 
 export default function FriendProfile() {
-  /* ---------- stores & params ---------- */
-  const { id } = useParams();                          // /friends/:id
-  const authUser           = useAuthStore((s) => s.user);
+  /* ---------- params & stores ---------- */
+  const { id: targetUserId } = useParams();                // /friends/:id
+  const authUser          = useAuthStore((s) => s.user);
   const {
     tiles, fetchTiles, setCurrentUserId
-  } = useProfileStore();
+  }                   = useProfileStore();
+  const {
+    friends, followUser, unfollowUser, userSlice
+  }                   = useFriendStore((s) => s);
 
-  const { friends, followUser, unfollowUser, userSlice } = useFriendStore((s) => s);
-  const currentUserId  = userSlice.currentUserId;
-  const targetFriend   = friends.find((f) => f.id === id);
-  const isOwner        = id === currentUserId;
-  const isFollowing    = friends
+  const currentUserId = userSlice.currentUserId;
+  const targetFriend  = friends.find((f) => f.id === targetUserId);
+  const isOwner       = targetUserId === currentUserId;
+  const isFollowing   = !!friends
     .find((f) => f.id === currentUserId)
-    ?.following.includes(id);
+    ?.following.includes(targetUserId);
 
   /* ---------- spotify data ---------- */
   const [spotifyData, setSpotifyData] = useState(null);
@@ -42,7 +45,7 @@ export default function FriendProfile() {
 
   const loadSpotify = useCallback(async () => {
     const res = await withTokenRefresh(
-      () => fetch(`${API}/auth/api/user/${id}/spotify`, { credentials: 'include' }),
+      () => fetch(`${API}/auth/api/user/${targetUserId}/spotify`, { credentials: 'include' }),
       () => fetch(`${API}/auth/refresh`, { credentials: 'include' })
     );
     if (!res?.ok) return;
@@ -52,23 +55,28 @@ export default function FriendProfile() {
       top_artists: data.top_artists ?? [],
       recent:      data.recent      ?? [],
     });
-  }, [API, id]);
+  }, [API, targetUserId]);
+
+  /* ---------- modal state ---------- */
+  const [modalType, setModalType] = useState(null); // 'followers' | 'following' | null
 
   /* ---------- initial load ---------- */
   useEffect(() => {
     if (!targetFriend) return;
-    setCurrentUserId(id);
-    fetchTiles(id, currentUserId);
+    setCurrentUserId(targetUserId);
+    fetchTiles(targetUserId, currentUserId);
     loadSpotify();
-  }, [id, targetFriend, currentUserId, fetchTiles, setCurrentUserId, loadSpotify]);
+  }, [targetUserId, targetFriend, currentUserId, fetchTiles, setCurrentUserId, loadSpotify]);
 
   if (!targetFriend) {
     return <div className="min-h-screen flex items-center justify-center text-white">User not found.</div>;
   }
 
-  /* ---------- follower counts ---------- */
-  const followersCount = friends.filter((f) => f.following.includes(id)).length;
-  const followingCount = targetFriend.following.length;
+  /* ---------- follower lists & counts ---------- */
+  const followersList = friends.filter((f) => f.following.includes(targetUserId));
+  const followingList = friends.filter((f) => targetFriend.following.includes(f.id));
+  const followersCount = followersList.length;
+  const followingCount = followingList.length;
 
   /* ---------- layout (read-only) ---------- */
   const layoutItems = tiles.map((t) => ({
@@ -77,12 +85,12 @@ export default function FriendProfile() {
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      {/* ← Back button */}
+      {/* ← Back */}
       <Link to="/friends" className="absolute left-6 top-6 text-blue-400 hover:underline">
         ← Back to Friends
       </Link>
 
-      {/* -------- main column -------- */}
+      {/* ─── main col ─── */}
       <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
         {/* header */}
         <header className="flex items-center gap-6">
@@ -94,11 +102,9 @@ export default function FriendProfile() {
               <h1 className="text-5xl font-extrabold">{targetFriend.name}</h1>
               {!isOwner && (
                 <button
-                  onClick={() => (isFollowing ? unfollowUser(id) : followUser(id))}
+                  onClick={() => (isFollowing ? unfollowUser(targetUserId) : followUser(targetUserId))}
                   className={`px-4 py-2 rounded-full text-sm transition-colors ${
-                    isFollowing
-                      ? 'bg-gray-400 hover:bg-gray-500'
-                      : 'bg-green-500 hover:bg-green-600'
+                    isFollowing ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
                   } text-white`}
                 >
                   {isFollowing ? 'Unfollow' : 'Follow'}
@@ -107,19 +113,25 @@ export default function FriendProfile() {
             </div>
             {targetFriend.bio && <p className="text-white/70">{targetFriend.bio}</p>}
             <p className="text-white/40 text-sm">
-              {followersCount} {followersCount === 1 ? 'follower' : 'followers'} • {followingCount} following
+              <span onClick={() => setModalType('followers')} className="cursor-pointer hover:underline">
+                {followersCount} {followersCount === 1 ? 'follower' : 'followers'}
+              </span>{' '}
+              •{' '}
+              <span onClick={() => setModalType('following')} className="cursor-pointer hover:underline">
+                {followingCount} following
+              </span>
             </p>
           </div>
         </header>
 
-        {/* spotify highlights */}
+        {/* spotify highlight cards */}
         <div className="space-y-6 mt-6">
           <div className="card"><FavoriteSongs   songs   ={spotifyData?.top         ?? []} /></div>
           <div className="card"><FavoriteArtists artists ={spotifyData?.top_artists ?? []} /></div>
           <div className="card"><RecentlyPlayed  recent  ={spotifyData?.recent      ?? []} /></div>
         </div>
 
-        {/* friend’s tiles (view-only) */}
+        {/* tile grid (read-only) */}
         <ResponsiveGrid
           className="layout mt-6"
           rowHeight={100}
@@ -137,10 +149,19 @@ export default function FriendProfile() {
         </ResponsiveGrid>
       </section>
 
-      {/* -------- right column -------- */}
+      {/* right col */}
       <aside className="col-span-12 lg:col-span-4">
         <div className="card backdrop-blur-lg h-full"><FriendActivity /></div>
       </aside>
+
+      {/* modal */}
+      {modalType && (
+        <FollowersModal
+          title={modalType === 'followers' ? 'Followers' : 'Following'}
+          people={modalType === 'followers' ? followersList : followingList}
+          onClose={() => setModalType(null)}
+        />
+      )}
     </div>
   );
 }
