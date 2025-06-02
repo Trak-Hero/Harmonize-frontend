@@ -17,14 +17,33 @@ const Tile = ({ tile }) => {
     const id = tile._id || tile.id;
 
     // ―――――――――――――――――――――――――――――――――――
-    // FIXED: Better image selection logic for different tile types
+    // IMPROVED: Better image selection logic for different tile types
     let chosenImage = '';
     
-    // For artist/song tiles, check multiple possible image field names
-    if (tile.type === 'artist' || tile.type === 'song') {
-      chosenImage = tile.bgImage || tile.image || tile.albumCover || tile.artistImage || '';
-    } else {
-      // For other tiles, prefer bgImage first
+    // For artist tiles - check multiple possible image sources
+    if (tile.type === 'artist') {
+      chosenImage = tile.bgImage || tile.image || tile.artistImage || tile.images?.[0]?.url || '';
+      console.log('[Tile.jsx] Artist tile image sources:', {
+        bgImage: tile.bgImage,
+        image: tile.image,
+        artistImage: tile.artistImage,
+        imagesArray: tile.images,
+        chosen: chosenImage
+      });
+    } 
+    // For song tiles - check album cover and other sources
+    else if (tile.type === 'song') {
+      chosenImage = tile.bgImage || tile.image || tile.albumCover || tile.album?.images?.[0]?.url || '';
+      console.log('[Tile.jsx] Song tile image sources:', {
+        bgImage: tile.bgImage,
+        image: tile.image,
+        albumCover: tile.albumCover,
+        albumImages: tile.album?.images,
+        chosen: chosenImage
+      });
+    } 
+    // For other tiles, prefer bgImage first
+    else {
       chosenImage = tile.bgImage || tile.image || '';
     }
 
@@ -34,12 +53,9 @@ const Tile = ({ tile }) => {
         ? chosenImage 
         : '/placeholder.jpg';
     
-    console.log('[Tile.jsx] Image logic for tile:', {
+    console.log('[Tile.jsx] Final image logic for tile:', {
       type: tile.type,
-      bgImage: tile.bgImage,
-      image: tile.image,
-      albumCover: tile.albumCover,
-      artistImage: tile.artistImage,
+      title: displayTitle,
       chosenImage,
       safeImageSrc
     });
@@ -57,7 +73,7 @@ const Tile = ({ tile }) => {
         {tile.type !== 'picture' && chosenImage && chosenImage !== '/' && (
           <img
             src={safeImageSrc}
-            alt=""
+            alt={displayTitle || 'Tile background'}
             onError={(e) => { 
               console.warn('[Tile.jsx] Image failed to load:', safeImageSrc);
               e.target.src = '/placeholder.jpg'; 
@@ -68,8 +84,17 @@ const Tile = ({ tile }) => {
 
         {/* ARTIST or SONG TILE: overlay the title on top of the background image */}
         {(tile.type === 'artist' || tile.type === 'song') && showTitle && (
-          <div className="absolute inset-0 flex items-end p-4 bg-black/40 backdrop-blur-sm z-10">
-            <h3 className="text-xl font-bold text-white">{displayTitle}</h3>
+          <div className="absolute inset-0 flex items-end p-4 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10">
+            <div className="text-white">
+              <h3 className="text-xl font-bold text-white drop-shadow-lg">{displayTitle}</h3>
+              {/* Show additional info if available */}
+              {tile.type === 'song' && tile.artist && (
+                <p className="text-sm text-white/80 mt-1">by {tile.artist}</p>
+              )}
+              {tile.type === 'artist' && tile.genres && tile.genres.length > 0 && (
+                <p className="text-sm text-white/80 mt-1">{tile.genres.slice(0, 2).join(', ')}</p>
+              )}
+            </div>
           </div>
         )}
 
@@ -88,7 +113,7 @@ const Tile = ({ tile }) => {
             {tile.bgImage && tile.bgImage !== '/' ? (
               <img
                 src={tile.bgImage}
-                alt=""
+                alt="User uploaded content"
                 className="w-full h-full object-cover"
                 onError={(e) => { e.target.src = '/placeholder.jpg'; }}
               />
@@ -103,23 +128,42 @@ const Tile = ({ tile }) => {
         {/* SPACER TILE */}
         {tile.type === 'spacer' && null}
 
-        {/* EDIT / DELETE BUTTONS */}
-        <button
-          onClick={(e) => { e.stopPropagation(); setEditorOpen(true, id); }}
-          className="absolute top-2 right-2 z-20 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70"
-        >
-          Edit
-        </button>
+        {/* EDIT / DELETE BUTTONS - Only show on hover */}
+        <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => { e.stopPropagation(); setEditorOpen(true, id); }}
+            className="bg-black/70 text-white px-2 py-1 rounded text-xs hover:bg-black/90 mr-1"
+          >
+            Edit
+          </button>
+        </div>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (window.confirm('Delete this tile?')) deleteTile(id);
-          }}
-          className="absolute top-2 left-2 z-20 bg-red-500/70 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
-        >
-          Delete
-        </button>
+        <div className="absolute top-2 left-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm('Delete this tile?')) deleteTile(id);
+            }}
+            className="bg-red-500/70 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+          >
+            Delete
+          </button>
+        </div>
+
+        {/* Fallback overlay for tiles without images */}
+        {(tile.type === 'artist' || tile.type === 'song') && (!chosenImage || chosenImage === '/') && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 z-5">
+            <div className="text-center text-white p-4">
+              <div className="text-4xl mb-2">
+                {tile.type === 'artist' ? '🎤' : '🎵'}
+              </div>
+              <h3 className="text-lg font-bold">{displayTitle}</h3>
+              {tile.type === 'song' && tile.artist && (
+                <p className="text-sm opacity-80">by {tile.artist}</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   } catch (err) {
