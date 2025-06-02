@@ -126,22 +126,22 @@ export default function UserProfile() {
       setSpotifyLoading(false);
     }
   }, [API, isOwner]);
-  // Notice: `spotifyLoading` was removed from dependencies.
+  // We removed `spotifyLoading` from the dependency list so toggling loading state won't re-trigger this.
 
   useEffect(() => {
     // Only attempt to load if:
     //   • session check is done
     //   • user is authenticated
     //   • this is the owner view
-    //   • AND spotifyData is still null
+    //   • AND we have not already fetched spotifyData
     if (!hasCheckedSession || !authUser) return;
     if (!isOwner) return;
     if (spotifyData !== null) return; 
-    // If spotifyData is already non-null, skip—prevents re-fetch.
+    // If spotifyData is already non-null, skip! (we fetched it once.)
 
     loadSpotify();
   }, [hasCheckedSession, authUser, isOwner, spotifyData, loadSpotify]);
-  // Including `spotifyData` ensures that once it transitions away from null, this effect won't run again.
+  // Once spotifyData goes from null → array, we will not re-fetch.
 
   /* ────────────────────────────────── 3) add‐tile handler ────────────────────────────────── */
   const handleAddTile = useCallback(
@@ -165,6 +165,7 @@ export default function UserProfile() {
   );
 
   /* ────────────────────────────────── 4) loading & redirect logic ────────────────────────────────── */
+  // First, show a spinner until we’ve at least checked “isLoggedIn?”
   if (!hasCheckedSession || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -176,6 +177,7 @@ export default function UserProfile() {
     );
   }
 
+  // If sessionCheck is done but authUser is null ⇒ force to /login UI
   if (hasCheckedSession && !authUser) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -192,6 +194,7 @@ export default function UserProfile() {
     );
   }
 
+  // If we still don’t have a targetUserId (should only happen briefly)
   if (!targetUserId) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -224,6 +227,7 @@ export default function UserProfile() {
       <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
         {/* header */}
         <header className="space-y-3 flex items-center gap-6">
+          {/* avatar */}
           {authUser.avatar && (
             <img
               src={authUser.avatar}
