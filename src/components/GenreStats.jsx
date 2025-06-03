@@ -3,6 +3,10 @@ import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 import { Chart, BarElement, CategoryScale, LinearScale } from 'chart.js';
 
+
+const API = import.meta.env.VITE_API_BASE_URL ?? "";
+
+
 // one-time registration
 Chart.register(BarElement, CategoryScale, LinearScale);
 
@@ -11,7 +15,7 @@ export default function GenreStats({ title = 'Your genre footprint' }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    axios.get('/api/genre-stats', { withCredentials: true })
+    axios.get(`${API}/api/genre-stats`, { withCredentials: true })
       .then((res) => {
         setStats(res.data);
       })
