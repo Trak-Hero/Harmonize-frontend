@@ -5,7 +5,6 @@ import axios from 'axios';
 
 const API = import.meta.env.VITE_API_BASE_URL ?? '';
 
-// Define genre clusters and positions
 const genreClusters = {
   Pop: ['pop', 'thai pop', 't-pop', 'k-pop', 'j-pop', 'mandopop', 'c-pop', 'electropop', 'synthpop', 'french pop'],
   Rock: ['rock', 'thai rock', 'indie rock', 'alternative rock', 'punk', 'hard rock', 'classic rock', 'garage rock'],
@@ -51,19 +50,21 @@ export default function Galaxy() {
   }, []);
 
   return (
-    <Canvas camera={{ position: [0, 0, 75], fov: 60 }}>
+    <Canvas camera={{ position: [0, 0, 90], fov: 60 }}>
       <color attach="background" args={['#01010b']} />
       <ambientLight intensity={0.3} />
       <pointLight position={[30, 30, 30]} intensity={1.2} />
-      <GenreStars data={genreData} />
       <Stars radius={300} depth={60} count={5000} factor={4} fade />
       <OrbitControls enablePan={false} />
+      <GenreStars data={genreData} />
+      <ClusterZones />
     </Canvas>
   );
 }
 
 function GenreStars({ data }) {
   const group = useRef();
+  const spread = 20;
 
   useFrame((_, delta) => {
     if (group.current) group.current.rotation.y += delta * 0.02;
@@ -76,19 +77,18 @@ function GenreStars({ data }) {
         const cluster = Object.entries(genreClusters).find(([, genres]) => genres.includes(lowerGenre))?.[0] || 'Other';
         const base = clusterPositions[cluster] || [0, 0, 0];
 
-        const spread = 10;
         const offsetX = base[0] + (Math.random() - 0.5) * spread;
         const offsetY = base[1] + (Math.random() - 0.5) * spread;
         const offsetZ = base[2] + (Math.random() - 0.5) * spread;
 
         const size = 0.6 + Math.sqrt(count) * 0.4;
-        const color = `hsl(${(idx * 35) % 360}, 80%, 60%)`;
+        const color = `hsl(${(idx * 37) % 360}, 80%, 60%)`;
 
         return (
           <group key={genre} position={[offsetX, offsetY, offsetZ]}>
             <mesh>
               <sphereGeometry args={[size, 16, 16]} />
-              <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.4} />
+              <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} />
             </mesh>
             <Text
               position={[0, size + 0.5, 0]}
@@ -102,6 +102,23 @@ function GenreStars({ data }) {
           </group>
         );
       })}
+    </group>
+  );
+}
+
+function ClusterZones() {
+  return (
+    <group>
+      {Object.entries(clusterPositions).map(([cluster, [x, y, z]], i) => (
+        <mesh key={cluster} position={[x, y, z]}>
+          <sphereGeometry args={[15, 32, 32]} />
+          <meshStandardMaterial
+            color={`hsl(${(i * 37) % 360}, 100%, 80%)`}
+            transparent
+            opacity={0.1}
+          />
+        </mesh>
+      ))}
     </group>
   );
 }
