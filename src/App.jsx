@@ -14,6 +14,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import { useEffect } from 'react';
 import { useAuthStore } from './state/authStore';
+import Galaxy from './pages/Galaxy';
 
 import './App.css';
 
@@ -57,6 +58,7 @@ function App() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/galaxy" element={<Galaxy />} />
         </Routes>
       </div>
     </div>

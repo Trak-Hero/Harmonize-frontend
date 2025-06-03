@@ -28,6 +28,7 @@ export default function Navbar() {
     { name: "Discover", icon: <Compass size={18} weight="regular" /> },
     { name: "Friends", icon: <Users size={18} weight="regular" /> },
     { name: "Map", icon: <MapTrifold size={18} weight="regular" /> },
+    { name: "Galaxy", icon: <span className="text-lg">✨</span> },
   ];
 
   return (
