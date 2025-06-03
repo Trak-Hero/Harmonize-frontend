@@ -14,6 +14,7 @@ import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed  from '../components/RecentlyPlayed';
 import FriendActivity  from '../components/FriendActivity';
 import ProfileEditor   from '../components/ProfileEditor';
+import FavoritePlaylists from '../components/FavoritePlaylists';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -324,6 +325,11 @@ export default function UserProfile() {
                 <div className="card">
                   <RecentlyPlayed recent={effectiveRecent} />
                 </div>
+                {Array.isArray(spotifyData?.playlists) && spotifyData.playlists.length > 0 && (
+                  <div className="card">
+                    <FavoritePlaylists playlists={spotifyData.playlists} />
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-center py-8 text-white/60">
