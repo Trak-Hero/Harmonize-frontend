@@ -11,22 +11,31 @@ export default function GenreMap() {
   const [markers, setMarkers] = useState([]);
 
   useEffect(() => {
-    axios.get(`${API}/api/genre-stats`, { withCredentials: true })
+    axios
+      .get(`${API}/api/genre-stats`, { withCredentials: true })
       .then(res => {
         const { histogram } = res.data;
 
-        const genreCountries = Object.entries(histogram).flatMap(([genre, count]) => {
+        // Step 1: Group genres by country
+        const countryGroups = {};
+        Object.entries(histogram).forEach(([genre, count]) => {
           const country = genreOrigins[genre.toLowerCase()];
-          if (!country || !countryCoords[country]) return [];
-          return [{
-            genre,
-            country,
-            count,
-            coordinates: countryCoords[country]
-          }];
+          if (!country || !countryCoords[country]) return;
+          if (!countryGroups[country]) countryGroups[country] = [];
+          countryGroups[country].push({ genre, count });
         });
 
-        setMarkers(genreCountries);
+        // Step 2: Spread stacked genres vertically to avoid overlap
+        const genreMarkers = Object.entries(countryGroups).flatMap(([country, genres]) => {
+          const [lon, lat] = countryCoords[country];
+          return genres.map((g, i) => ({
+            ...g,
+            country,
+            coordinates: [lon, lat + i * 0.7], // vertical offset
+          }));
+        });
+
+        setMarkers(genreMarkers);
       })
       .catch(err => console.error('[GenreMap] Failed:', err));
   }, []);
