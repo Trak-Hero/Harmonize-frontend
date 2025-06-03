@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 
 export default function SearchResults() {
-  const [params]  = useSearchParams();
-  const query     = params.get('q') ?? '';
+  const [params] = useSearchParams();
+  const query = params.get('q') ?? '';
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(()=>{
+  useEffect(() => {
     if (!query) return;
     setLoading(true);
     fetch(`${import.meta.env.VITE_API_BASE_URL}/spotify/search?q=${encodeURIComponent(query)}`)
@@ -17,8 +17,8 @@ export default function SearchResults() {
       .finally(() => setLoading(false));
   }, [query]);
 
-  if (!query)         return <p className="p-6 text-white">Enter an artist name…</p>;
-  if (loading)        return <p className="p-6 text-white">Searching…</p>;
+  if (!query) return <p className="p-6 text-white">Enter an artist name…</p>;
+  if (loading) return <p className="p-6 text-white">Searching…</p>;
   if (!results.length) return <p className="p-6 text-white">No matches.</p>;
 
   return (

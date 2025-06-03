@@ -1,3 +1,4 @@
+// src/components/SongSearchModal.jsx
 import { useState } from 'react';
 import { useProfileStore } from '../state/profileStore';
 
@@ -10,47 +11,52 @@ export default function SongSearchModal({ onClose, userId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const search = async () => {
-    if (!query.trim()) return;
-    setLoading(true); 
-    setError('');
-    try {
-      const url = `${API}/spotify/search?q=${encodeURIComponent(query)}&type=track`;
-      const res = await fetch(url, { credentials: 'include' });
-      if (!res.ok) throw new Error(`${res.status}`);
-      const data = await res.json();
-      console.log('[SongSearchModal] received data:', data);
-      setResults(data.tracks || []);
-    } catch (e) {
-      console.error('[SongSearchModal] search failed:', e);
-      setError('Could not fetch songs.');
-    } finally {
-      setLoading(false);
+const search = async () => {
+  if (!query.trim()) return;
+  setLoading(true); 
+  setError('');
+  try {
+    const url = `${API}/spotify/search?q=${encodeURIComponent(query)}&type=track`;
+    const res = await fetch(url, { credentials: 'include' });
+    if (!res.ok) throw new Error(`${res.status}`);
+    const data = await res.json();
+    console.log('[SongSearchModal] received data:', data);
+    
+    let tracks = [];
+    if (data.tracks && Array.isArray(data.tracks)) {
+      tracks = data.tracks; 
+    } else if (Array.isArray(data)) {
+      tracks = data; 
     }
-  };
+    
+    setResults(tracks);
+  } catch (e) {
+    console.error('[SongSearchModal] search failed:', e);
+    setError('Could not fetch songs.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const pickSong = async (track) => {
-    // More robust album cover extraction
+    // Extract album cover art
     let albumCover = '';
     
     if (track.album && track.album.images && Array.isArray(track.album.images) && track.album.images.length > 0) {
-      // Find the best quality image (usually the first one is highest quality)
-      const validImage = track.album.images.find(img => img.url && img.url.trim());
-      albumCover = validImage ? validImage.url.trim() : '';
+      // Sort by size and get the best quality image
+      const sortedImages = track.album.images.sort((a, b) => (b.width || 0) - (a.width || 0));
+      albumCover = sortedImages[0].url;
     } else if (track.album && track.album.image && typeof track.album.image === 'string') {
-      albumCover = track.album.image.trim();
+      albumCover = track.album.image;
     }
     
-    // Fallback warning if no image found
-    if (!albumCover) {
-      console.warn('[SongSearchModal] No album cover found for track:', track.name);
-    }
+    console.log('[pickSong] Using album cover:', albumCover);
   
     const tileData = {
       userId,
       type: 'song',
       title: track.name || 'Unknown Song',
-      bgImage: albumCover,
+      bgImage: albumCover, // This will be used by the Tile component
       x: 0,
       y: Infinity,
       w: 2,
@@ -94,13 +100,12 @@ export default function SongSearchModal({ onClose, userId }) {
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
           {results.map((track) => {
-            // Display logic for search results
+            // Display logic for search results preview
             let displayImage = 'https://placehold.co/48x48?text=Song';
             
             if (track.album && track.album.images && Array.isArray(track.album.images) && track.album.images.length > 0) {
-              const validImage = track.album.images.find(img => img.url && img.url.trim());
-              if (validImage) displayImage = validImage.url;
-            } else if (track.album && track.album.image && typeof track.album.image === 'string' && track.album.image.trim()) {
+              displayImage = track.album.images[0].url;
+            } else if (track.album && track.album.image && typeof track.album.image === 'string') {
               displayImage = track.album.image;
             }
             

@@ -56,7 +56,7 @@ export default function TileEditor() {
       <div className="w-full max-w-md rounded-xl bg-zinc-900 p-6 space-y-6">
         <h2 className="text-2xl font-bold text-white">Edit Tile</h2>
 
-        {/* ─────── Type-specific bits ─────── */}
+        // In TileEditor.jsx, update the type-specific section:
         {(tile.type === 'artist' || tile.type === 'song') && (
           <TextField
             label="Title"
@@ -75,23 +75,26 @@ export default function TileEditor() {
           />
         )}
 
-        {/* ─────── universal customisation ─────── */}
-        <TextField
-          label="Background-image URL"
-          name="bgImage"
-          value={form.bgImage || ''}
-          onChange={onChange}
-          placeholder="https://example.com/photo.jpg"
-        />
-
-        {/* preview if any image */}
-        {form.bgImage && (
-          <img
-            src={form.bgImage}
-            alt="preview"
-            className="h-32 w-full rounded object-cover"
-            onError={(e) => (e.currentTarget.style.display = 'none')}
-          />
+        {(tile.type === 'picture' || tile.type === 'artist' || tile.type === 'song') && (
+          <>
+            <TextField
+              label={tile.type === 'picture' ? "Image URL" : "Background Image URL (optional)"}
+              name="bgImage"
+              value={form.bgImage || ''}
+              onChange={onChange}
+              placeholder="https://example.com/image.jpg"
+            />
+            
+            {/* preview if any image */}
+            {form.bgImage && (
+              <img
+                src={form.bgImage}
+                alt="preview"
+                className="h-32 w-full rounded object-cover"
+                onError={(e) => (e.currentTarget.style.display = 'none')}
+              />
+            )}
+          </>
         )}
 
         {/* colour */}

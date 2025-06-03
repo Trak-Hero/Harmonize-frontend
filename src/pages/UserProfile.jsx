@@ -92,8 +92,8 @@ export default function UserProfile() {
     if (!hasCheckedSession || authLoading) return;
     if (!authUser) return;
     if (!targetUserId) return;
-
-    // ALWAYS prefix with the absolute API URL, never a relative path
+  
+    // Fix: Use the correct endpoint path
     fetch(`${API}/api/recent`, { credentials: 'include' })
       .then((res) => {
         if (!res.ok) {
