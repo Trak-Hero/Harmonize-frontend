@@ -156,7 +156,8 @@ export default function UserProfile() {
       setSpotifyData({
         top:         Array.isArray(data.top)         ? data.top : [],
         top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
-        recent:      Array.isArray(data.recent)      ? data.recent : []
+        recent:      Array.isArray(data.recent)      ? data.recent : [],
+        playlists:   Array.isArray(data.playlists)   ? data.playlists : []
       });
     } catch (error) {
       console.error('[UserProfile] Unexpected error loading Spotify data:', error);
