@@ -41,32 +41,33 @@ export default function ArtistSearchModal({ onClose, userId }) {
       artistImage = artist.image;
     }
     
-    console.log('[pickArtist] Artist data:', artist);
-    console.log('[pickArtist] Extracted image URL:', artistImage);
+    console.log('🎨 [pickArtist] Artist data received:', artist);
+    console.log('🖼️ [pickArtist] Extracted image URL:', artistImage);
+    console.log('📊 [pickArtist] Image array:', artist.images);
   
     const tileData = {
       userId,
       type: 'artist',
       title: artist.name || 'Unknown Artist',
-      bgImage: artistImage,
+      bgImage: artistImage, 
       x: 0,
       y: Infinity,
       w: 2,
       h: 2,
     };
   
-    console.log('[pickArtist] Final tile data being sent:', tileData);
+    console.log('📦 [pickArtist] Final tile data being sent to addTile:', tileData);
   
     try {
       const result = await addTile(tileData);
-      console.log('[pickArtist] Tile creation result:', result);
+      console.log('✅ [pickArtist] Tile creation result:', result);
       onClose();
     } catch (error) {
-      console.error('[pickArtist] Failed to add artist tile:', error);
+      console.error('❌ [pickArtist] Failed to add artist tile:', error);
       setError('Failed to add artist tile. Please try again.');
     }
   };
-
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-zinc-900 w-full max-w-xl rounded-xl p-6 space-y-4">
