@@ -10,6 +10,8 @@ const ForYou = () => {
       try {
         const res = await fetch('http://localhost:8080/api/musicPosts'); // adjust path later
         const data = await res.json();
+        console.log('Fetched posts:', data); // <- Add this line
+
         setFeed(data);
       } catch (err) {
         console.error('Error fetching posts:', err);
