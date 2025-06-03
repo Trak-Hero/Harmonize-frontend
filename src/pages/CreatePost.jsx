@@ -1,51 +1,56 @@
 import { useState } from 'react';
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 const CreatePost = () => {
   const [formData, setFormData] = useState({
+    spotifyTrackId: '',
     title: '',
     artist: '',
     genre: '',
     audioUrl: '',
     coverUrl: '',
-    videoUrl: '',
+    duration: null,
+    caption: '',
   });
 
   const [isPreviewing, setIsPreviewing] = useState(false);
-
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
 
   const handleSpotifySearch = async () => {
     if (!searchQuery.trim()) return;
-  
+
     try {
-      const res = await fetch(`/api/search/spotify?query=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`${API}/spotify/search?q=${encodeURIComponent(searchQuery)}&type=track`);
       const data = await res.json();
       setSearchResults(data.tracks || []);
     } catch (err) {
-      console.error(err);
+      console.error('Spotify Search Error:', err);
     }
   };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Submitting form with data:', formData);
 
     try {
-      const response = await fetch('/api/musicPosts', {
+      const response = await fetch('http://localhost:8080/api/musicPosts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Include Spotify or app access token if needed
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+
+      const result = await response.json();
+      console.log('Server response:', result);
 
       if (!response.ok) throw new Error('Failed to create post');
 
@@ -56,7 +61,7 @@ const CreatePost = () => {
         genre: '',
         audioUrl: '',
         coverUrl: '',
-        videoUrl: '',
+        duration: null,
       });
       setIsPreviewing(false);
     } catch (err) {
@@ -65,9 +70,7 @@ const CreatePost = () => {
     }
   };
 
-  const togglePreview = () => {
-    setIsPreviewing(!isPreviewing);
-  };
+  const togglePreview = () => setIsPreviewing(!isPreviewing);
 
   return (
     <div className="min-h-screen bg-black text-white flex justify-center items-center px-4">
@@ -83,46 +86,47 @@ const CreatePost = () => {
 
           <div className="space-y-2">
             <input
-                type="text"
-                placeholder="Search a song on Spotify"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400"
+              type="text"
+              placeholder="Search a song on Spotify"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400"
             />
             <button
-                type="button"
-                onClick={handleSpotifySearch}
-                className="w-full bg-indigo-500 text-white py-1 rounded hover:bg-indigo-600"
+              type="button"
+              onClick={handleSpotifySearch}
+              className="w-full bg-indigo-500 text-white py-1 rounded hover:bg-indigo-600"
             >
-                Search
+              Search
             </button>
           </div>
 
           {searchResults.length > 0 && (
             <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
-                {searchResults.map((track) => (
+              {searchResults.map((track) => (
                 <div
-                    key={track.id}
-                    onClick={() => {
+                  key={track.id}
+                  onClick={() => {
                     setFormData({
-                        ...formData,
-                        title: track.name,
-                        artist: track.artist,
-                        audioUrl: track.preview_url,
-                        coverUrl: track.cover,
-                        duration: track.duration_ms / 1000,
+                      ...formData,
+                      spotifyTrackId: track.id,
+                      title: track.name,
+                      artist: track.artists?.[0]?.name || '',
+                      audioUrl: track.preview_url || '',
+                      coverUrl: track.album?.images?.[0]?.url || '',
+                      duration: track.duration_ms ? track.duration_ms / 1000 : null,
                     });
                     setSearchResults([]);
                     setSearchQuery('');
-                    }}
-                    className="bg-gray-800 p-2 rounded cursor-pointer hover:bg-gray-700"
+                  }}
+                  className="bg-gray-800 p-2 rounded cursor-pointer hover:bg-gray-700"
                 >
-                    <p className="font-semibold">{track.name}</p>
-                    <p className="text-sm text-gray-400">{track.artist}</p>
+                  <p className="font-semibold">{track.name}</p>
+                  <p className="text-sm text-gray-400">{track.artists?.[0]?.name}</p>
                 </div>
-                ))}
+              ))}
             </div>
-            )}
+          )}
 
           <input
             name="title"
@@ -130,7 +134,7 @@ const CreatePost = () => {
             value={formData.title}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400"
           />
 
           <input
@@ -142,6 +146,21 @@ const CreatePost = () => {
             className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400"
           />
 
+          <select
+            name="genre"
+            value={formData.genre}
+            onChange={handleChange}
+            className="w-full px-3 py-2 rounded bg-gray-800 text-white"
+          >
+            <option value="">Select Genre</option>
+            <option value="Pop">Pop</option>
+            <option value="Hip-Hop">Hip-Hop</option>
+            <option value="R&B">R&B</option>
+            <option value="Electronic">Electronic</option>
+            <option value="Indie">Indie</option>
+            <option value="Other">Other</option>
+          </select>
+
           <input
             name="coverUrl"
             placeholder="Cover Image URL"
@@ -150,10 +169,10 @@ const CreatePost = () => {
             className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400"
           />
 
-          <input
-            name="videoUrl"
-            placeholder="Optional Video URL"
-            value={formData.videoUrl}
+          <textarea
+            name="caption"
+            placeholder="Add a caption..."
+            value={formData.caption}
             onChange={handleChange}
             className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400"
           />
@@ -168,6 +187,7 @@ const CreatePost = () => {
       ) : (
         <div className="bg-gray-900 p-6 rounded-lg shadow-md w-full max-w-lg space-y-4">
           <h2 className="text-2xl font-bold text-center">Preview</h2>
+
           {formData.videoUrl ? (
             <video src={formData.videoUrl} controls className="rounded-lg w-full" />
           ) : formData.coverUrl ? (
@@ -182,6 +202,12 @@ const CreatePost = () => {
             <h3 className="text-xl font-semibold">{formData.title || 'Untitled'}</h3>
             <p className="text-gray-300">{formData.artist}</p>
             <p className="text-sm text-gray-400">{formData.genre}</p>
+            {formData.duration && (
+              <p className="text-sm text-gray-500">
+                Duration: {Math.floor(formData.duration / 60)}:
+                {('0' + Math.floor(formData.duration % 60)).slice(-2)} min
+              </p>
+            )}
           </div>
 
           {formData.audioUrl && (

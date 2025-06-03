@@ -1,58 +1,24 @@
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import MusicCard from '../components/MusicCard';
-import midnightCityCover from '../assets/covers/midnight-city.jpg';
-import midnightCityVideo from '../assets/videos/midnight-city-video.mp4';
-import dreamsCover from '../assets/covers/dreams.png';
-import blindingLightsCover from '../assets/covers/blinding-lights.png';
-import takeOnMeCover from '../assets/covers/take-on-me.png';
-
-const dummyFeed = [
-  {
-    id: 1,
-    title: "Midnight City",
-    artist: "M83",
-    genre: "Synthpop",
-    cover: midnightCityCover,
-    audio: "/audio/midnight-city.mp3",
-    video: midnightCityVideo,
-  },
-  {
-    id: 2,
-    title: "Dreams",
-    artist: "Fleetwood Mac",
-    genre: "Rock",
-    cover: dreamsCover,
-    audio: "/audio/dreams.mp3",
-    // video: "/videos/dreams.mp4", // optional
-  },
-  {
-    id: 3,
-    title: "Blinding Lights",
-    artist: "The Weeknd",
-    genre: "Pop",
-    cover: blindingLightsCover,
-    audio: "/audio/blinding-lights.mp3",
-  },
-  {
-    id: 4,
-    title: "Take On Me",
-    artist: "a-ha",
-    genre: "Synthpop",
-    cover: takeOnMeCover,
-    audio: "/audio/take-on-me.mp3",
-  },
-  {
-    id: 5,
-    title: "Electric Feel",
-    artist: "MGMT",
-    genre: "Indie Rock",
-    cover: "/covers/electric-feel.jpg",
-    audio: "/audio/electric-feel.mp3",
-  }
-  // add more later
-];
 
 const ForYou = () => {
+  const [feed, setFeed] = useState([]);
+
+  useEffect(() => {
+    const fetchFeed = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/musicPosts'); // adjust path later
+        const data = await res.json();
+        setFeed(data);
+      } catch (err) {
+        console.error('Error fetching posts:', err);
+      }
+    };
+
+    fetchFeed();
+  }, []);
+
   return (
     <div className="bg-black text-white min-h-screen">
         {/* Header with Create Post Tab */}
@@ -68,7 +34,7 @@ const ForYou = () => {
 
         {/* Feed */}
         <div className="flex flex-col items-center snap-y snap-mandatory overflow-y-scroll h-screen px-4 py-6 space-y-6">
-            {dummyFeed.map((item) => (
+            {feed.map((item) => (
             <div key={item.id} className="snap-start h-screen flex items-center justify-center">
                 <MusicCard key={item.id} item={item} />
             </div>
