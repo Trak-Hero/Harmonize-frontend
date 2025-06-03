@@ -1,80 +1,164 @@
-// src/pages/MapPage.js
 import React, { useState, useEffect } from 'react';
 import EventList from '../components/map/eventList';
+import FriendList from '../components/map/friendList';
 import FilterBar from '../components/map/filterBar';
 import SearchBar from '../components/map/searchBar';
 import MapView from '../components/map/mapView';
-const sampleEvents = [
-  {
-    name: 'The Rockapellas',
-    genre: 'pop',
-    distance: '0.5',
-    time: '2024-05-20T22:00:00',
-    image: '/images/rockapellas.jpg',
-  },
-  {
-    name: 'Sheba',
-    genre: 'jazz',
-    distance: '0.6',
-    time: '2024-05-20T20:00:00',
-    image: '/images/sheba.jpg',
-  },
-  {
-    name: 'Coast Jazz Orchestra',
-    genre: 'jazz',
-    distance: '1',
-    time: '2024-05-24T19:00:00',
-    image: '/images/jazz.jpg',
-  },
+import { fetchEventsByLocation } from '../api/ticketmaster';
+import useLocationStore from '../state/locationStore';
+
+const sampleFriends = [
+  { _id: 'giselle-wu-1', displayName: 'Giselle Wu', location: { type: 'Point', coordinates: [-72.2802, 43.7025] } },
+  { _id: 'echoi-2', displayName: 'Evelyn Choi', location: { type: 'Point', coordinates: [-72.2840, 43.7040] } },
+  { _id: 'rhuang-3', displayName: 'Rachael Huang', location: { type: 'Point', coordinates: [-72.2815, 43.7060] } },
+  { _id: 'trak-4', displayName: 'Trak Prateepmanowong', location: { type: 'Point', coordinates: [-72.2830, 43.7010] } },
+  { _id: 'storii-5', displayName: 'Shisui Torii', location: { type: 'Point', coordinates: [-72.2865, 43.7035] } }
 ];
+
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
 
 const MapPage = () => {
   const [events, setEvents] = useState([]);
-  const [filters, setFilters] = useState({ genre: '', sortBy: '' });
+  const [allEvents, setAllEvents] = useState([]);
+  const [allFriends, setAllFriends] = useState([]);
+  const [filteredFriends, setFilteredFriends] = useState([]);
+  const [showEvents, setShowEvents] = useState(true);
+  const [showFriends, setShowFriends] = useState(true);
+  const [filters, setFilters] = useState({ genre: '', sortBy: '', distance: '' });
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [selectedFriendId, setSelectedFriendId] = useState(null);
 
+  const { userLocation, fetchUserLocation } = useLocationStore();
 
   useEffect(() => {
-    let filtered = [...sampleEvents];
+    fetchUserLocation();
+  }, [fetchUserLocation]);
 
-    if (filters.genre) {
-      filtered = filtered.filter(event =>
-        event.genre.toLowerCase() === filters.genre.toLowerCase()
+  // Fetch events based on user location
+  useEffect(() => {
+    async function loadEvents() {
+      const radius = filters.distance || 100;
+      const fallbackCoords = { lat: 43.7, lon: -72.28 };
+      const latitude = userLocation?.latitude ?? fallbackCoords.lat;
+      const longitude = userLocation?.longitude ?? fallbackCoords.lon;
+
+      try {
+        const rawEvents = await fetchEventsByLocation(latitude, longitude, radius);
+        const enriched = rawEvents.map(e => ({
+          ...e,
+          distance: calculateDistance(latitude, longitude, e.location.coordinates[1], e.location.coordinates[0])
+        }));
+        setEvents(enriched);
+        setAllEvents(enriched);
+      } catch (err) {
+        console.error("Failed to fetch events", err);
+      }
+    }
+
+    if (userLocation || filters.distance) {
+      loadEvents();
+    }
+  }, [userLocation, filters.distance]);
+
+  // Enrich friends with distance to user location
+  useEffect(() => {
+    if (!userLocation) return;
+
+    const enrichedFriends = sampleFriends.map(friend => {
+      const [lng, lat] = friend.location.coordinates;
+      const dist = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
+      return { ...friend, distance: dist };
+    });
+
+    setAllFriends(enrichedFriends);
+    setFilteredFriends(enrichedFriends);
+  }, [userLocation]);
+
+  // Filter and sort friends
+  useEffect(() => {
+    let filtered = [...allFriends];
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(friend =>
+        friend.displayName.toLowerCase().includes(term) ||
+        friend.userName?.toLowerCase().includes(term)
       );
     }
 
     if (filters.sortBy === 'nearest') {
-      filtered.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+      filtered.sort((a, b) => a.distance - b.distance);
+    }
+
+    if (filters.distance) {
+      const maxDistance = parseFloat(filters.distance);
+      filtered = filtered.filter(friend => friend.distance <= maxDistance);
+    }
+
+    setFilteredFriends(filtered);
+  }, [filters, searchTerm, allFriends]);
+
+  // Filter and sort events
+  useEffect(() => {
+    let filtered = [...allEvents];
+
+    if (filters.genre) {
+      const genreKey = filters.genre.toLowerCase().replace(/[^a-z0-9]/g, '');
+      filtered = filtered.filter(event => event.genreKey === genreKey);
+    }
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(event =>
+        event.title.toLowerCase().includes(term) ||
+        event.description?.toLowerCase().includes(term)
+      );
+    }
+
+    if (filters.sortBy === 'nearest') {
+      filtered.sort((a, b) => a.distance - b.distance);
     } else if (filters.sortBy === 'date') {
-      filtered.sort((a, b) => new Date(a.time) - new Date(b.time));
+      filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+
+    if (filters.distance) {
+      const maxDistance = parseFloat(filters.distance);
+      filtered = filtered.filter(event => event.distance <= maxDistance);
     }
 
     setEvents(filtered);
-  }, [filters]);
+  }, [filters, searchTerm, allEvents]);
 
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-  };
-
-  const handleSearchChange = (newSearchTerm) => {
-    setSearchTerm(newSearchTerm);
-  };
+  const genreOptions = Array.from(new Set(allEvents.map(e => e.genre))).sort();
 
   return (
     <div className="w-screen h-screen flex bg-gradient-to-b from-[#012e40] via-[#001c29] to-black text-white">
       <div className="flex flex-1 overflow-hidden h-full">
-        {/* Sidebar */}
-        <div className="w-[24rem] min-w-[300px] top-50 p-6 space-y-6 bg-black/30 backdrop-blur-lg">
-          <SearchBar onSearchChange={handleSearchChange} />
-          <FilterBar onFilterChange={handleFilterChange} />
-          <EventList events={events} />
+        <div className="w-[24rem] min-w-[300px] top-50 p-6 space-y-6 bg-black/30 backdrop-blur-lg overflow-y-auto max-h-screen">
+          <SearchBar onSearchChange={setSearchTerm} />
+          <FilterBar onFilterChange={setFilters} genres={genreOptions} />
+          <EventList events={showEvents ? events : []} onSelect={setSelectedEventId} visible={showEvents} />
+          <FriendList friends={showFriends ? filteredFriends : []} visible={showFriends} onSelect={setSelectedFriendId} />
         </div>
-
-        {/* Main area (map will eventually go here) */}
         <div className="flex-1 relative">
-          <MapView />
+          <MapView
+            events={events}
+            showEvents={showEvents}
+            setShowEvents={setShowEvents}
+            showFriends={showFriends}
+            setShowFriends={setShowFriends}
+            selectedEventId={selectedEventId}
+            friends={filteredFriends}
+            selectedFriendId={selectedFriendId}
+          />
         </div>
-
       </div>
     </div>
   );
