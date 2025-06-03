@@ -1,3 +1,4 @@
+// src/components/ArtistSearchModal.jsx
 import { useState } from 'react';
 import { useProfileStore } from '../state/profileStore';
 
@@ -30,44 +31,43 @@ export default function ArtistSearchModal({ onClose, userId }) {
   };
 
   const pickArtist = async (artist) => {
-    // More robust image extraction
-    let displayImage = '';
+    // Extract the best quality image
+    let artistImage = '';
     
     if (artist.images && Array.isArray(artist.images) && artist.images.length > 0) {
-      // Find the best quality image (usually the first one is highest quality)
-      const validImage = artist.images.find(img => img.url && img.url.trim());
-      displayImage = validImage ? validImage.url.trim() : '';
+      const sortedImages = artist.images.sort((a, b) => (b.width || 0) - (a.width || 0));
+      artistImage = sortedImages[0].url;
     } else if (artist.image && typeof artist.image === 'string') {
-      displayImage = artist.image.trim();
+      artistImage = artist.image;
     }
     
-    // Fallback to a default if no image found
-    if (!displayImage) {
-      console.warn('[ArtistSearchModal] No image found for artist:', artist.name);
-    }
+    console.log('🎨 [pickArtist] Artist data received:', artist);
+    console.log('🖼️ [pickArtist] Extracted image URL:', artistImage);
+    console.log('📊 [pickArtist] Image array:', artist.images);
   
     const tileData = {
       userId,
       type: 'artist',
       title: artist.name || 'Unknown Artist',
-      bgImage: displayImage,
+      bgImage: artistImage, 
       x: 0,
       y: Infinity,
       w: 2,
       h: 2,
     };
   
-    console.log('[pickArtist] Creating tile with data:', tileData);
+    console.log('📦 [pickArtist] Final tile data being sent to addTile:', tileData);
   
     try {
-      await addTile(tileData);
+      const result = await addTile(tileData);
+      console.log('✅ [pickArtist] Tile creation result:', result);
       onClose();
     } catch (error) {
-      console.error('[pickArtist] Failed to add artist tile:', error);
+      console.error('❌ [pickArtist] Failed to add artist tile:', error);
       setError('Failed to add artist tile. Please try again.');
     }
   };
-
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-zinc-900 w-full max-w-xl rounded-xl p-6 space-y-4">
@@ -94,13 +94,12 @@ export default function ArtistSearchModal({ onClose, userId }) {
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
           {results.map((artist) => {
-            // Display logic for search results
+            // Display logic for search results preview
             let displayImage = 'https://placehold.co/48x48?text=Artist';
             
             if (artist.images && Array.isArray(artist.images) && artist.images.length > 0) {
-              const validImage = artist.images.find(img => img.url && img.url.trim());
-              if (validImage) displayImage = validImage.url;
-            } else if (artist.image && typeof artist.image === 'string' && artist.image.trim()) {
+              displayImage = artist.images[0].url;
+            } else if (artist.image && typeof artist.image === 'string') {
               displayImage = artist.image;
             }
 

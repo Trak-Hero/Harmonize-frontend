@@ -87,16 +87,17 @@ export const useProfileStore = create(
        * Falls back to the cached currentUserId if caller does not pass one.
        */
       addTile: async (tileData, tempId = null) => {
-        console.log('[profileStore] addTile sending payload:', tileData);
+        console.log('[profileStore] addTile called with:', { tileData, tempId });
+        
         // Prefer an explicit userId from the caller; otherwise fall back to the one cached
         const userId = tileData.userId || get().currentUserId;
         
         if (!userId) {
           console.error('[profileStore] Tile add failed: No user ID available');
           console.log('[profileStore] Current state:', get());
-          return;
+          throw new Error('No user ID available for tile creation');
         }
-
+      
         try {
           console.log('[profileStore] Adding tile with userId:', userId, 'tileData:', tileData);
           console.log('[profileStore] Temp ID to replace:', tempId);
@@ -111,8 +112,10 @@ export const useProfileStore = create(
             h: Number(tileData.h) || 1,
           };
           
+          console.log('[profileStore] Final payload being sent to server:', payload);
+          
           const res = await axios.post(`${API_BASE}/api/tiles`, payload);
-          console.log('[profileStore] Created tile response:', res.data);
+          console.log('[profileStore] Server response:', res.data);
           
           set((state) => ({
             tiles: tempId
@@ -123,6 +126,7 @@ export const useProfileStore = create(
           return res.data;
         } catch (err) {
           console.error('[profileStore] Failed to add tile:', err);
+          console.error('[profileStore] Error response:', err.response?.data);
           
           // Remove temp tile on failure
           if (tempId) {
