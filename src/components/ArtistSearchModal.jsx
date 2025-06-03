@@ -35,30 +35,31 @@ export default function ArtistSearchModal({ onClose, userId }) {
     let artistImage = '';
     
     if (artist.images && Array.isArray(artist.images) && artist.images.length > 0) {
-      // Sort by size and get the best quality image
       const sortedImages = artist.images.sort((a, b) => (b.width || 0) - (a.width || 0));
       artistImage = sortedImages[0].url;
     } else if (artist.image && typeof artist.image === 'string') {
       artistImage = artist.image;
     }
     
-    console.log('[pickArtist] Using image:', artistImage);
+    console.log('[pickArtist] Artist data:', artist);
+    console.log('[pickArtist] Extracted image URL:', artistImage);
   
     const tileData = {
       userId,
       type: 'artist',
       title: artist.name || 'Unknown Artist',
-      bgImage: artistImage, // This will be used by the Tile component
+      bgImage: artistImage,
       x: 0,
       y: Infinity,
       w: 2,
       h: 2,
     };
   
-    console.log('[pickArtist] Creating tile with data:', tileData);
+    console.log('[pickArtist] Final tile data being sent:', tileData);
   
     try {
-      await addTile(tileData);
+      const result = await addTile(tileData);
+      console.log('[pickArtist] Tile creation result:', result);
       onClose();
     } catch (error) {
       console.error('[pickArtist] Failed to add artist tile:', error);

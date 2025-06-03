@@ -8,7 +8,8 @@ const Tile = ({ tile }) => {
   }
 
   try {
-    console.log('[Tile.jsx] rendering tile:', tile);
+    console.log('[Tile.jsx] Rendering tile with full data:', JSON.stringify(tile, null, 2));
+    
     const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
     const deleteTile = useProfileStore((s) => s.deleteTile);
 
@@ -16,104 +17,73 @@ const Tile = ({ tile }) => {
     const showTitle = !!displayTitle;
     const id = tile._id || tile.id;
 
-    // Primary image source is bgImage (set by the modals)
+    // Check for bgImage
     let chosenImage = '';
-    
     if (tile.bgImage && tile.bgImage.trim() && tile.bgImage !== '/') {
       chosenImage = tile.bgImage.trim();
     }
 
-    console.log('[Tile.jsx] Image logic for tile:', {
+    console.log('[Tile.jsx] Image analysis:', {
       type: tile.type,
+      title: displayTitle,
       bgImage: tile.bgImage,
       chosenImage,
-      hasImage: !!chosenImage
+      hasValidImage: !!chosenImage,
+      imageLength: tile.bgImage?.length || 0
     });
 
     return (
       <div
         className="relative h-full w-full rounded-lg overflow-hidden border border-white/40 group"
         style={{
-          backgroundColor: tile.bgColor ?? 'transparent',
+          backgroundColor: tile.bgColor ?? '#374151', // Default gray background
           fontFamily: tile.font || 'sans-serif',
         }}
       >
         {/* Background image for all tiles that have one */}
-        {chosenImage && (
+        {chosenImage ? (
           <div className="absolute inset-0 z-0">
             <img
               src={chosenImage}
               alt={displayTitle || tile.type}
               crossOrigin="anonymous"
-              onLoad={() => console.log('[Tile.jsx] image loaded successfully:', chosenImage)}
+              onLoad={() => console.log('[Tile.jsx] ✅ Image loaded successfully:', chosenImage)}
               onError={(e) => {
-                console.warn('[Tile.jsx] Image failed to load:', chosenImage);
-                console.warn('[Tile.jsx] Original tile data:', tile);
-                e.currentTarget.src = `https://placehold.co/200x200?text=${tile.type}`;
+                console.error('[Tile.jsx] ❌ Image failed to load:', chosenImage);
+                console.error('[Tile.jsx] Tile data:', tile);
+                e.currentTarget.src = `https://placehold.co/200x200/4B5563/FFFFFF?text=${encodeURIComponent(tile.type.toUpperCase())}`;
               }}
               className="w-full h-full object-cover"
             />
             {/* Dark overlay for better text readability */}
-            <div className="absolute inset-0 bg-black/30 z-10"></div>
+            <div className="absolute inset-0 bg-black/40 z-10"></div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
+            <span className="text-white/60 text-sm">No Image</span>
           </div>
         )}
 
-        {/* ARTIST TILE: overlay title over background image */}
-        {tile.type === 'artist' && (
-          <div className="absolute inset-0 flex items-end p-4 z-20">
-            {showTitle && (
-              <h3 className="text-xl font-bold text-white drop-shadow-lg">{displayTitle}</h3>
-            )}
-            {!chosenImage && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-700 text-white">
-                <span>🎤 {displayTitle || 'Artist'}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* SONG TILE: overlay title over album cover */}
-        {tile.type === 'song' && (
-          <div className="absolute inset-0 flex items-end p-4 z-20">
-            {showTitle && (
-              <h3 className="text-xl font-bold text-white drop-shadow-lg">{displayTitle}</h3>
-            )}
-            {!chosenImage && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-700 text-white">
-                <span>🎵 {displayTitle || 'Song'}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TEXT TILE */}
-        {tile.type === 'text' && (
-          <div className="relative z-10 p-4 text-white break-words whitespace-pre-wrap h-full flex items-center justify-center">
-            <div className="text-center drop-shadow-lg">
-              {tile.content || 'Click Edit to add text'}
+        {/* Content overlay */}
+        <div className="absolute inset-0 z-20 flex flex-col justify-between p-4">
+          {/* Title at bottom */}
+          {showTitle && (
+            <div className="mt-auto">
+              <h3 className="text-white font-bold text-lg drop-shadow-lg leading-tight">
+                {displayTitle}
+              </h3>
             </div>
-          </div>
-        )}
+          )}
+          
+          {/* Type indicator if no title */}
+          {!showTitle && (
+            <div className="flex items-center justify-center h-full">
+              <span className="text-white/80 text-lg capitalize">{tile.type}</span>
+            </div>
+          )}
+        </div>
 
-        {/* PICTURE TILE - no overlay, just the image */}
-        {tile.type === 'picture' && (
-          <>
-            {!chosenImage && (
-              <div className="relative z-10 h-full w-full flex items-center justify-center text-white bg-gray-600">
-                <span>🖼️ Click Edit to add image</span>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* SPACER TILE */}
-        {tile.type === 'spacer' && (
-          <div className="h-full w-full bg-transparent flex items-center justify-center text-white/40">
-            <span className="text-sm">Spacer</span>
-          </div>
-        )}
-
-        {/* EDIT / DELETE BUTTONS */}
+        {/* Edit/Delete buttons */}
         <button
           onClick={(e) => {
             e.stopPropagation();
