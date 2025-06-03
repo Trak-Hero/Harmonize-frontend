@@ -13,35 +13,37 @@ const Tile = ({ tile }) => {
     const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
     const deleteTile = useProfileStore((s) => s.deleteTile);
 
-    const displayTitle = tile.title ?? tile.name ?? tile.content ?? '';
-    const showTitle = !!displayTitle;
+    const displayTitle = tile.title ?? tile.name ?? '';
+    const displayContent = tile.content ?? '';
     const id = tile._id || tile.id;
 
-    // Check for bgImage
+    // For text tiles, NEVER show background images
+    // For other tiles, check for bgImage
     let chosenImage = '';
-    if (tile.bgImage && tile.bgImage.trim() && tile.bgImage !== '/') {
+    if (tile.type !== 'text' && tile.bgImage && tile.bgImage.trim() && tile.bgImage !== '/') {
       chosenImage = tile.bgImage.trim();
     }
 
     console.log('[Tile.jsx] Image analysis:', {
       type: tile.type,
       title: displayTitle,
+      content: displayContent,
       bgImage: tile.bgImage,
       chosenImage,
       hasValidImage: !!chosenImage,
-      imageLength: tile.bgImage?.length || 0
+      isTextTile: tile.type === 'text'
     });
 
     return (
       <div
         className="relative h-full w-full rounded-lg overflow-hidden border border-white/40 group"
         style={{
-          backgroundColor: tile.bgColor ?? '#374151', // Default gray background
+          backgroundColor: tile.bgColor ?? (tile.type === 'text' ? '#374151' : 'transparent'),
           fontFamily: tile.font || 'sans-serif',
         }}
       >
-        {/* Background image for all tiles that have one */}
-        {chosenImage ? (
+        {/* Background image - ONLY for non-text tiles that have images */}
+        {chosenImage && tile.type !== 'text' && (
           <div className="absolute inset-0 z-0">
             <img
               src={chosenImage}
@@ -50,7 +52,6 @@ const Tile = ({ tile }) => {
               onLoad={() => console.log('[Tile.jsx] ✅ Image loaded successfully:', chosenImage)}
               onError={(e) => {
                 console.error('[Tile.jsx] ❌ Image failed to load:', chosenImage);
-                console.error('[Tile.jsx] Tile data:', tile);
                 e.currentTarget.src = `https://placehold.co/200x200/4B5563/FFFFFF?text=${encodeURIComponent(tile.type.toUpperCase())}`;
               }}
               className="w-full h-full object-cover"
@@ -58,30 +59,55 @@ const Tile = ({ tile }) => {
             {/* Dark overlay for better text readability */}
             <div className="absolute inset-0 bg-black/40 z-10"></div>
           </div>
-        ) : (
+        )}
+
+        {/* Fallback background for tiles without images (except text tiles) */}
+        {!chosenImage && tile.type !== 'text' && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
             <span className="text-white/60 text-sm">No Image</span>
           </div>
         )}
 
-        {/* Content overlay */}
-        <div className="absolute inset-0 z-20 flex flex-col justify-between p-4">
-          {/* Title at bottom */}
-          {showTitle && (
-            <div className="mt-auto">
-              <h3 className="text-white font-bold text-lg drop-shadow-lg leading-tight">
-                {displayTitle}
-              </h3>
+        {/* ARTIST TILE: show title at bottom */}
+        {tile.type === 'artist' && displayTitle && (
+          <div className="absolute inset-0 z-20 flex flex-col justify-end p-4">
+            <h3 className="text-white font-bold text-lg drop-shadow-lg leading-tight">
+              {displayTitle}
+            </h3>
+          </div>
+        )}
+
+        {/* SONG TILE: show title at bottom */}
+        {tile.type === 'song' && displayTitle && (
+          <div className="absolute inset-0 z-20 flex flex-col justify-end p-4">
+            <h3 className="text-white font-bold text-lg drop-shadow-lg leading-tight">
+              {displayTitle}
+            </h3>
+          </div>
+        )}
+
+        {/* TEXT TILE: show content, no background image */}
+        {tile.type === 'text' && (
+          <div className="relative z-10 p-4 h-full flex items-center justify-center">
+            <div className="text-center text-white break-words whitespace-pre-wrap leading-relaxed">
+              {displayContent || 'Click Edit to add text'}
             </div>
-          )}
-          
-          {/* Type indicator if no title */}
-          {!showTitle && (
-            <div className="flex items-center justify-center h-full">
-              <span className="text-white/80 text-lg capitalize">{tile.type}</span>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* PICTURE TILE: no overlay text, just the image */}
+        {tile.type === 'picture' && !chosenImage && (
+          <div className="relative z-10 h-full w-full flex items-center justify-center text-white bg-gray-600">
+            <span>🖼️ Click Edit to add image</span>
+          </div>
+        )}
+
+        {/* SPACER TILE */}
+        {tile.type === 'spacer' && (
+          <div className="h-full w-full bg-transparent flex items-center justify-center text-white/40">
+            <span className="text-sm">Spacer</span>
+          </div>
+        )}
 
         {/* Edit/Delete buttons */}
         <button
