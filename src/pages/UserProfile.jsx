@@ -14,6 +14,7 @@ import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed  from '../components/RecentlyPlayed';
 import FriendActivity  from '../components/FriendActivity';
 import ProfileEditor   from '../components/ProfileEditor';
+import FavoritePlaylists from '../components/FavoritePlaylists';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -155,7 +156,8 @@ export default function UserProfile() {
       setSpotifyData({
         top:         Array.isArray(data.top)         ? data.top : [],
         top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
-        recent:      Array.isArray(data.recent)      ? data.recent : []
+        recent:      Array.isArray(data.recent)      ? data.recent : [],
+        playlists:   Array.isArray(data.playlists)   ? data.playlists : []
       });
     } catch (error) {
       console.error('[UserProfile] Unexpected error loading Spotify data:', error);
@@ -324,6 +326,11 @@ export default function UserProfile() {
                 <div className="card">
                   <RecentlyPlayed recent={effectiveRecent} />
                 </div>
+                {Array.isArray(spotifyData?.playlists) && spotifyData.playlists.length > 0 && (
+                  <div className="card">
+                    <FavoritePlaylists playlists={spotifyData.playlists} />
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-center py-8 text-white/60">
