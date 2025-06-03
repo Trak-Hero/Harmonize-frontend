@@ -10,6 +10,7 @@ import SpotifyDashboard from './pages/SpotifyDashboard';
 import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
 import Register from './pages/Register';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import { useEffect } from 'react';
 import { useAuthStore } from './state/authStore';
@@ -45,7 +46,7 @@ function App() {
         <Navbar />
 
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<Home />} />
           <Route path="/discover" element={<ForYou />} />
           <Route path="/artist/:id" element={<ArtistProfile />} />
           <Route path="/search" element={<SearchResults />} />

@@ -5,22 +5,20 @@ const API = import.meta.env.VITE_API_BASE_URL;
 
 export default function ArtistSearchModal({ onClose, userId }) {
   const addTile = useProfileStore((s) => s.addTile);
-  const [query, setQuery]       = useState('');
-  const [results, setResults]   = useState([]);
-  const [loading, setLoading]   = useState(false);
-  const [error,   setError]     = useState('');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const search = async () => {
     if (!query.trim()) return;
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
     try {
-      const url =
-        `${API}/spotify/search?q=${encodeURIComponent(query)}&type=artist`;
+      const url = `${API}/spotify/search?q=${encodeURIComponent(query)}&type=artist`;
       const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      
-      // Backend returns array directly for artists, not wrapped in object
       console.log('[ArtistSearchModal] received data:', data);
       setResults(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -32,15 +30,42 @@ export default function ArtistSearchModal({ onClose, userId }) {
   };
 
   const pickArtist = async (artist) => {
-    await addTile({
-            userId,
-            type:     'artist',
-            title:    artist.name,                   
-            bgImage:  artist.image || '',  // Backend sends 'image' not 'images'
-        
-            x: 0, y: Infinity, w: 2, h: 2,
-          });
-    onClose();
+    // More robust image extraction
+    let displayImage = '';
+    
+    if (artist.images && Array.isArray(artist.images) && artist.images.length > 0) {
+      // Find the best quality image (usually the first one is highest quality)
+      const validImage = artist.images.find(img => img.url && img.url.trim());
+      displayImage = validImage ? validImage.url.trim() : '';
+    } else if (artist.image && typeof artist.image === 'string') {
+      displayImage = artist.image.trim();
+    }
+    
+    // Fallback to a default if no image found
+    if (!displayImage) {
+      console.warn('[ArtistSearchModal] No image found for artist:', artist.name);
+    }
+  
+    const tileData = {
+      userId,
+      type: 'artist',
+      title: artist.name || 'Unknown Artist',
+      bgImage: displayImage,
+      x: 0,
+      y: Infinity,
+      w: 2,
+      h: 2,
+    };
+  
+    console.log('[pickArtist] Creating tile with data:', tileData);
+  
+    try {
+      await addTile(tileData);
+      onClose();
+    } catch (error) {
+      console.error('[pickArtist] Failed to add artist tile:', error);
+      setError('Failed to add artist tile. Please try again.');
+    }
   };
 
   return (
@@ -62,26 +87,41 @@ export default function ArtistSearchModal({ onClose, userId }) {
         </div>
 
         {loading && <p className="text-white">Searching…</p>}
-        {error   && <p className="text-red-400">{error}</p>}
+        {error && <p className="text-red-400">{error}</p>}
         {!loading && !results.length && !error && (
           <p className="text-white/60">No results yet – try a search.</p>
         )}
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
-          {results.map((a) => (
-            <li
-              key={a.id}
-              onClick={() => pickArtist(a)}
-              className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
-            >
-              <img
-                src={a.image || 'https://placehold.co/48x48?text=Artist'}
-                alt={a.name}
-                className="w-12 h-12 object-cover rounded"
-              />
-              <span className="text-white">{a.name}</span>
-            </li>
-          ))}
+          {results.map((artist) => {
+            // Display logic for search results
+            let displayImage = 'https://placehold.co/48x48?text=Artist';
+            
+            if (artist.images && Array.isArray(artist.images) && artist.images.length > 0) {
+              const validImage = artist.images.find(img => img.url && img.url.trim());
+              if (validImage) displayImage = validImage.url;
+            } else if (artist.image && typeof artist.image === 'string' && artist.image.trim()) {
+              displayImage = artist.image;
+            }
+
+            return (
+              <li
+                key={artist.id || Math.random()}
+                onClick={() => pickArtist(artist)}
+                className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
+              >
+                <img
+                  src={displayImage}
+                  alt={artist.name || 'Artist'}
+                  className="w-12 h-12 object-cover rounded"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://placehold.co/48x48?text=Artist';
+                  }}
+                />
+                <span className="text-white">{artist.name || 'Unknown Artist'}</span>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="text-right">
