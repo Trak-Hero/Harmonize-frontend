@@ -8,6 +8,7 @@ import FriendFeed  from "../components/FriendFeed";
 import GenreStats  from "../components/GenreStats";
 import mapTrack    from "../utils/mapTrack";
 import GenreTimeline from '../components/GenreTimeline';
+import GenreMap from '../components/GenreMap';
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -211,6 +212,7 @@ export default function Home() {
       <section className="container mx-auto px-4">
         <GenreStats />
         <GenreTimeline />
+        <GenreMap />
       </section>
 
       {/* ───────── Friend Activity ───────── */}
