@@ -8,25 +8,24 @@ export default function GenreCloud({ histogram, unlistened }) {
   useEffect(() => {
     if (!histogram) return;
 
-    /* ── build an array of { text, size, listened } ── */
+    // Merge listened and unlistened genre data
     const data = [
       ...Object.entries(histogram).map(([g, c]) => ({
         text: g,
-        size: 12 + Math.sqrt(c) * 4,   // 12–40 px
+        size: 18 + Math.sqrt(c) * 6,   // 🔼 was 12 + √c * 4
         listened: true,
       })),
       ...unlistened.map(g => ({
         text: g,
-        size: 12,                      // minimal size for unplayed
+        size: 14,                      // 🔼 was 12
         listened: false,
       })),
     ];
 
-    /* ── layout (runs off-thread) ── */
     const layout = cloud()
-      .size([window.innerWidth * 0.9, 450])
+      .size([window.innerWidth * 0.95, 600]) // 🔼 wider + taller
       .words(data)
-      .padding(4)
+      .padding(6)
       .rotate(() => 0)
       .font('Inter')
       .fontSize(d => d.size)
@@ -55,16 +54,16 @@ export default function GenreCloud({ histogram, unlistened }) {
         .style('font-size', d => `${d.size}px`)
         .style('fill', (d, i) =>
           d.listened
-            ? `hsl(${(i * 25) % 360} 70% 60%)`
-            : '#666')                     // grey for unlistened
-        .style('opacity', d => (d.listened ? 1 : 0.3))
+            ? `hsl(${(i * 30) % 360} 70% 60%)`
+            : '#666')
+        .style('opacity', d => (d.listened ? 1 : 0.25))
         .text(d => d.text);
     }
   }, [histogram, unlistened]);
 
   return (
     <div className="mt-16 flex justify-center">
-      <svg ref={ref} className="max-w-5xl" />
+      <svg ref={ref} className="max-w-[1200px]" />
     </div>
   );
 }
