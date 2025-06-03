@@ -5,13 +5,13 @@ import axios from "axios";
 import MediaCard   from "../components/MediaCard";
 import Carousel    from "../components/Carousel";
 import FriendFeed  from "../components/FriendFeed";
+import GenreStats  from "../components/GenreStats";
 import mapTrack    from "../utils/mapTrack";
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export default function Home() {
   const [recommendations, setRecommendations] = useState([]);
-  const [recent,          setRecent]          = useState([]);
   const [friendActivity,  setFriendActivity]  = useState([]);
   const [topAlbums,       setTopAlbums]       = useState([]);
   const [loading,         setLoading]         = useState(true);
@@ -45,47 +45,20 @@ export default function Home() {
           recRes = { data: [] };
         }
 
-        const [recentRes, friendsRes] = await Promise.all([
-          axios
-            .get(`${API}/api/recent`, {
-              withCredentials: true,
-              timeout: 10000,
-            })
-            .catch((err) => {
-              console.warn("Home: Recent tracks request failed:", err.response?.status || err.message);
-              return { data: [] };
-            }),
-          axios
-            .get(`${API}/api/friends/activity`, {
-              withCredentials: true,
-              timeout: 10000,
-            })
-            .catch((err) => {
-              console.warn("Home: Friend activity request failed:", err.response?.status || err.message);
-              return { data: [] };
-            }),
-        ]);
+        const friendsRes = await axios
+          .get(`${API}/api/friends/activity`, {
+            withCredentials: true,
+            timeout: 10000,
+          })
+          .catch((err) => {
+            console.warn("Home: Friend activity request failed:", err.response?.status || err.message);
+            return { data: [] };
+          });
 
         if (cancelled) return;
 
-        console.log("Home: Raw API responses:", {
-          recommendations: recRes.data?.length || 0,
-          recent:         recentRes.data?.length || 0,
-          friends:        friendsRes.data?.length || 0,
-        });
-
         const mappedRecommendations = recRes.data ?? [];
 
-        const mappedRecent = (recentRes.data ?? [])
-          .map(mapTrack)
-          .filter((track) => track !== null);
-
-        console.log("Home: Mapped tracks:", {
-          recommendations: mappedRecommendations.length,
-          recent:         mappedRecent.length,
-        });
-
-        // Get top tracks and extract album info
         let albumsArray = [];
         try {
           const spotifyRes = await axios.get(`${API}/api/me/spotify`, {
@@ -94,8 +67,8 @@ export default function Home() {
           });
           if (!cancelled && spotifyRes.data?.top) {
             const topTracks = spotifyRes.data.top;
-
             const albumMap = {};
+
             topTracks.forEach((t) => {
               const album = t.album || {};
               const albumId = album.id || album.name || String(Math.random());
@@ -125,7 +98,6 @@ export default function Home() {
 
         if (!cancelled) {
           setRecommendations(mappedRecommendations);
-          setRecent(mappedRecent);
           setFriendActivity(friendsRes.data ?? []);
           setTopAlbums(albumsArray);
         }
@@ -234,23 +206,9 @@ export default function Home() {
         )}
       </section>
 
-      {/* ───────── Recently Played ───────── */}
+      {/* ───────── Genre Footprint ───────── */}
       <section className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold mb-4 text-white">Recently played</h2>
-        {recent.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {recent.map((track) => (
-              <MediaCard key={track.id} media={track} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-white/60">
-            <p>No recent tracks found.</p>
-            <p className="text-sm mt-2">
-              Start listening to music on Spotify to see your recent tracks here.
-            </p>
-          </div>
-        )}
+        <GenreStats />
       </section>
 
       {/* ───────── Friend Activity ───────── */}
