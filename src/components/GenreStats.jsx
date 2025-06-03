@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 import { Chart, BarElement, CategoryScale, LinearScale } from 'chart.js';
+import GenreCloud from './GenreCloud';
 
 Chart.register(BarElement, CategoryScale, LinearScale);
 
@@ -35,7 +36,7 @@ export default function GenreStats({ title = 'Your genre footprint' }) {
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10);
 
-  /* ► generate a soft-pastel colour per bar */
+  // generate a soft-pastel colour per bar
   const barColours = top10.map((_, i) => `hsl(${(i * 36) % 360} 70% 55% / .85)`);
 
   return (
@@ -47,37 +48,46 @@ export default function GenreStats({ title = 'Your genre footprint' }) {
           No genre data available yet. Try listening to more music!
         </p>
       ) : (
-        <div className="w-full mx-auto h-80"> {/* -- 320 px tall */}
-          <Bar
-            data={{
-              labels: top10.map(([g]) => g),
-              datasets: [
-                {
-                  label: 'plays',
-                  data: top10.map(([, c]) => c),
-                  backgroundColor: barColours,
-                  borderRadius: 6,
+        <>
+          <div className="w-full mx-auto h-80">
+            <Bar
+              data={{
+                labels: top10.map(([g]) => g),
+                datasets: [
+                  {
+                    label: 'plays',
+                    data: top10.map(([, c]) => c),
+                    backgroundColor: barColours,
+                    borderRadius: 6,
+                  },
+                ],
+              }}
+              options={{
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  x: {
+                    grid: { color: '#ffffff22' },
+                    ticks: { color: '#bbb' },
+                  },
+                  y: {
+                    grid: { display: false },
+                    ticks: { color: '#bbb' },
+                  },
                 },
-              ],
-            }}
-            options={{
-              indexAxis: 'y',
-              plugins: { legend: { display: false } },
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: {
-                  grid: { color: '#ffffff22' },
-                  ticks: { color: '#bbb' },
-                },
-                y: {
-                  grid: { display: false },
-                  ticks: { color: '#bbb' },
-                },
-              },
-            }}
-          />
-        </div>
+              }}
+            />
+          </div>
+
+          {stats && (
+            <GenreCloud
+              histogram={stats.histogram}
+              unlistened={stats.unlistened}
+            />
+          )}
+        </>
       )}
 
       {stats.unlistened?.length > 0 && (
