@@ -1,11 +1,38 @@
-export async function fetchRecentTracks() {
-  const res = await fetch('/api/spotify/recent'); // or your full API URL
-  if (!res.ok) throw new Error('Failed to fetch recent tracks');
-  return await res.json();
-}
+// src/api/spotify.js  (or src/utils/spotify.js)
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-export async function fetchTopArtists() {
-  const res = await fetch('/spotify/top-artists');
-  if (!res.ok) throw new Error('Failed to fetch top artists');
-  return await res.json();
-}
+/* ---------- helpers ---------- */
+const jsonOrThrow = async (res, msg) => {
+  if (!res.ok) throw new Error(`${msg} (${res.status})`);
+  return res.json();
+};
+
+/* ---------- current-session user (“me”) ---------- */
+export const fetchMyRecentTracks = async () =>
+  jsonOrThrow(
+    await fetch(`${API_BASE}/spotify/me/recent`, { credentials: 'include' }),
+    'Failed to fetch recent tracks'
+  );
+
+export const fetchMyTopArtists = async () =>
+  jsonOrThrow(
+    await fetch(`${API_BASE}/spotify/me/top-artists`, { credentials: 'include' }),
+    'Failed to fetch top artists'
+  );
+
+/* ---------- public profile user ---------- */
+export const fetchUserRecentTracks = async (userId) =>
+  jsonOrThrow(
+    await fetch(`${API_BASE}/spotify/user/${userId}/recent`, {
+      credentials: 'include',
+    }),
+    'Failed to fetch user recent tracks'
+  );
+
+export const fetchUserTopArtists = async (userId) =>
+  jsonOrThrow(
+    await fetch(`${API_BASE}/spotify/user/${userId}/top-artists`, {
+      credentials: 'include',
+    }),
+    'Failed to fetch user top artists'
+  );

@@ -55,8 +55,8 @@ export default function UserProfile() {
   const API = import.meta.env.VITE_API_BASE_URL;
   const loadSpotify = useCallback(async () => {
     const res = await withTokenRefresh(
-      () => fetch(`${API}/auth/api/me/spotify`, { credentials: 'include' }),
-      () => fetch(`${API}/auth/refresh`,        { credentials: 'include' })
+      () => fetch(`${API}/spotify/me`, { credentials: 'include' }),
+      () => fetch(`${API}/auth/refresh`, { credentials: 'include' })
     );
     if (!res?.ok) return;
     const data = await res.json();

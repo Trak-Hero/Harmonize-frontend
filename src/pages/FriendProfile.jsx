@@ -22,7 +22,7 @@ const cols        = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
 
 export default function FriendProfile() {
   /* ---------- stores & params ---------- */
-  const { id }  = useParams();                     // /friends/:id
+  const { id }  = useParams();
   const API     = import.meta.env.VITE_API_BASE_URL;
 
   const authUser = useAuthStore((s) => s.user);
@@ -54,8 +54,8 @@ export default function FriendProfile() {
 
   const loadSpotify = useCallback(async () => {
     const res = await withTokenRefresh(
-      () => fetch(`${API}/auth/api/user/${id}/spotify`, { credentials: 'include' }),
-      () => fetch(`${API}/auth/refresh`, { credentials: 'include' })
+        () => fetch(`${API}/spotify/user/${id}`, { credentials: 'include' }),
+        () => fetch(`${API}/auth/refresh`,       { credentials: 'include' })
     );
     if (!res?.ok) return;
     const data = await res.json();
@@ -127,8 +127,10 @@ export default function FriendProfile() {
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
       {/* ← Back */}
-      <Link to="/friends" className="absolute left-6 top-6 text-blue-400 hover:underline">
-        ← Back to Friends
+      <Link
+        to="/friends"
+        className="inline-block mt-4 mb-6 text-blue-600 hover:underline"
+        > ← Back to Friends
       </Link>
 
       {/* -------- main column -------- */}
