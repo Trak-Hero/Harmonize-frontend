@@ -110,7 +110,7 @@ const ForYou = () => {
 
   const handleLike = async (postId) => {
     try {
-      const response = await fetch(`/api/musicPosts/${postId}/like`, {
+      const response = await fetch(`${API}/api/musicPosts/${postId}/like`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -139,8 +139,9 @@ const ForYou = () => {
   
   const handleUnlike = async (postId) => {
     try {
-      const response = await fetch(`/api/musicPosts/${postId}/unlike`, {
+      const response = await fetch(`${API}/api/musicPosts/${postId}/unlike`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         }
