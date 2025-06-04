@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import { useEffect } from 'react';
 import { useAuthStore } from './state/authStore';
 import Galaxy from './pages/Galaxy';
+import BlendPage from './pages/BlendPage';
 
 import './App.css';
 
@@ -59,6 +60,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/galaxy" element={<Galaxy />} />
+          <Route path="/blend" element={<BlendPage />} />
         </Routes>
       </div>
     </div>
