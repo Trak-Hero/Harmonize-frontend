@@ -68,26 +68,26 @@ export default function FriendProfile() {
   }, [API, id]);
 
   /* ---------- initial load ---------- */
-useEffect(() => {
-  if (!friends.some((f) => (f.id || f._id) === id)) {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/${id}`, {
-      credentials: 'include',
-    })
-      .then((r) => r.ok && r.json())
-      .then((u) => {
-        if (!u) return;
-        setProfile(u);
-        addFriendToStore(u);
-      })
-      .catch(console.error);
-  }
+    useEffect(() => {
+    if (!friends.some((f) => (f.id || f._id) === id)) {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/${id}`, {
+        credentials: 'include',
+        })
+        .then((r) => r.ok && r.json())
+        .then((u) => {
+            if (!u) return;
+            setProfile(u);
+            addFriendToStore(u);
+        })
+        .catch(console.error);
+    }
 
-  if (!targetFriend) return;   // wait until we *have* a profile
+    if (!targetFriend) return;
 
-  setCurrentUserId(id);
-  fetchTiles(id, currentUserId);
-  loadSpotify();
-}, [id, targetFriend, currentUserId, fetchTiles, setCurrentUserId, loadSpotify, friends, addFriendToStore]);
+    setCurrentUserId(id);
+    fetchTiles(id, currentUserId);
+    loadSpotify();
+    }, [id, targetFriend, currentUserId, fetchTiles, setCurrentUserId, loadSpotify, friends, addFriendToStore]);
 
   if (!targetFriend) {
     return (
