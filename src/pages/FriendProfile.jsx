@@ -1,3 +1,4 @@
+//FriendProfile.jsx
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Responsive, WidthProvider } from 'react-grid-layout';
@@ -23,18 +24,18 @@ const cols        = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
 export default function FriendProfile() {
   /* ---------- stores & params ---------- */
   const { id } = useParams();                          // /friends/:id
-  const authUser           = useAuthStore((s) => s.user);
+  const authUser = useAuthStore((s) => s.user);
   const {
     tiles, fetchTiles, setCurrentUserId
   } = useProfileStore();
 
-  const { friends, followUser, unfollowUser, userSlice } = useFriendStore((s) => s);
-  const currentUserId  = userSlice.currentUserId;
-  const targetFriend   = friends.find((f) => f.id === id);
-  const isOwner        = id === currentUserId;
-  const isFollowing    = friends
-    .find((f) => f.id === currentUserId)
-    ?.following.includes(id);
+  const { userSlice } = useFriendStore((s) => s);
+  const { friends, followUser, unfollowUser, currentUserId } = userSlice;
+  
+  const targetFriend = friends.find((f) => f.id === id);
+  const isOwner = id === currentUserId;
+  const isFollowing = friends.find((f) => f.id === currentUserId)?.following?.includes(id) ?? false;
+
 
   /* ---------- spotify data ---------- */
   const [spotifyData, setSpotifyData] = useState(null);

@@ -1,3 +1,4 @@
+//friendStore.js
 import { create } from 'zustand';
 
 /* ───────────────────────────── mock users ───────────────────────────── */
