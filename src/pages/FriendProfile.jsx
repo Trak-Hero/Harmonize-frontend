@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { useAuthStore } from '../state/authStore';
 import { useProfileStore } from '../state/profileStore';
-import { useFriendStore } from '../state/friendStore';
+import useFriendStore from '../state/friendStore';
 import withTokenRefresh from '../utils/withTokenRefresh';
 
 import Tile            from '../components/Tile';
