@@ -113,39 +113,51 @@ export default function BlendPage() {
 
   /** Fetch data & compute blend */
   const loadBlend = async (targetUser = null) => {
+    console.log('🚀 loadBlend called with:', targetUser);
     setLoading(true);
     try {
-      // current user’s artists
+      // current user's artists
       const userData = await fetchTopArtists();
-
+      console.log('✅ Current user data:', userData);
+  
       let friendData;
       let friendName;
-
+  
       if (targetUser) {
+        console.log('🔍 Fetching friend data for:', targetUser._id);
         // real friend data
         const res = await fetch(
           `${API_BASE}/api/users/${targetUser._id}/top-artists`,
           { credentials: 'include' }
         );
-        if (!res.ok) throw new Error('Failed to fetch friend data');
+        
+        if (!res.ok) {
+          console.error('❌ Failed to fetch friend data:', res.status);
+          throw new Error('Failed to fetch friend data');
+        }
+        
         friendData = await res.json();
         friendName = targetUser.displayName;
+        console.log('✅ Friend data loaded:', friendName);
       } else {
         // mock friend data
         friendData = generateFriendMockData(userData);
         friendName = 'Sample User';
+        console.log('✅ Mock data generated');
       }
-
+  
       const blend = computeBlend(userData, friendData, 'You', friendName);
+      console.log('✅ Blend computed:', blend);
+      
       setBlendData(blend);
       setSelectedUser(targetUser);
+      console.log('✅ State updated');
     } catch (err) {
-      console.error('Error computing blend', err);
+      console.error('❌ Error computing blend', err);
     } finally {
       setLoading(false);
     }
   };
-
   /* initial load */
   useEffect(() => {
     loadBlend();
@@ -153,9 +165,15 @@ export default function BlendPage() {
 
   /* handle selecting a different user */
   const handleSelectUser = (user) => {
+    console.log('Selecting user:', user);
     setShowUserModal(false);
-    loadBlend(user);
+    // Clear current data first
+    setBlendData(null);
+    setSelectedUser(null);
+    // Then load new data
+    setTimeout(() => loadBlend(user), 100);
   };
+  
 
   /* ---------- render ---------- */
   if (loading || !blendData) {

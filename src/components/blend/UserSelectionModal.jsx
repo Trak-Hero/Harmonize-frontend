@@ -15,8 +15,6 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
     try {
       const url = `${API_BASE}/api/users/search?q=${encodeURIComponent(query)}`;
       console.log('🔍 Fetching users from:', url);
-      console.log('🌐 Current origin:', window.location.origin);
-      console.log('🔧 API_BASE:', API_BASE);
       
       const res = await fetch(url, {
         credentials: 'include',
@@ -26,7 +24,6 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
       });
       
       console.log('📡 Response status:', res.status);
-      console.log('📡 Response headers:', Object.fromEntries(res.headers.entries()));
       
       if (!res.ok) {
         const errorText = await res.text();
@@ -52,6 +49,11 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
   const handleSearch = (e) => {
     e.preventDefault();
     searchUsers(searchQuery);
+  };
+
+  const handleUserSelect = (user) => {
+    console.log('🎯 User selected in modal:', user);
+    onSelectUser(user);
   };
 
   return (
@@ -93,7 +95,7 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
           {users.map((user) => (
             <div
               key={user._id}
-              onClick={() => onSelectUser(user)}
+              onClick={() => handleUserSelect(user)}
               className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700 transition-colors"
             >
               <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
