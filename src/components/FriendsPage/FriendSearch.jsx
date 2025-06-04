@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useFriendStore from '../state/friendStore';
+import useFriendStore from '../../state/friendStore';
 
 export default function FriendSearch() {
   const [term, setTerm]     = useState('');
@@ -10,7 +10,6 @@ export default function FriendSearch() {
 
   const followUser = useFriendStore((s) => s.userSlice.followUser);
 
-  /* debounce the network hit */
   useEffect(() => {
     if (!term.trim()) { setResults([]); return; }
 
