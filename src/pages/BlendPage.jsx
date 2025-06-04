@@ -1,3 +1,6 @@
+// ─────────────────────────────────────────────────────────────────────────────
+//  src/pages/BlendPage.jsx   (FULL FILE, fixed)
+// ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useState } from 'react';
 import BlendHeader from '../components/blend/BlendHeader';
 import TasteScoreCard from '../components/blend/TasteScoreCard';
@@ -88,7 +91,7 @@ function generateFriendMockData(yourData) {
   return {
     items: yourData.items.map((artist, idx) => {
       const sharedArtist = idx % 4 === 0; // 25 % shared artists
-      const sharedGenre = idx % 3 !== 0;  // 66 % shared genres
+      const sharedGenre  = idx % 3 !== 0; // 66 % shared genres
 
       const newGenres = sharedGenre
         ? artist.genres
@@ -113,67 +116,55 @@ export default function BlendPage() {
 
   /** Fetch data & compute blend */
   const loadBlend = async (targetUser = null) => {
-    console.log('🚀 loadBlend called with:', targetUser);
     setLoading(true);
     try {
-      // current user's artists
+      /* 1. Current user’s top artists */
       const userData = await fetchTopArtists();
-      console.log('✅ Current user data:', userData);
-  
+
+      /* 2. Friend’s data (real or mock) */
       let friendData;
       let friendName;
-  
+
       if (targetUser) {
-        console.log('🔍 Fetching friend data for:', targetUser._id);
-        // real friend data
         const res = await fetch(
           `${API_BASE}/api/users/${targetUser._id}/top-artists`,
           { credentials: 'include' }
         );
-        
-        if (!res.ok) {
-          console.error('❌ Failed to fetch friend data:', res.status);
-          throw new Error('Failed to fetch friend data');
-        }
-        
+
+        if (!res.ok) throw new Error('Failed to fetch friend data');
+
         friendData = await res.json();
         friendName = targetUser.displayName;
-        console.log('✅ Friend data loaded:', friendName);
       } else {
-        // mock friend data
         friendData = generateFriendMockData(userData);
         friendName = 'Sample User';
-        console.log('✅ Mock data generated');
       }
-  
-      const blend = computeBlend(userData, friendData, 'You', friendName);
-      console.log('✅ Blend computed:', blend);
-      
-      setBlendData(blend);
-      setSelectedUser(targetUser);
-      console.log('✅ State updated');
+
+      /* 3. Compute and store blend */
+      setBlendData(
+        computeBlend(userData, friendData, 'You', friendName)
+      );
+      setSelectedUser(targetUser || null);
     } catch (err) {
-      console.error('❌ Error computing blend', err);
+      console.error('[BlendPage] loadBlend failed:', err);
     } finally {
       setLoading(false);
     }
   };
+
   /* initial load */
   useEffect(() => {
     loadBlend();
   }, []);
 
-  /* handle selecting a different user */
+  /* choose another user */
   const handleSelectUser = (user) => {
-    console.log('Selecting user:', user);
     setShowUserModal(false);
-    // Clear current data first
-    setBlendData(null);
+    setBlendData(null);          // clear view immediately
     setSelectedUser(null);
-    // Then load new data
-    setTimeout(() => loadBlend(user), 100);
+    // small delay so spinner shows if network is slow
+    setTimeout(() => loadBlend(user), 50);
   };
-  
 
   /* ---------- render ---------- */
   if (loading || !blendData) {
