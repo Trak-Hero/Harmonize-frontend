@@ -64,13 +64,7 @@ export const useProfileStore = create(
         try {
           console.log('[profileStore] Fetching tiles for user:', profileUserId, 'viewer:', viewerId);
           
-          const res = await axios.get(
-            `${API_BASE}/api/users/${profileUserId}/tiles`,
-            { 
-              params: { viewerId },
-              timeout: 10000, // 10 second timeout
-            }
-          );
+          const res = await axios.get(`/api/tiles`, { params: { userId: profileUserId } });
           
           console.log('[profileStore] Fetched tiles:', res.data);
           set({ 
