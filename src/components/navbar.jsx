@@ -5,14 +5,11 @@ import { Compass, Users, MapTrifold, ArrowRight } from '@phosphor-icons/react';
 export default function Navbar() {
   const [q, setQ] = useState('');
   const navigate = useNavigate();
-  // top of Navbar.jsx
-  const API = import.meta.env.VITE_API_BASE_URL;
 
   const search = (e) => {
     e.preventDefault();
     const term = q.trim();
     if (!term) return;
-    // 👉 go to SearchResults page, let it fetch array of matches
     navigate(`/search?q=${encodeURIComponent(term)}`);
     setQ('');
   };
@@ -27,6 +24,7 @@ export default function Navbar() {
     { name: "Discover", icon: <Compass size={18} weight="regular" /> },
     { name: "Friends", icon: <Users size={18} weight="regular" /> },
     { name: "Map", icon: <MapTrifold size={18} weight="regular" /> },
+    { name: "Blend", icon: <MapTrifold size={18} weight="regular" /> },
   ];
 
   return (
@@ -38,13 +36,13 @@ export default function Navbar() {
         </Link>
 
         {navItems.map(({ name, icon }) => (
-      <Link key={name} to={`/${name.toLowerCase()}`} className={navLinkClasses}>
-        <div className="flex items-center gap-1">
-          {icon}
-          <span>{name}</span>
-        </div>
-        <span className={underlineSpanClasses}></span>
-      </Link>
+          <Link key={name} to={`/${name.toLowerCase()}`} className={navLinkClasses}>
+            <div className="flex items-center gap-1">
+              {icon}
+              <span>{name}</span>
+            </div>
+            <span className={underlineSpanClasses}></span>
+          </Link>
         ))}
       </div>
 
@@ -65,25 +63,25 @@ export default function Navbar() {
         </button>
       </form>
 
-      {/* Right: Profile + Dashboard + Connect */}
+      {/* Right: Profile + Dashboard + Sign Up */}
       <div className="flex gap-3">
         <Link
           to="/profile"
           className="px-4 py-2 rounded-md border border-white/20 hover:bg-white/10 text-sm font-medium transition"
         >
-        Profile
+          Profile
         </Link>
         <Link
           to="/dashboard"
           className="px-4 py-2 rounded-md border border-white/20 hover:bg-white/10 text-sm font-medium transition"
         >
-        Dashboard
+          Dashboard
         </Link>
         <Link
           to="/connect"
           className="px-4 py-2 rounded-md bg-green-500 hover:bg-green-600 text-sm font-medium transition"
         >
-        Sign up
+          Sign up
         </Link>
       </div>
     </nav>

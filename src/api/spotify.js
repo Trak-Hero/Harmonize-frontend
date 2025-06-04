@@ -6,6 +6,14 @@ export async function fetchRecentTracks() {
 
 export async function fetchTopArtists() {
   const res = await fetch('/spotify/top-artists');
-  if (!res.ok) throw new Error('Failed to fetch top artists');
-  return await res.json();
+
+  const contentType = res.headers.get('content-type');
+  const text = await res.text();
+
+  if (!res.ok || !contentType?.includes('application/json')) {
+    console.error('Non-JSON response from /spotify/top-artists:', text.slice(0, 300));
+    throw new Error('Top artists fetch returned non-JSON');
+  }
+
+  return JSON.parse(text);
 }
