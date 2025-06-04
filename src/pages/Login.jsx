@@ -42,9 +42,15 @@ export default function Login() {
         const errorData = await res.json().catch(() => ({ message: 'Login failed' }));
         throw new Error(errorData.message || `Login failed with status: ${res.status}`);
       }
-
       const user = await res.json();
       console.log('Login successful:', user);
+      console.log("Access token:", user.accessToken);
+
+      if (user.spotifyAccessToken) {
+        localStorage.setItem('accessToken', user.spotifyAccessToken);
+      }
+
+
       login(user);
       navigate('/profile');
     } catch (err) {
