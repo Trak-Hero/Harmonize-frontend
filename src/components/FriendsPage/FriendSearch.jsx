@@ -38,7 +38,7 @@ export default function FriendSearch() {
 
       {hasResults && (
         <ul className="mt-2 max-h-60 overflow-y-auto border rounded-md bg-white shadow">
-          {(results ?? []).map((u) => (
+          {results.map((u) => (
             <li
               key={u._id}
               onClick={() => navigate(`/friends/${u._id}`)}
