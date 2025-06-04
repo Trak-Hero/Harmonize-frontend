@@ -4,34 +4,50 @@ const MusicCard = ({ item, isVisible }) => {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
-  // Auto-play when card becomes visible
+  // auto-play the audio when card becomes visible
   useEffect(() => {
-    if (audioRef.current && item.previewUrl) {
+    if (audioRef.current && item.previewUrl && !audioError) {
       if (isVisible) {
+        setAudioLoading(true);
         audioRef.current.play()
-          .then(() => setIsPlaying(true))
+          .then(() => {
+            setIsPlaying(true);
+            setAudioLoading(false);
+          })
           .catch((error) => {
-            console.log('Auto-play prevented:', error);
-            setAudioError(true);
+            console.log('Auto-play prevented or failed:', error);
+            setAudioLoading(false);
           });
       } else {
         audioRef.current.pause();
         setIsPlaying(false);
+        setAudioLoading(false);
       }
     }
-  }, [isVisible, item.previewUrl]);
+  }, [isVisible, item.previewUrl, audioError]);
 
   const handlePlayPause = () => {
+    if (!item.previewUrl) return;
+
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
+        setAudioLoading(true);
         audioRef.current.play()
-          .then(() => setIsPlaying(true))
+          .then(() => {
+            setIsPlaying(true);
+            setAudioLoading(false);
+            setAudioError(false); // reset error state on successful play
+          })
           .catch((error) => {
             console.error('Play error:', error);
+            setAudioLoading(false);
             setAudioError(true);
           });
       }
@@ -40,11 +56,40 @@ const MusicCard = ({ item, isVisible }) => {
 
   const handleAudioEnd = () => {
     setIsPlaying(false);
+    setCurrentTime(0);
   };
 
   const handleAudioError = () => {
     console.error('Audio error for track:', item.title);
     setAudioError(true);
+    setIsPlaying(false);
+    setAudioLoading(false);
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const formatTime = (time) => {
+    if (isNaN(time)) return '0:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const getPreviewStatus = () => {
+    if (!item.previewUrl) return 'No preview available';
+    if (audioError) return 'Preview unavailable';
+    if (audioLoading) return 'Loading...';
+    return '30s preview';
   };
 
   return (
@@ -63,15 +108,17 @@ const MusicCard = ({ item, isVisible }) => {
             onClick={handlePlayPause}
           >
             <div className="bg-white bg-opacity-90 rounded-full p-4">
-              {isPlaying ? (
-                <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                </svg>
-              ) : (
-                <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              )}
+              {audioLoading ? (
+                  <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                ) : isPlaying ? (
+                  <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                  </svg>
+                ) : (
+                  <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                )}
             </div>
           </div>
         )}
@@ -97,6 +144,8 @@ const MusicCard = ({ item, isVisible }) => {
             ref={audioRef}
             onEnded={handleAudioEnd}
             onError={handleAudioError}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
             preload="metadata"
           >
             <source src={item.previewUrl} type="audio/mpeg" />
@@ -109,20 +158,37 @@ const MusicCard = ({ item, isVisible }) => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={handlePlayPause}
-                className="bg-white text-black px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition"
+                disabled={audioLoading}
+                className={`px-3 py-1 rounded-full text-sm transition ${
+                  audioLoading 
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                    : 'bg-white text-black hover:bg-gray-200'
+                }`}
               >
-                {isPlaying ? 'Pause' : 'Play Preview'}
+                {audioLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Play Preview'}
               </button>
-              <span className="text-xs text-gray-400">30s preview</span>
+              <span className="text-xs text-gray-400">{getPreviewStatus()}</span>
             </div>
-          </div>
-        ) : (
-          <div className="mt-2">
-            <span className="text-xs text-gray-500">
-              {audioError ? 'Preview unavailable' : 'No preview available'}
-            </span>
-          </div>
-        )}
+
+            {/* Progress bar */}
+            {duration > 0 && (
+              <div className="flex items-center space-x-2 text-xs text-gray-400">
+                <span>{formatTime(currentTime)}</span>
+                <div className="flex-1 bg-gray-700 rounded-full h-1">
+                  <div 
+                    className="bg-white h-1 rounded-full transition-all duration-100"
+                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                  ></div>
+                </div>
+                <span>{formatTime(duration)}</span>
+              </div>
+                )}
+              </div>
+            ) : (
+              <div className="mt-2">
+                <span className="text-xs text-gray-500">{getPreviewStatus()}</span>
+              </div>
+            )}
 
         {/* Action Buttons */}
         <div className="flex justify-between mt-4 text-gray-300 text-sm">
