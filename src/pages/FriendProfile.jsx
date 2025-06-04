@@ -176,15 +176,9 @@ export default function FriendProfile() {
 
         {/* Spotify highlights */}
         <div className="space-y-6 mt-6">
-          <div className="card">
-            <FavoriteSongs songs={spotifyData?.top ?? []} />
-          </div>
-          <div className="card">
-            <FavoriteArtists artists={spotifyData?.top_artists ?? []} />
-          </div>
-          <div className="card">
-            <RecentlyPlayed recent={spotifyData?.recent ?? []} />
-          </div>
+          <div className="card"><FavoriteSongs   songs   ={spotifyData?.top         ?? []} /></div>
+          <div className="card"><FavoriteArtists artists ={spotifyData?.top_artists ?? []} /></div>
+          <div className="card"><RecentlyPlayed  recent  ={spotifyData?.recent      ?? []} /></div>
         </div>
 
         {/* friend’s tiles (read-only) */}
