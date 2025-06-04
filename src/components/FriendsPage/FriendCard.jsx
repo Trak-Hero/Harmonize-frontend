@@ -23,7 +23,7 @@ const FriendCard = ({ friend }) => {
       <Link to={`/friends/${safeId}`} className="block hover:opacity-90">
         <div className="flex justify-center mb-4">
           <img
-            src={avatar || 'https://via.placeholder.com/150'}
+            src={avatar || 'https://placehold.co/150'}
             alt={`${safeName}'s avatar`}
             className="w-24 h-24 rounded-full object-cover"
           />

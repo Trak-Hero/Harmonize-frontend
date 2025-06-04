@@ -136,7 +136,7 @@ export default function FriendProfile() {
         {/* header */}
         <header className="flex items-center gap-6">
           <img
-            src={targetFriend.avatar || 'https://via.placeholder.com/150'}
+            src={targetFriend.avatar || 'https://placehold.co/150'}
             className="h-24 w-24 rounded-full object-cover border border-white/20"
           />
           <div className="flex-1 space-y-2">
