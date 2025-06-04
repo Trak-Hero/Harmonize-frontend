@@ -1,69 +1,121 @@
+/* src/state/friendStore.js
+   -------------------------------------------------------------- */
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import axios from 'axios';
 
-const normalize = (u) => ({
-  ...u,
-  id:  String(u._id ?? u.id),
-  _id: String(u._id ?? u.id),
-});
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+axios.defaults.withCredentials = true;
 
-const upsert = (arr, user) => {
-  const u   = normalize(user);
-  const idx = arr.findIndex((f) => String(f._id ?? f.id) === u._id);
-  if (idx === -1) return [...arr, u];
-  const copy = arr.slice();
-  copy[idx]  = u;
-  return copy;
-};
+export const useFriendStore = create(
+  persist(
+    (set, get) => ({
+      /* ──────────── STATE ──────────── */
+      currentUserId: null,   // whose profile page you’re on
+      friends: [],           // cached user docs (me + everyone we touch)
+      isLoading: false,
 
-const useFriendStore = create((set, get) => ({
-  userSlice: {
-    currentUserId: null,
-    friends: [],
+      /* ──────────── MUTATORS ──────────── */
+      setCurrentUserId: (id) => {
+        console.log('[friendStore] setCurrentUserId →', id);
+        set({ currentUserId: id });
+      },
 
-    followUser: async (friendId) => {
-      const API = import.meta.env.VITE_API_BASE_URL;
-      try {
-        const res = await fetch(`${API}/api/friends/follow/${friendId}`, {
-          method: 'POST',
-          credentials: 'include',
+      /** Push or replace a user doc in the cache */
+      addFriendToStore: (userDoc) => {
+        if (!userDoc || !userDoc._id) return;
+
+        set((state) => {
+          const exists = state.friends.some(
+            (u) => String(u._id) === String(userDoc._id)
+          );
+          return {
+            friends: exists
+              ? state.friends.map((u) =>
+                  String(u._id) === String(userDoc._id) ? userDoc : u
+                )
+              : [...state.friends, userDoc],
+          };
         });
-        if (!res.ok) return;
+      },
 
-        const { current, target } = await res.json();
+      /* ──────────── FOLLOW / UNFOLLOW ──────────── */
+      followUser: async (friendId) => {
+        try {
+          const res = await axios.post(
+            `${API_BASE}/api/friends/follow/${friendId}`
+          );
+          if (res.status !== 201) return;
 
-        set((s) => ({
-          userSlice: {
-            ...s.userSlice,
-            friends: upsert(upsert(s.userSlice.friends, current), target),
-          },
-        }));
-      } catch (err) {
-        console.error('[followUser]', err);
-      }
-    },
+          const { current, target } = res.data;
+          console.log('[friendStore] followUser → server returned', {
+            current,
+            target,
+          });
 
-    unfollowUser: async (friendId) => {
-      const API = import.meta.env.VITE_API_BASE_URL;
-      try {
-        const res = await fetch(`${API}/api/friends/follow/${friendId}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
-        if (!res.ok) return;
+          // merge both updated user docs into cache
+          set((state) => ({
+            friends: state.friends.map((u) => {
+              if (String(u._id) === String(current._id)) return current;
+              if (String(u._id) === String(target._id))  return target;
+              return u;
+            }),
+          }));
+        } catch (err) {
+          console.error('[friendStore] followUser error:', err);
+        }
+      },
 
-        const { current, target } = await res.json();
+      unfollowUser: async (friendId) => {
+        try {
+          const res = await axios.delete(
+            `${API_BASE}/api/friends/follow/${friendId}`
+          );
+          if (res.status !== 200) return;
 
-        set((s) => ({
-          userSlice: {
-            ...s.userSlice,
-            friends: upsert(upsert(s.userSlice.friends, current), target),
-          },
-        }));
-      } catch (err) {
-        console.error('[unfollowUser]', err);
-      }
-    },
-  },
-}));
+          const { current, target } = res.data;
+          console.log('[friendStore] unfollowUser → server returned', {
+            current,
+            target,
+          });
+
+          set((state) => ({
+            friends: state.friends.map((u) => {
+              if (String(u._id) === String(current._id)) return current;
+              if (String(u._id) === String(target._id))  return target;
+              return u;
+            }),
+          }));
+        } catch (err) {
+          console.error('[friendStore] unfollowUser error:', err);
+        }
+      },
+
+      /* ──────────── FETCH SINGLE FRIEND (utility) ──────────── */
+      fetchFriend: async (friendId) => {
+        set({ isLoading: true });
+        try {
+          const res = await axios.get(`${API_BASE}/api/users/${friendId}`, {
+            timeout: 10000,
+            withCredentials: true,
+          });
+          if (res.status === 200) {
+            get().addFriendToStore(res.data);
+          }
+        } catch (err) {
+          console.error('[friendStore] fetchFriend error:', err);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+    }),
+    {
+      name: 'friend-store',
+      partialize: (s) => ({
+        currentUserId: s.currentUserId,
+      }),
+    }
+  )
+);
 
 export default useFriendStore;
