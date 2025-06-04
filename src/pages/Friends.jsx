@@ -5,21 +5,21 @@ import FriendCard from '../components/FriendsPage/FriendCard';
 import FriendSearchBar from '../components/FriendsPage/FriendSearch';
 
 export default function Friends() {
-  const { friends, userSlice, followUser, unfollowUser } = useFriendStore((s) => s);
+  const { friends = [], userSlice = {}, followUser, unfollowUser } =
+    useFriendStore((s) => s);
   const currentUserId = userSlice.currentUserId;
 
   return (
     <div className="px-4 pt-6 max-w-5xl mx-auto">
-      {/* 🔍 global username-search */}
       <FriendSearchBar />
 
       {friends.length ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {friends.map((friend) => {
-            const isMe = friend.id === currentUserId;
+            const isMe        = friend.id === currentUserId;
             const iFollowThem =
-              friends.find((f) => f.id === currentUserId)?.following?.includes(friend.id) ??
-              false;
+              friends.find((f) => f.id === currentUserId)
+                ?.following?.includes(friend.id) ?? false;
 
             return (
               <div key={friend.id} className="space-y-2">

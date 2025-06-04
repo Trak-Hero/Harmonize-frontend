@@ -77,11 +77,11 @@ export default function FriendProfile() {
   }
 
   /* ---------- follower counts ---------- */
-  const followersCount = friends.filter(
-    (f) => (f.following ?? []).includes(id)
-  ).length;
+  const followersCount = (friends ?? [])
+    .filter((f) => (f.following ?? []).includes(id))
+    .length;
 
-  const followingCount = (targetFriend.following ?? []).length;
+  const followingCount = ((targetFriend ?? {}).following ?? []).length;
 
   /* ---------- layout (read-only) ---------- */
   const layoutItems = tiles.map((t) => ({
