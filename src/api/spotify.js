@@ -26,6 +26,7 @@ export async function fetchTopArtists() {
     mode: 'cors',
     credentials: 'include',
   });
+  console.log("Sending access token:", token);
 
   if (!res.ok) throw new Error('Failed to fetch top artists');
   return await res.json();
