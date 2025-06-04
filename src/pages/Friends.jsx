@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import useFriendStore from '../state/friendStore';
 import FriendCard from '../components/FriendsPage/FriendCard';
-import FriendSearchBar from '../components/FriendSearchBar';
+import FriendSearchBar from '../components/FriendsPage/FriendSearch';
 
 export default function Friends() {
   const { friends, userSlice, followUser, unfollowUser } = useFriendStore((s) => s);
