@@ -64,28 +64,13 @@ export const useProfileStore = create(
         try {
           console.log('[profileStore] Fetching tiles for user:', profileUserId, 'viewer:', viewerId);
           
-          const res = await axios.get(`${API_BASE}/api/tiles`, { params: { userId: profileUserId } });
+          const res = await axios.get(`${API_BASE}/api/tiles/${profileUserId}`);
           
           const tiles = Array.isArray(res.data) ? res.data : [];
           console.log('[profileStore] Fetched tiles:', tiles);
           set({ tiles, currentUserId: profileUserId, isLoading: false });
                 } catch (err) {
                   console.error('[profileStore] Failed to fetch tiles:', err);
-          
-          // Try alternative endpoint
-          try {
-            console.log('[profileStore] Trying alternative endpoint...');
-            const res = await axios.get(`${API_BASE}/api/tiles/${profileUserId}`);
-            console.log('[profileStore] Fetched tiles (alternative):', res.data);
-            set({ 
-              tiles: res.data || [], 
-              currentUserId: profileUserId,
-              isLoading: false 
-            });
-          } catch (err2) {
-            console.error('[profileStore] Alternative fetch also failed:', err2);
-            set({ isLoading: false });
-          }
         }
       },
 
