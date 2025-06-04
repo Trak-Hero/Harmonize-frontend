@@ -1,5 +1,6 @@
 
-import create from 'zustand';
+import { create } from 'zustand';
+
 const useFriendStore = create((set, get) => ({
   userSlice: {
     currentUserId: null,
@@ -24,7 +25,7 @@ const useFriendStore = create((set, get) => ({
         },
       }));
     },
-    
+
     unfollowUser: async (friendId) => {
       const API = import.meta.env.VITE_API_BASE_URL;
       const res = await fetch(`${API}/api/friends/follow/${friendId}`, {
@@ -46,3 +47,5 @@ const useFriendStore = create((set, get) => ({
     },
   },
 }));
+
+export default useFriendStore;
