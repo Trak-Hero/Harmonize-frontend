@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { useAuthStore } from '../state/authStore';
 import { useProfileStore } from '../state/profileStore';
-import useFriendStore   from '../state/friendStore';
+import { useFriendStore } from '../state/friendStore';
 import withTokenRefresh from '../utils/withTokenRefresh';
 
 import Tile            from '../components/Tile';
@@ -22,7 +22,9 @@ const cols        = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
 
 export default function FriendProfile() {
   /* ---------- stores & params ---------- */
-  const { id } = useParams();                          // /friends/:id
+  const { id }  = useParams();                     // /friends/:id
+  const API     = import.meta.env.VITE_API_BASE_URL;
+
   const authUser = useAuthStore((s) => s.user);
 
   const {
@@ -31,18 +33,16 @@ export default function FriendProfile() {
     setCurrentUserId,
   } = useProfileStore();
 
-  const { userSlice, addFriendToStore } = useFriendStore((s) => ({
-   userSlice: s.userSlice,
-    addFriendToStore: (u) =>
-        s.userSlice.friends.push(u),             
- }));
-  const { friends = [], followUser, unfollowUser, currentUserId } = userSlice ?? {};
+  const {
+    userSlice: { friends = [], followUser, unfollowUser, currentUserId } = {},
+    addFriendToStore,
+  } = useFriendStore();
 
+  /* ---------- derived ---------- */
+  const cached   = friends.find((f) => (f.id || f._id) === id);
   const [profile, setProfile] = useState(null);
-  const targetFriend =
-   friends.find((f) => (f.id || f._id) === id) || profile;
-  
-  const isOwner = id === currentUserId;
+  const targetFriend          = cached || profile;
+  const isOwner               = id === currentUserId;
 
   const isFollowing =
     friends
@@ -51,12 +51,11 @@ export default function FriendProfile() {
 
   /* ---------- spotify data ---------- */
   const [spotifyData, setSpotifyData] = useState(null);
-  const API = import.meta.env.VITE_API_BASE_URL;
 
   const loadSpotify = useCallback(async () => {
     const res = await withTokenRefresh(
       () => fetch(`${API}/auth/api/user/${id}/spotify`, { credentials: 'include' }),
-      () => fetch(`${API}/auth/refresh`,              { credentials: 'include' })
+      () => fetch(`${API}/auth/refresh`, { credentials: 'include' })
     );
     if (!res?.ok) return;
     const data = await res.json();
@@ -67,46 +66,56 @@ export default function FriendProfile() {
     });
   }, [API, id]);
 
-  /* ---------- fetch profile if not cached ---------- */
-    useEffect(() => {
-    const alreadyHave = friends.some((f) => (f.id || f._id) === id);
-    if (alreadyHave) return;
+  /* ---------- fetch profile if missing ---------- */
+  useEffect(() => {
+    if (cached) return;
 
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/${id}`, {
-        credentials: 'include',
-    })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((u) => u && addFriendToStore(u))
-        .catch(console.error);
-    }, [id, friends, addFriendToStore]);
+    fetch(`${API}/api/users/${id}`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((u) => {
+        if (!u) return;
+        setProfile(u);          // local render
+        addFriendToStore?.(u);  // cache globally
+      })
+      .catch(console.error);
+  }, [API, id, cached, addFriendToStore]);
 
-    /* ---------- once profile present, load tiles & spotify ---------- */
-    useEffect(() => {
-    const target = friends.find((f) => (f.id || f._id) === id);
-    if (!target) return;
+  /* ---------- load tiles & spotify once we have the user ---------- */
+  useEffect(() => {
+    if (!targetFriend) return;
 
     if (currentUserId !== id) setCurrentUserId(id);
 
-    fetchTiles(id);
+    fetchTiles(id);     // tiles don’t depend on currentUserId any more
     loadSpotify();
-    }, [id, friends, currentUserId, setCurrentUserId, fetchTiles, loadSpotify]);
+  }, [
+    id,
+    targetFriend,       // effect waits until profile present
+    currentUserId,
+    setCurrentUserId,
+    fetchTiles,
+    loadSpotify,
+  ]);
 
+  /* ---------- guard: still loading ---------- */
   if (!targetFriend) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
-        User not found.
+        Loading…
       </div>
     );
   }
 
   /* ---------- follower counts ---------- */
-  const followersCount = (friends ?? [])
-    .filter((f) => (f.following ?? []).includes(id))
-    .length;
+  const followersCount = friends.reduce(
+    (acc, f) =>
+      (f.following ?? []).some((fid) => fid === id) ? acc + 1 : acc,
+    0
+  );
 
-  const followingCount = ((targetFriend ?? {}).following ?? []).length;
+  const followingCount = (targetFriend.following ?? []).length;
 
-  /* ---------- layout (read-only) ---------- */
+  /* ---------- grid layout ---------- */
   const layoutItems = tiles.map((t) => ({
     i: t._id || t.id,
     x: t.x || 0,
@@ -117,7 +126,7 @@ export default function FriendProfile() {
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      {/* ← Back button */}
+      {/* ← Back */}
       <Link to="/friends" className="absolute left-6 top-6 text-blue-400 hover:underline">
         ← Back to Friends
       </Link>
@@ -130,14 +139,13 @@ export default function FriendProfile() {
             src={targetFriend.avatar || 'https://via.placeholder.com/150'}
             className="h-24 w-24 rounded-full object-cover border border-white/20"
           />
-
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-3">
               <h1 className="text-5xl font-extrabold">
                 {targetFriend.name || targetFriend.username || 'Unknown'}
               </h1>
 
-              {!isOwner && (followUser || unfollowUser) && (
+              {!isOwner && (
                 <button
                   onClick={() =>
                     isFollowing ? unfollowUser?.(id) : followUser?.(id)
@@ -153,7 +161,9 @@ export default function FriendProfile() {
               )}
             </div>
 
-            {targetFriend.bio && <p className="text-white/70">{targetFriend.bio}</p>}
+            {targetFriend.bio && (
+              <p className="text-white/70">{targetFriend.bio}</p>
+            )}
 
             <p className="text-white/40 text-sm">
               {followersCount} {followersCount === 1 ? 'follower' : 'followers'} •{' '}
@@ -175,7 +185,7 @@ export default function FriendProfile() {
           </div>
         </div>
 
-        {/* friend’s tiles (view-only) */}
+        {/* tiles */}
         <ResponsiveGrid
           className="layout mt-6"
           rowHeight={100}
@@ -188,7 +198,13 @@ export default function FriendProfile() {
           {tiles.map((t) => (
             <div
               key={t._id || t.id}
-              data-grid={{ x: t.x || 0, y: t.y || 0, w: t.w || 1, h: t.h || 1, i: t._id || t.id }}
+              data-grid={{
+                x: t.x || 0,
+                y: t.y || 0,
+                w: t.w || 1,
+                h: t.h || 1,
+                i: t._id || t.id,
+              }}
             >
               <div className="card h-full">
                 <Tile tile={t} />
