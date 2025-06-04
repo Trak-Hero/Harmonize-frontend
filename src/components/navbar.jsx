@@ -38,6 +38,7 @@ export default function Navbar() {
     { name: "Discover", icon: <Compass size={18} weight="regular" /> },
     { name: "Friends", icon: <Users size={18} weight="regular" /> },
     { name: "Map", icon: <MapTrifold size={18} weight="regular" /> },
+    { name: "Blend", icon: <MapTrifold size={18} weight="regular" /> },
     { name: "Galaxy", icon: <Planet size={18} weight="regular" /> },
   ];
 
@@ -50,13 +51,13 @@ export default function Navbar() {
         </Link>
 
         {navItems.map(({ name, icon }) => (
-      <Link key={name} to={`/${name.toLowerCase()}`} className={navLinkClasses}>
-        <div className="flex items-center gap-1">
-          {icon}
-          <span>{name}</span>
-        </div>
-        <span className={underlineSpanClasses}></span>
-      </Link>
+          <Link key={name} to={`/${name.toLowerCase()}`} className={navLinkClasses}>
+            <div className="flex items-center gap-1">
+              {icon}
+              <span>{name}</span>
+            </div>
+            <span className={underlineSpanClasses}></span>
+          </Link>
         ))}
       </div>
 
