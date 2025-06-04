@@ -9,7 +9,32 @@ const ForYou = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [visibleCardId, setVisibleCardId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const observerRef = useRef(null);
+
+  // fetch current user data
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const res = await fetch(`${API}/api/me`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (res.ok) {
+          const userData = await res.json();
+          setCurrentUser(userData);
+        }
+      } catch (err) {
+        console.error('Error fetching current user:', err);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   useEffect(() => {
     const fetchFeed = async () => {
@@ -36,7 +61,9 @@ const ForYou = () => {
             title: post.title,
             artist: post.artist,
             previewUrl: post.previewUrl || 'No preview URL',
-            hasPreview: !!post.previewUrl
+            hasPreview: !!post.previewUrl,
+            likes: post.likes,
+            likedBy: post.likedBy?.length || 0
           });
         });
         setFeed(data);
@@ -65,12 +92,12 @@ const ForYou = () => {
         });
       },
       {
-        threshold: 0.5, // Trigger when 50% of the card is visible
-        rootMargin: '-50px 0px', // Adjust trigger area
+        threshold: 0.5, // trigger when 50% of the card is visible
+        rootMargin: '-50px 0px', // adjust trigger area
       }
     );
 
-    // Observe all music cards
+    // observe all music cards
     const cardElements = document.querySelectorAll('[data-card-id]');
     cardElements.forEach((el) => observerRef.current.observe(el));
 
@@ -80,6 +107,62 @@ const ForYou = () => {
       }
     };
   }, [feed]);
+
+  const handleLike = async (postId) => {
+    try {
+      const response = await fetch(`/api/musicPosts/${postId}/like`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to like post');
+      
+      // optionally refresh the post data
+      const updatedPost = await response.json();
+
+      // update the post in the feed
+      setFeed(prevFeed => 
+        prevFeed.map(post => 
+          post._id === postId ? updatedPost : post
+        )
+      );
+
+      return updatedPost;
+    } catch (error) {
+      console.error('Error liking post:', error);
+      throw error;
+    }
+  };
+  
+  const handleUnlike = async (postId) => {
+    try {
+      const response = await fetch(`/api/musicPosts/${postId}/unlike`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to unlike post');
+      
+      const updatedPost = await response.json();
+
+      // update the post in the feed
+      setFeed(prevFeed => 
+        prevFeed.map(post => 
+          post._id === postId ? updatedPost : post
+        )
+      );
+
+      return updatedPost;
+    } catch (error) {
+      console.error('Error unliking post:', error);
+      throw error;
+    }
+  };
 
   if (loading) {
     return (
@@ -110,7 +193,7 @@ const ForYou = () => {
 
   return (
     <div className="bg-black text-white min-h-screen">
-      {/* Header with Create Post Tab */}
+      {/* Header with Create Post tab */}
       <div className="flex justify-between items-center px-6 py-4 border-b border-gray-800">
         <h1 className="text-3xl font-bold text-center flex-grow">Discover New Music For You</h1>
         <Link
@@ -143,6 +226,9 @@ const ForYou = () => {
               <MusicCard 
                 item={item} 
                 isVisible={visibleCardId === (item._id || item.id)}
+                onLike={handleLike}
+                onUnlike={handleUnlike}
+                currentUser={currentUser}
               />
             </div>
           ))
