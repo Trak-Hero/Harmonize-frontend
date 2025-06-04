@@ -4,6 +4,8 @@ import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import useLocationStore from '../../state/locationStore';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 const LocationMarker = () => {
   const [position, setPosition] = useState(null);
 
@@ -63,7 +65,7 @@ const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
       if (!fetchedKeysRef.current.has(key)) {
         fetchedKeysRef.current.add(key);
         try {
-          const res = await fetch(`http://localhost:8080/api/geocode/reverse?lat=${lat}&lon=${lng}&addressdetails=1`);
+          const res = await fetch(`${API_BASE}/api/geocode/reverse?lat=${lat}&lon=${lng}&addressdetails=1`);
           const data = await res.json();
           setCityMap((prev) => ({ ...prev, [key]: data.city || 'Unknown' }));
         } catch {
@@ -180,7 +182,7 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
       if (!fetchedKeysRef.current.has(key)) {
         fetchedKeysRef.current.add(key);
         try {
-          const res = await fetch(`http://localhost:8080/api/geocode/reverse?lat=${event.location.coordinates[1]}&lon=${event.location.coordinates[0]}&addressdetails=1`);
+          const res = await fetch(`${API_BASE}/api/geocode/reverse?lat=${event.location.coordinates[1]}&lon=${event.location.coordinates[0]}&addressdetails=1`);
           const data = await res.json();
           setCityMap(prev => ({ ...prev, [key]: data.city }));
         } catch {
