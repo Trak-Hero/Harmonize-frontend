@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const API = import.meta.env.VITE_API_BASE_URL;
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 const CreatePost = () => {
   const [formData, setFormData] = useState({
@@ -8,8 +8,8 @@ const CreatePost = () => {
     title: '',
     artist: '',
     genre: '',
-    audioUrl: '',
     coverUrl: '',
+    previewUrl:'',
     duration: null,
     caption: '',
   });
@@ -22,11 +22,23 @@ const CreatePost = () => {
     if (!searchQuery.trim()) return;
 
     try {
-      const res = await fetch(`${API}/spotify/search?q=${encodeURIComponent(searchQuery)}&type=track`);
+      const res = await fetch(`${API}/api/musicPosts/spotify/search?q=${encodeURIComponent(searchQuery)}&type=track`, {
+        method: 'GET',
+        credentials: 'include', // include session cookies
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const data = await res.json();
-      setSearchResults(data.tracks || []);
+      setSearchResults(data || []);
     } catch (err) {
       console.error('Spotify Search Error:', err);
+      alert('Failed to search Spotify. Please try again.');
     }
   };
 
@@ -43,9 +55,12 @@ const CreatePost = () => {
     console.log('Submitting form with data:', formData);
 
     try {
-      const response = await fetch('http://localhost:8080/api/musicPosts', {
+      const response = await fetch(`${API}/api/musicPosts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -56,12 +71,14 @@ const CreatePost = () => {
 
       alert('Post created!');
       setFormData({
+        spotifyTrackId: '',
         title: '',
         artist: '',
         genre: '',
-        audioUrl: '',
         coverUrl: '',
+        previewUrl:'',
         duration: null,
+        caption: '',
       });
       setIsPreviewing(false);
     } catch (err) {
@@ -107,15 +124,15 @@ const CreatePost = () => {
                 <div
                   key={track.id}
                   onClick={() => {
-                    setFormData({
-                      ...formData,
+                    setFormData((prev) => ({
+                      ...prev,
                       spotifyTrackId: track.id,
                       title: track.name,
                       artist: track.artists?.[0]?.name || '',
-                      audioUrl: track.preview_url || '',
+                      previewUrl: track.preview_url || '',
                       coverUrl: track.album?.images?.[0]?.url || '',
                       duration: track.duration_ms ? track.duration_ms / 1000 : null,
-                    });
+                    }));
                     setSearchResults([]);
                     setSearchQuery('');
                   }}
@@ -132,19 +149,15 @@ const CreatePost = () => {
             name="title"
             placeholder="Title"
             value={formData.title}
-            onChange={handleChange}
+            readOnly
             required
             className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400"
           />
 
-          <input
-            name="artist"
-            placeholder="Artist"
-            value={formData.artist}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400"
-          />
+          <div className="w-full px-3 py-2 rounded bg-gray-800 text-white">
+            <label className="block text-sm text-gray-400 mb-1">Artist</label>
+            <p>{formData.artist || 'Artist will appear here'}</p>
+          </div>
 
           <select
             name="genre"
@@ -210,9 +223,9 @@ const CreatePost = () => {
             )}
           </div>
 
-          {formData.audioUrl && (
+          {formData.previewUrl && (
             <audio controls className="w-full mt-4">
-              <source src={formData.audioUrl} type="audio/mpeg" />
+              <source src={formData.previewUrl} type="audio/mpeg" />
               Your browser does not support the audio element.
             </audio>
           )}
