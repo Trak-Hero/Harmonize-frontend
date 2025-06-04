@@ -1,138 +1,202 @@
 import { useEffect, useState } from 'react';
 import { useProfileStore } from '../state/profileStore';
 
-const TileEditor = ({ tile }) => {
-  const updateTile = useProfileStore((s) => s.updateTile);
-  const removeTile = useProfileStore((s) => s.removeTile);
-  const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
+const fonts = [
+  { label: 'Default (sans-serif)', value: '' },
+  { label: 'Serif',         value: 'serif' },
+  { label: 'Monospace',     value: 'monospace' },
+  { label: 'Cursive',       value: 'cursive' },
+  { label: 'Fantasy',       value: 'fantasy' },
+];
 
-  const [form, setForm] = useState({ ...tile });
+const sizes = [1, 2, 3, 4];          // allowed grid units
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    const parsed = ['w', 'h'].includes(name) ? parseInt(value) : value;
-    setForm({ ...form, [name]: parsed });
-  };
+export default function TileEditor() {
+  const { tiles, editingTileId, updateTile, setEditorOpen } = useProfileStore();
+  const tile = tiles.find((t) => (t._id || t.id) === editingTileId);
 
-  const close = () => setEditorOpen(false);
+  const [form, setForm] = useState({});
 
-  const save = () => {
-    updateTile(tile.id, form);
-    close();
-  };
-
+  /* ------------------------------------------------------------ */
+  /* sync form <-> tile                                           */
+  /* ------------------------------------------------------------ */
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, []);
+    if (tile) setForm(tile);
+  }, [tile]);
 
+  if (!tile) return null;
+
+  /* generic onChange that parses w/h as numbers */
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((p) => ({
+      ...p,
+      [name]: ['w', 'h'].includes(name) ? Number(value) : value,
+    }));
+  };
+
+  const handleSave = async () => {
+    const id = tile._id || tile.id;
+
+    if (String(id).startsWith('tmp_')) {
+      // replace the temp tile with a real one
+      const { addTile } = useProfileStore.getState();
+      await addTile(form, id);
+    } else {
+      await updateTile(id, form);
+    }
+    setEditorOpen(false);
+  };
+
+  /* ------------------------------------------------------------ */
+  /* UI                                                            */
+  /* ------------------------------------------------------------ */
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
-      <div className="bg-white text-black rounded-lg p-6 w-[90%] max-w-md space-y-4">
-        <h2 className="text-xl font-bold">Edit Tile</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <div className="w-full max-w-md rounded-xl bg-zinc-900 p-6 space-y-6">
+        <h2 className="text-2xl font-bold text-white">Edit Tile</h2>
 
-        {tile.type === 'text' && (
-          <input
-            type="text"
-            name="content"
-            value={form.content}
-            onChange={handleChange}
-            placeholder="Text"
-            className="w-full border p-2 rounded"
+        // In TileEditor.jsx, update the type-specific section:
+        {(tile.type === 'artist' || tile.type === 'song') && (
+          <TextField
+            label="Title"
+            name="title"
+            value={form.title || ''}
+            onChange={onChange}
           />
         )}
 
-        {tile.type === 'artist' && (
+        {tile.type === 'text' && (
+          <TextareaField
+            label="Content"
+            name="content"
+            value={form.content || ''}
+            onChange={onChange}
+          />
+        )}
+
+        {(tile.type === 'picture' || tile.type === 'artist' || tile.type === 'song') && (
           <>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Artist Name"
-              className="w-full border p-2 rounded"
+            <TextField
+              label={tile.type === 'picture' ? "Image URL" : "Background Image URL (optional)"}
+              name="bgImage"
+              value={form.bgImage || ''}
+              onChange={onChange}
+              placeholder="https://example.com/image.jpg"
             />
-            <input
-              type="text"
-              name="image"
-              value={form.image}
-              onChange={handleChange}
-              placeholder="Image URL"
-              className="w-full border p-2 rounded"
-            />
+            
+            {/* preview if any image */}
+            {form.bgImage && (
+              <img
+                src={form.bgImage}
+                alt="preview"
+                className="h-32 w-full rounded object-cover"
+                onError={(e) => (e.currentTarget.style.display = 'none')}
+              />
+            )}
           </>
         )}
 
-        <input
-          type="color"
+        {/* colour */}
+        <ColorField
+          label="Background colour"
           name="bgColor"
-          value={form.bgColor}
-          onChange={handleChange}
-          className="w-full"
+          value={form.bgColor || '#000000'}
+          onChange={onChange}
         />
 
-        <input
-          type="text"
-          name="bgImage"
-          value={form.bgImage || ''}
-          onChange={handleChange}
-          placeholder="Background Image URL"
-          className="w-full border p-2 rounded"
-        />
-
-        <select
+        {/* font selector */}
+        <SelectField
+          label="Font family"
           name="font"
-          value={form.font}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        >
-          <option value="sans-serif">Sans-serif</option>
-          <option value="serif">Serif</option>
-          <option value="monospace">Monospace</option>
-        </select>
+          value={form.font || ''}
+          onChange={onChange}
+          options={fonts}
+        />
 
-        {/* 📐 Predefined Size Controls */}
-        <div className="flex gap-2">
-          <select
+        {/* size picker */}
+        <div className="flex gap-4">
+          <SelectField
+            label="Width (w)"
             name="w"
-            value={form.w}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          >
-            <option value={1}>Width: 1</option>
-            <option value={2}>Width: 2</option>
-            <option value={4}>Width: 4</option>
-          </select>
-
-          <select
+            value={form.w ?? 1}
+            onChange={onChange}
+            options={sizes.map((s) => ({ label: s, value: s }))}
+          />
+          <SelectField
+            label="Height (h)"
             name="h"
-            value={form.h}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          >
-            <option value={1}>Height: 1</option>
-            <option value={2}>Height: 2</option>
-          </select>
+            value={form.h ?? 1}
+            onChange={onChange}
+            options={sizes.map((s) => ({ label: s, value: s }))}
+          />
         </div>
 
-        <div className="flex justify-between mt-4">
-          <button onClick={save} className="px-4 py-2 bg-blue-500 text-white rounded">Save</button>
-          <button onClick={close} className="px-4 py-2 bg-gray-400 text-white rounded">Cancel</button>
+        {/* buttons */}
+        <div className="pt-4 flex justify-end gap-2">
           <button
-            onClick={() => {
-              removeTile(tile.id);
-              close();
-            }}
-            className="px-4 py-2 bg-red-500 text-white rounded"
+            onClick={() => setEditorOpen(false)}
+            className="rounded bg-zinc-700 px-4 py-2 text-white hover:bg-zinc-600"
           >
-            Delete
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
+            Save
           </button>
         </div>
       </div>
     </div>
   );
-};
+}
 
-export default TileEditor;
+/* ---------------- little helpers ---------------- */
+const TextField = ({ label, ...props }) => (
+  <div>
+    <label className="mb-1 block text-white">{label}</label>
+    <input
+      {...props}
+      className="w-full rounded bg-zinc-800 p-2 text-white"
+    />
+  </div>
+);
+
+const TextareaField = ({ label, ...props }) => (
+  <div>
+    <label className="mb-1 block text-white">{label}</label>
+    <textarea
+      {...props}
+      rows={4}
+      className="w-full rounded bg-zinc-800 p-2 text-white"
+    />
+  </div>
+);
+
+const SelectField = ({ label, options, ...props }) => (
+  <div className="w-full">
+    <label className="mb-1 block text-white">{label}</label>
+    <select
+      {...props}
+      className="w-full rounded bg-zinc-800 p-2 text-white"
+    >
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
+const ColorField = (props) => (
+  <div>
+    <label className="mb-1 block text-white">{props.label}</label>
+    <input
+      type="color"
+      {...props}
+      className="h-10 w-full rounded bg-zinc-800 p-1"
+    />
+  </div>
+);

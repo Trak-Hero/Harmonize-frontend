@@ -10,21 +10,45 @@ import SpotifyDashboard from './pages/SpotifyDashboard';
 import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
 import Register from './pages/Register';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import { useEffect } from 'react';
+import { useAuthStore } from './state/authStore';
+import Galaxy from './pages/Galaxy';
 import BlendPage from './pages/BlendPage';
 
 import './App.css';
 
-
 function App() {
+  const { fetchUser, hasCheckedSession, isLoading, user } = useAuthStore();
+
+  useEffect(() => {
+    // Only fetch user session if we haven't checked yet
+    // This prevents unnecessary API calls on every reload
+    if (!hasCheckedSession) {
+      fetchUser();
+    }
+  }, [fetchUser, hasCheckedSession]);
+
+  // Optional: Show loading spinner while checking session
+  if (!hasCheckedSession && isLoading) {
+    return (
+      <div className="relative w-full h-screen overflow-hidden">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-white text-lg">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
- 
       {/* App content */}
       <div className="relative z-20 flex flex-col h-full overflow-auto">
         <Navbar />
 
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<Home />} />
           <Route path="/discover" element={<ForYou />} />
           <Route path="/artist/:id" element={<ArtistProfile />} />
           <Route path="/search" element={<SearchResults />} />
@@ -34,6 +58,8 @@ function App() {
           <Route path="/friends" element={<Friends />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/galaxy" element={<Galaxy />} />
           <Route path="/blend" element={<BlendPage />} />
         </Routes>
       </div>

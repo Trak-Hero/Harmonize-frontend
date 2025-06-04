@@ -1,10 +1,24 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Compass, Users, MapTrifold, ArrowRight } from '@phosphor-icons/react';
+import { useAuthStore } from '../state/authStore';
+import {
+  Compass,
+  Users,
+  MapTrifold,
+  Planet,
+  ArrowRight,
+  UserCircle,
+  SpotifyLogo,
+  SignIn,
+  SignOut,
+} from '@phosphor-icons/react';
 
 export default function Navbar() {
   const [q, setQ] = useState('');
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const API = import.meta.env.VITE_API_BASE_URL;
 
   const search = (e) => {
     e.preventDefault();
@@ -25,6 +39,7 @@ export default function Navbar() {
     { name: "Friends", icon: <Users size={18} weight="regular" /> },
     { name: "Map", icon: <MapTrifold size={18} weight="regular" /> },
     { name: "Blend", icon: <MapTrifold size={18} weight="regular" /> },
+    { name: "Galaxy", icon: <Planet size={18} weight="regular" /> },
   ];
 
   return (
@@ -63,27 +78,56 @@ export default function Navbar() {
         </button>
       </form>
 
-      {/* Right: Profile + Dashboard + Sign Up */}
-      <div className="flex gap-3">
-        <Link
-          to="/profile"
-          className="px-4 py-2 rounded-md border border-white/20 hover:bg-white/10 text-sm font-medium transition"
-        >
-          Profile
-        </Link>
-        <Link
-          to="/dashboard"
-          className="px-4 py-2 rounded-md border border-white/20 hover:bg-white/10 text-sm font-medium transition"
-        >
-          Dashboard
-        </Link>
-        <Link
-          to="/connect"
-          className="px-4 py-2 rounded-md bg-green-500 hover:bg-green-600 text-sm font-medium transition"
-        >
-          Sign up
-        </Link>
-      </div>
+    {/* Right: Profile + Dashboard + Connect/Spotify */}
+    <div className="flex items-center gap-4">
+      {user ? (
+        <>
+          <Link to="/profile" className={navLinkClasses}>
+            <div className="flex items-center gap-1">
+              <UserCircle size={18} weight="regular" />
+              <span>Profile</span>
+            </div>
+            <span className={underlineSpanClasses}></span>
+          </Link>
+
+          <Link to="/connect" className={navLinkClasses}>
+            <div className="flex items-center gap-1 text-green-400 hover:text-green-300">
+              <SpotifyLogo size={18} weight="fill" />
+              <span>Spotify</span>
+            </div>
+            <span className="absolute left-0 -bottom-1 h-0.5 w-0 bg-green-400 transition-all duration-300 group-hover:w-full"></span>
+          </Link>
+
+          <button
+            onClick={logout}
+            className={`${navLinkClasses} text-red-400 hover:text-red-300`}
+          >
+            <div className="flex items-center gap-1">
+              <SignOut size={18} weight="regular" />
+              <span>Log out</span>
+            </div>
+            <span className="absolute left-0 -bottom-1 h-0.5 w-0 bg-red-400 transition-all duration-300 group-hover:w-full"></span>
+          </button>
+        </>
+      ) : (
+        <>
+          <Link to="/login" className={navLinkClasses}>
+            <div className="flex items-center gap-1">
+              <SignIn size={18} weight="regular" />
+              <span>Log in</span>
+            </div>
+            <span className={underlineSpanClasses}></span>
+          </Link>
+
+          <Link
+            to="/register"
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition"
+          >
+            Sign up
+          </Link>
+        </>
+      )}
+    </div>
     </nav>
   );
 }
