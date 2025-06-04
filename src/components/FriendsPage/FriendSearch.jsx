@@ -1,14 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useFriendStore from '../../state/friendStore';
 
 export default function FriendSearch() {
   const [term, setTerm]       = useState('');
   const [results, setResults] = useState([]);
   const timer                 = useRef(null);
   const navigate              = useNavigate();
-
-  const followUser = useFriendStore((s) => s.userSlice.followUser);
 
   /* ---------- debounced fetch ---------- */
   useEffect(() => {
@@ -28,7 +25,7 @@ export default function FriendSearch() {
     return () => clearTimeout(timer.current);
   }, [term]);
 
-  const addFriend = (uid) => followUser?.(uid);
+  const hasResults = Boolean(results[0]);
 
   return (
     <div className="w-full mb-6">
@@ -39,26 +36,15 @@ export default function FriendSearch() {
         onChange={(e) => setTerm(e.target.value)}
       />
 
-      {(results ?? []).length > 0 && (
+      {hasResults && (
         <ul className="mt-2 max-h-60 overflow-y-auto border rounded-md bg-white shadow">
-          {(results ?? []).map((u) => (
+          {results.map((u) => (
             <li
               key={u._id}
-              className="flex items-center justify-between px-3 py-2 hover:bg-gray-50"
+              onClick={() => navigate(`/friends/${u._id}`)}
+              className="px-3 py-2 hover:bg-gray-50 cursor-pointer truncate"
             >
-              <button
-                onClick={() => navigate(`/friends/${u._id}`)}
-                className="text-left flex-1 truncate"
-              >
-                {u.username || 'Unknown'}
-              </button>
-
-              <button
-                onClick={() => addFriend(u._id)}
-                className="ml-3 text-sm text-blue-600 hover:underline"
-              >
-                Add
-              </button>
+              {u.username || 'Unknown'}
             </li>
           ))}
         </ul>
