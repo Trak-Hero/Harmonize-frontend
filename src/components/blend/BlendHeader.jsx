@@ -1,4 +1,5 @@
-export default function BlendHeader() {
+// src/components/blend/BlendHeader.jsx - Updated version
+export default function BlendHeader({ selectedUser }) {
   return (
     <div className="w-full flex flex-col items-start text-left space-y-2">
       {/* Title */}
@@ -8,7 +9,15 @@ export default function BlendHeader() {
 
       {/* Subtitle */}
       <p className="text-3xl italic text-gray-300">
-        These are <span className="font-semibold text-white underline underline-offset-4">our</span> tastes
+        {selectedUser ? (
+          <>
+            Your taste vs <span className="font-semibold text-white underline underline-offset-4">{selectedUser.displayName}</span>
+          </>
+        ) : (
+          <>
+            These are <span className="font-semibold text-white underline underline-offset-4">our</span> tastes
+          </>
+        )}
       </p>
     </div>
   );
