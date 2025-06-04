@@ -6,60 +6,58 @@ import SimilarGenresCard from '../components/blend/SimilarGenresCard';
 import DifferencesCard from '../components/blend/DifferencesCard';
 import { fetchTopArtists } from '../api/spotify'; // your own data
 
-const friendMockData = {
-  items: [
-    {
-      name: 'Joji',
-      genres: ['lo-fi', 'alternative r&b'],
-      images: [{ url: '/artists/joji.jpg' }],
-    },
-    {
-      name: 'Beabadoobee',
-      genres: ['bedroom pop', 'indie rock'],
-      images: [{ url: '/artists/beabadoobee.jpg' }],
-    },
-    {
-      name: 'BIBI',
-      genres: ['k-r&b', 'k-pop'],
-      images: [{ url: '/artists/bibi.jpg' }],
-    },
-    {
-      name: 'IU',
-      genres: ['k-pop', 'ballad'],
-      images: [{ url: '/artists/iu.jpg' }],
-    },
-  ],
-};
-
 function computeBlend(userAData, userBData, userAName, userBName) {
-  const getArtistNames = (list) => list.map((a) => a.name);
-  const getGenres = (list) => list.flatMap((a) => a.genres);
-
   const artistsA = userAData.items;
   const artistsB = userBData.items;
 
-  const artistNamesA = new Set(getArtistNames(artistsA));
-  const artistNamesB = new Set(getArtistNames(artistsB));
+  const artistMapA = new Map(artistsA.map((a) => [a.id, a]));
+  const artistMapB = new Map(artistsB.map((b) => [b.id, b]));
 
-  const commonArtists = artistsA.filter((a) => artistNamesB.has(a.name));
+  // 1. Common Artists (by ID)
+  const commonArtistIds = artistsA
+    .map((a) => a.id)
+    .filter((id) => artistMapB.has(id));
 
-  const uniqueA = artistsA.filter((a) => !artistNamesB.has(a.name));
-  const uniqueB = artistsB.filter((a) => !artistNamesA.has(a.name));
+  const commonArtists = commonArtistIds.map((id) => artistMapA.get(id));
 
-  const genresA = getGenres(artistsA);
-  const genresB = getGenres(artistsB);
+  // 2. Genre Analysis
+  const allGenresA = artistsA.flatMap((a) => a.genres);
+  const allGenresB = artistsB.flatMap((b) => b.genres);
 
-  const uniqueGenresA = [...new Set(genresA.filter((g) => !genresB.includes(g)))];
-  const uniqueGenresB = [...new Set(genresB.filter((g) => !genresA.includes(g)))];
+  const genreSetA = new Set(allGenresA);
+  const genreSetB = new Set(allGenresB);
 
-  const similarGenres = [...new Set(genresA.filter((g) => genresB.includes(g)))];
+  const similarGenres = [...genreSetA].filter((g) => genreSetB.has(g));
+  const uniqueGenresA = [...genreSetA].filter((g) => !genreSetB.has(g));
+  const uniqueGenresB = [...genreSetB].filter((g) => !genreSetA.has(g));
 
-  const tasteMatch = Math.round((commonArtists.length / Math.min(artistsA.length, artistsB.length)) * 100);
+  // 3. Popularity Similarity (avg difference in matched artists)
+  const popularityDiffs = commonArtistIds.map((id) => {
+    const a = artistMapA.get(id).popularity;
+    const b = artistMapB.get(id).popularity;
+    return Math.abs(a - b);
+  });
+
+  const avgPopularityDiff = popularityDiffs.length
+    ? popularityDiffs.reduce((sum, d) => sum + d, 0) / popularityDiffs.length
+    : 100;
+
+  // 4. Score Components
+  const artistScore = (commonArtistIds.length / Math.min(artistsA.length, artistsB.length)) * 100;
+  const genreScore = (similarGenres.length / (new Set([...allGenresA, ...allGenresB]).size)) * 100;
+  const popularityScore = 100 - avgPopularityDiff;
+
+  // Weighted blend (feel free to adjust)
+  const finalScore = Math.round(
+    0.5 * artistScore +
+    0.3 * genreScore +
+    0.2 * popularityScore
+  );
 
   return {
     userA: { name: userAName, avatarUrl: '' },
     userB: { name: userBName, avatarUrl: '' },
-    tasteMatch,
+    tasteMatch: finalScore,
     commonArtists: commonArtists.map((a) => ({
       name: a.name,
       imageUrl: a.images[0]?.url || '',
@@ -68,14 +66,12 @@ function computeBlend(userAData, userBData, userAName, userBName) {
     differences: {
       userAName,
       userBName,
-      userAOnlyArtists: uniqueA.map((a) => ({
-        name: a.name,
-        imageUrl: a.images[0]?.url || '',
-      })),
-      userBOnlyArtists: uniqueB.map((a) => ({
-        name: a.name,
-        imageUrl: a.images[0]?.url || '',
-      })),
+      userAOnlyArtists: artistsA
+        .filter((a) => !artistMapB.has(a.id))
+        .map((a) => ({ name: a.name, imageUrl: a.images[0]?.url || '' })),
+      userBOnlyArtists: artistsB
+        .filter((b) => !artistMapA.has(b.id))
+        .map((b) => ({ name: b.name, imageUrl: b.images[0]?.url || '' })),
       uniqueGenres: {
         userA: uniqueGenresA,
         userB: uniqueGenresB,
@@ -91,6 +87,19 @@ export default function BlendPage() {
     const load = async () => {
       try {
         const userData = await fetchTopArtists(); // your data
+
+         const friendMockData = {
+            items: userData.items
+                .slice()
+                .reverse()
+                .map((artist, idx) => ({
+                ...artist,
+                id: idx % 2 === 0 ? artist.id : artist.id + '_friend', 
+                name: artist.name + (idx % 2 === 0 ? '' : ' (Alt)'),
+                })),
+            };
+
+
         const blend = computeBlend(userData, friendMockData, 'You', 'Minsoo');
         setBlendData(blend);
       } catch (e) {
