@@ -46,9 +46,10 @@ export default function Login() {
       console.log('Login successful:', user);
       console.log("Access token:", user.accessToken);
 
-      if (user.accessToken) {
-        localStorage.setItem('accessToken', user.accessToken);
+      if (user.spotifyAccessToken) {
+        localStorage.setItem('accessToken', user.spotifyAccessToken);
       }
+
 
       login(user);
       navigate('/profile');

@@ -19,10 +19,15 @@ export async function fetchRecentTracks() {
 export async function fetchTopArtists() {
   const token = getAccessToken();
   const res = await fetch(`${API_BASE}/spotify/top-artists`, {
+    method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    mode: 'cors',
+    credentials: 'include',
   });
+
   if (!res.ok) throw new Error('Failed to fetch top artists');
   return await res.json();
 }
+
