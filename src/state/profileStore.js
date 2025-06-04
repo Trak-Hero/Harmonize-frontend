@@ -58,20 +58,17 @@ export const useProfileStore = create(
           console.warn('[profileStore] fetchTiles called without profileUserId');
           return;
         }
-
+      
         set({ isLoading: true });
-        
+      
         try {
-          console.log('[profileStore] Fetching tiles for user:', profileUserId, 'viewer:', viewerId);
-          
-          const res = await axios.get(
-            `${API_BASE}/api/users/${profileUserId}/tiles`,
-            { 
-              params: { viewerId },
-              timeout: 10000, // 10 second timeout
-            }
-          );
-          
+          console.log('[profileStore] Fetching tiles (using /api/tiles/:userId) for user:', profileUserId);
+      
+          // Call the working route directly
+          const res = await axios.get(`${API_BASE}/api/tiles/${profileUserId}`, {
+            timeout: 10000,
+          });
+      
           console.log('[profileStore] Fetched tiles:', res.data);
           set({ 
             tiles: res.data || [], 
@@ -79,38 +76,28 @@ export const useProfileStore = create(
             isLoading: false 
           });
         } catch (err) {
-          console.error('[profileStore] Failed to fetch tiles:', err);
-          
-          // Try alternative endpoint
-          try {
-            console.log('[profileStore] Trying alternative endpoint...');
-            const res = await axios.get(`${API_BASE}/api/tiles/${profileUserId}`);
-            console.log('[profileStore] Fetched tiles (alternative):', res.data);
-            set({ 
-              tiles: res.data || [], 
-              currentUserId: profileUserId,
-              isLoading: false 
-            });
-          } catch (err2) {
-            console.error('[profileStore] Alternative fetch also failed:', err2);
-            set({ isLoading: false });
-          }
+          console.error('[profileStore] Failed to fetch tiles (only attempted valid endpoint):', err);
+          set({ tiles: [], isLoading: false });
         }
       },
+      
 
       /**
        * Create a new tile that belongs to the *current* profile.
        * Falls back to the cached currentUserId if caller does not pass one.
        */
       addTile: async (tileData, tempId = null) => {
+        console.log('[profileStore] addTile called with:', { tileData, tempId });
+        
         // Prefer an explicit userId from the caller; otherwise fall back to the one cached
         const userId = tileData.userId || get().currentUserId;
+        
         if (!userId) {
           console.error('[profileStore] Tile add failed: No user ID available');
           console.log('[profileStore] Current state:', get());
-          return;
+          throw new Error('No user ID available for tile creation');
         }
-
+      
         try {
           console.log('[profileStore] Adding tile with userId:', userId, 'tileData:', tileData);
           console.log('[profileStore] Temp ID to replace:', tempId);
@@ -125,8 +112,10 @@ export const useProfileStore = create(
             h: Number(tileData.h) || 1,
           };
           
+          console.log('[profileStore] Final payload being sent to server:', payload);
+          
           const res = await axios.post(`${API_BASE}/api/tiles`, payload);
-          console.log('[profileStore] Created tile response:', res.data);
+          console.log('[profileStore] Server response:', res.data);
           
           set((state) => ({
             tiles: tempId
@@ -137,6 +126,7 @@ export const useProfileStore = create(
           return res.data;
         } catch (err) {
           console.error('[profileStore] Failed to add tile:', err);
+          console.error('[profileStore] Error response:', err.response?.data);
           
           // Remove temp tile on failure
           if (tempId) {

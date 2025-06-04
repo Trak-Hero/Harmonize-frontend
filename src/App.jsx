@@ -11,9 +11,11 @@ import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
 import CreatePost from './pages/CreatePost';
 import Register from './pages/Register';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import { useEffect } from 'react';
 import { useAuthStore } from './state/authStore';
+import Galaxy from './pages/Galaxy';
 
 import './App.css';
 
@@ -46,7 +48,7 @@ function App() {
         <Navbar />
 
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<Home />} />
           <Route path="/discover" element={<ForYou />} />
           <Route path="/artist/:id" element={<ArtistProfile />} />
           <Route path="/search" element={<SearchResults />} />
@@ -58,6 +60,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/create" element={<CreatePost />} />
+          <Route path="/galaxy" element={<Galaxy />} />
         </Routes>
       </div>
     </div>
