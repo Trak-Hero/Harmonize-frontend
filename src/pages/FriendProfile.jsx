@@ -67,27 +67,29 @@ export default function FriendProfile() {
     });
   }, [API, id]);
 
-  /* ---------- initial load ---------- */
+  /* ---------- fetch profile if not cached ---------- */
     useEffect(() => {
-    if (!friends.some((f) => (f.id || f._id) === id)) {
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/${id}`, {
+    const alreadyHave = friends.some((f) => (f.id || f._id) === id);
+    if (alreadyHave) return;
+
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/${id}`, {
         credentials: 'include',
-        })
-        .then((r) => r.ok && r.json())
-        .then((u) => {
-            if (!u) return;
-            setProfile(u);
-            addFriendToStore(u);
-        })
+    })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((u) => u && addFriendToStore(u))
         .catch(console.error);
-    }
+    }, [id, friends, addFriendToStore]);
 
-    if (!targetFriend) return;
+    /* ---------- once profile present, load tiles & spotify ---------- */
+    useEffect(() => {
+    const target = friends.find((f) => (f.id || f._id) === id);
+    if (!target) return;
 
-    setCurrentUserId(id);
-    fetchTiles(id, currentUserId);
+    if (currentUserId !== id) setCurrentUserId(id);
+
+    fetchTiles(id);
     loadSpotify();
-    }, [id, targetFriend, currentUserId, fetchTiles, setCurrentUserId, loadSpotify, friends, addFriendToStore]);
+    }, [id, friends, currentUserId, setCurrentUserId, fetchTiles, loadSpotify]);
 
   if (!targetFriend) {
     return (
