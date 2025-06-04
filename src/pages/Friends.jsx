@@ -56,11 +56,11 @@ export default function Friends() {
                     }
                     className={`w-full py-1.5 rounded ${
                       iFollowThem
-                        ? 'bg-gray-400 hover:bg-gray-500'
+                        ? 'bg-red-500 hover:bg-red-600'
                         : 'bg-green-500 hover:bg-green-600'
                     } text-white text-sm`}
                   >
-                    {iFollowThem ? 'Unfollow' : 'Follow'}
+                    {iFollowThem ? 'Unfollow' : 'Add Friend'}
                   </button>
                 )}
               </div>
