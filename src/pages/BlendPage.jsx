@@ -89,15 +89,24 @@ export default function BlendPage() {
         const userData = await fetchTopArtists(); // your data
 
          const friendMockData = {
-            items: userData.items
-                .slice()
-                .reverse()
-                .map((artist, idx) => ({
+            items: userData.items.map((artist, idx) => {
+                const sharedArtist = idx % 4 === 0; // 25% of artists are shared
+                const sharedGenre = idx % 3 !== 0;  // 66% of genres are similar
+
+                const newGenres = sharedGenre
+                ? artist.genres.map((g) => g) // keep original
+                : artist.genres.map((g) => g + '-alt'); // mutate genres
+
+                return {
                 ...artist,
-                id: idx % 2 === 0 ? artist.id : artist.id + '_friend', 
-                name: artist.name + (idx % 2 === 0 ? '' : ' (Alt)'),
-                })),
-            };
+                id: sharedArtist ? artist.id : artist.id + '_friend_' + idx,
+                name: sharedArtist ? artist.name : artist.name + ' (Alt)',
+                genres: newGenres,
+                };
+            }),
+        };
+
+
 
 
         const blend = computeBlend(userData, friendMockData, 'You', 'Minsoo');
