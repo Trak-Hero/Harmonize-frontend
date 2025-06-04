@@ -26,16 +26,23 @@ export default function FriendProfile() {
   const authUser = useAuthStore((s) => s.user);
 
   const {
-    tiles = [],                           // ← default to empty array
+    tiles = [],
     fetchTiles,
     setCurrentUserId,
   } = useProfileStore();
 
-  const { userSlice } = useFriendStore((s) => s);
+  const { userSlice, addFriendToStore } = useFriendStore((s) => ({
+   userSlice: s.userSlice,
+    addFriendToStore: (u) =>
+        s.userSlice.friends.push(u),             
+ }));
   const { friends = [], followUser, unfollowUser, currentUserId } = userSlice ?? {};
 
-  const targetFriend = friends.find((f) => (f.id || f._id) === id);
-  const isOwner      = id === currentUserId;
+  const [profile, setProfile] = useState(null);
+  const targetFriend =
+   friends.find((f) => (f.id || f._id) === id) || profile;
+  
+  const isOwner = id === currentUserId;
 
   const isFollowing =
     friends
@@ -61,12 +68,26 @@ export default function FriendProfile() {
   }, [API, id]);
 
   /* ---------- initial load ---------- */
-  useEffect(() => {
-    if (!targetFriend) return;
-    setCurrentUserId(id);
-    fetchTiles(id, currentUserId);
-    loadSpotify();
-  }, [id, targetFriend, currentUserId, fetchTiles, setCurrentUserId, loadSpotify]);
+useEffect(() => {
+  if (!friends.some((f) => (f.id || f._id) === id)) {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/${id}`, {
+      credentials: 'include',
+    })
+      .then((r) => r.ok && r.json())
+      .then((u) => {
+        if (!u) return;
+        setProfile(u);
+        addFriendToStore(u);
+      })
+      .catch(console.error);
+  }
+
+  if (!targetFriend) return;   // wait until we *have* a profile
+
+  setCurrentUserId(id);
+  fetchTiles(id, currentUserId);
+  loadSpotify();
+}, [id, targetFriend, currentUserId, fetchTiles, setCurrentUserId, loadSpotify, friends, addFriendToStore]);
 
   if (!targetFriend) {
     return (

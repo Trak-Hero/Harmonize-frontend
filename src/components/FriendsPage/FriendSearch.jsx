@@ -42,7 +42,7 @@ export default function FriendSearch() {
             <li
               key={u._id}
               onClick={() => navigate(`/friends/${u._id}`)}
-              className="px-3 py-2 hover:bg-gray-50 cursor-pointer truncate"
+              className="text-left flex-1 truncate text-gray-800"
             >
               {u.username || 'Unknown'}
             </li>
