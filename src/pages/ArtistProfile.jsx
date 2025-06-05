@@ -26,7 +26,12 @@ export default function ArtistProfile() {
 
   const pick = (...urls) => urls.find(Boolean);
 
-  // ---- FALLBACK DATA WHEN SPOTIFY LACKS INFO ----
+
+  // ───────────────────────────────────────────────
+  useEffect(() => {
+    setLoading(true);
+
+    // ---- FALLBACK DATA WHEN SPOTIFY LACKS INFO ----
   const fallbackTracks = [
     { id:'1', name:'The Less I Know the Better', popularity:88,
       album:{images:[{url:'/fallback-cover.jpg'}]} },
@@ -38,9 +43,6 @@ export default function ArtistProfile() {
     { id:'c2', name:'Lonerism', cover:'/fallback-album.jpg', year:2012 },
   ];
 
-  // ───────────────────────────────────────────────
-  useEffect(() => {
-    setLoading(true);
     (async () => {
       try {
         // 1️⃣  fetch from Spotify direct endpoint first

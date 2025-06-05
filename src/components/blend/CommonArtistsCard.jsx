@@ -46,7 +46,7 @@ export default function CommonArtistsCard({ artists }) {
       setVisibleCount(4);
       setIsExpanding(false);
     }
-  }, [showAll, artists.length]);
+  }, [showAll, artists.length, visibleCount]);
 
   return (
     <div className="relative p-6 rounded-2xl text-white shadow-xl bg-gradient-to-br from-green-700 via-emerald-500 to-orange-400 transform transition-all duration-500 hover:scale-105">
@@ -91,17 +91,19 @@ export default function CommonArtistsCard({ artists }) {
 
       {artists.length > 4 && (
         <div className="mt-4 text-center">
-          <button
+            <button
             onClick={() => setShowAll(!showAll)}
-            className={`text-sm text-blue-100 underline hover:text-white transition-all duration-300 transform hover:scale-105 ${
-              isExpanding ? 'animate-pulse' : ''
-            }`}
+            className={`outline-none focus:outline-none text-sm font-semibold px-4 py-2 rounded-full shadow transition-all duration-300
+                ${showAll ? 'bg-white text-green-800' : 'bg-white text-orange-800'}
+                hover:bg-gray-100 hover:scale-105
+                ${isExpanding ? 'animate-pulse opacity-60 cursor-not-allowed' : ''}
+            `}
             disabled={isExpanding}
-          >
+            >
             {showAll ? 'Show Less' : `Show More (${artists.length - 4} more)`}
-          </button>
+            </button>
         </div>
-      )}
+    )}
 
       {/* Custom CSS for fade-in-up animation */}
       <style jsx>{`

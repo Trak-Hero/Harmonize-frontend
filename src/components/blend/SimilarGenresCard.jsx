@@ -20,7 +20,7 @@ export default function SimilarGenresCard({ genres = [] }) {
     };
     setVisibleCount(0); // Reset before revealing
     setTimeout(reveal, 100);
-  }, [expanded, genres.length]);
+  }, [expanded, genres.length, totalToShow]);
 
   return (
     <div className="bg-gradient-to-br from-green-700 via-lime-400 to-rose-200 p-6 rounded-2xl text-white shadow-xl">
