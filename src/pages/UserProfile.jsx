@@ -277,13 +277,13 @@ export default function UserProfile() {
                 {authUser.displayName || authUser.username || 'Your Profile'}
               </h1>
               {isOwner && (
-                <button
-                  onClick={() => setShowEditor(true)}
-                  className="px-4 py-2 bg-white text-black rounded-full text-sm hover:bg-zinc-200"
-                >
-                  Edit
-                </button>
-              )}
+              <a
+                href={`${API}/spotify/auth`}
+                className="text-sm mt-2 text-blue-400 underline hover:text-blue-300"
+              >
+                Connect your Spotify account to see recent activity.
+              </a>
+            )}
             </div>
             {authUser.bio && <p className="text-white/70">{authUser.bio}</p>}
             <p className="text-white/40 text-sm">0 Followers • 0 Following</p>
