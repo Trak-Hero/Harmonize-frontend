@@ -13,7 +13,7 @@ export default function FriendSearch() {
 
     clearTimeout(timer.current);
     timer.current = setTimeout(() => {
-      fetch(`/api/users/search?username=${encodeURIComponent(term)}`)
+      fetch(`/api/users/search?q=${encodeURIComponent(term)}`, { credentials: 'include', })
         .then((r) => r.json())
         .then((data) => setResults(Array.isArray(data) ? data : []))
         .catch(console.error);
