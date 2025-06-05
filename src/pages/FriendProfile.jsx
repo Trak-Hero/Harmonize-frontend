@@ -104,14 +104,7 @@ export default function FriendProfile() {
       </div>
     );
   }
-
-  const followersCount = friends.reduce(
-    (acc, f) =>
-      (f.following ?? []).some((fid) => String(fid) === String(id))
-        ? acc + 1
-        : acc,
-    0
-  );
+  const followersCount = friend.followers?.length ?? 0;
   const followingCount = friend.following?.length ?? 0;
 
   const layoutItems = tiles.map((t) => ({
