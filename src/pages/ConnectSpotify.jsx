@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Add useEffect here
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../state/authStore';
 
@@ -43,6 +43,7 @@ export default function ConnectSpotify() {
       setLoading(false);
     }
   };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen text-white p-8">
       <div className="max-w-md text-center space-y-6">
