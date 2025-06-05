@@ -25,13 +25,10 @@ const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
 const cols        = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
 
 export default function FriendProfile() {
-  /* ───────── routing & env ───────── */
-  const { id } = useParams();                            // /friends/:id
-  const API    = import.meta.env.VITE_API_BASE_URL || '';
+  const { id } = useParams();
+  const API = import.meta.env.VITE_API_BASE_URL || '';
 
-  /* ───────── auth & profile stores ───────── */
   const { user: authUser } = useAuthStore();
-
   const {
     tiles,
     fetchTiles,
@@ -46,35 +43,41 @@ export default function FriendProfile() {
     addFriendToStore
   } = useFriendStore();
 
-  /* ───────── cached vs fetch profile ───────── */
-  const cached   = friends.find((f) => (f.id || f._id) === id);
+  const cached = friends.find((f) => (f.id || f._id) === id);
   const [profile, setProfile] = useState(null);
   const friend = cached || profile;
 
-  /* ───────── follow state ───────── */
-  const me       = friends.find((f) => (f.id || f._id) === currentUserId);
-  const isOwner  = id === currentUserId;
-  const isFollowing =
-    !!me?.following?.some((fid) => String(fid) === String(id));
+  // Correct follow state using authUser (not currentUserId)
+  const me = friends.find((f) => String(f._id || f.id) === String(authUser?._id || authUser?.id));
+  const isOwner = String(authUser?._id || authUser?.id) === String(id);
+  const isFollowing = !!me?.following?.some((fid) => String(fid) === String(id));
 
-  /* ───────── Spotify data ───────── */
+  const handleFollowToggle = async () => {
+    if (isFollowing) {
+      await unfollowUser(id);
+    } else {
+      await followUser(id);
+    }
+    const updated = friends.find((f) => String(f._id || f.id) === String(id));
+    if (updated) setProfile(updated);
+  };
+
   const [spotifyData, setSpotifyData] = useState(null);
 
   const loadSpotify = useCallback(async () => {
     const res = await withTokenRefresh(
       () => fetch(`${API}/spotify/user/${id}`, { credentials: 'include' }),
-      () => fetch(`${API}/auth/refresh`,       { credentials: 'include' })
+      () => fetch(`${API}/auth/refresh`, { credentials: 'include' })
     );
     if (!res?.ok) return;
     const data = await res.json();
     setSpotifyData({
-      top:         data.top         ?? [],
+      top: data.top ?? [],
       top_artists: data.top_artists ?? [],
-      recent:      data.recent      ?? []
+      recent: data.recent ?? []
     });
   }, [API, id]);
 
-  /* ───────── fetch friend profile if missing ───────── */
   useEffect(() => {
     if (cached) return;
     fetch(`${API}/api/users/${id}`, { credentials: 'include' })
@@ -87,7 +90,6 @@ export default function FriendProfile() {
       .catch(console.error);
   }, [API, id, cached, addFriendToStore]);
 
-  /* ───────── load tiles + Spotify when ready ───────── */
   useEffect(() => {
     if (!friend) return;
     if (currentUserId !== id) setCurrentUserId(id);
@@ -95,7 +97,6 @@ export default function FriendProfile() {
     loadSpotify();
   }, [friend, id, currentUserId, setCurrentUserId, fetchTiles, loadSpotify]);
 
-  /* ───────── guard: still loading ───────── */
   if (!friend) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
@@ -104,7 +105,6 @@ export default function FriendProfile() {
     );
   }
 
-  /* ───────── follower counts ───────── */
   const followersCount = friends.reduce(
     (acc, f) =>
       (f.following ?? []).some((fid) => String(fid) === String(id))
@@ -114,7 +114,6 @@ export default function FriendProfile() {
   );
   const followingCount = friend.following?.length ?? 0;
 
-  /* ───────── grid layout ───────── */
   const layoutItems = tiles.map((t) => ({
     i: t._id || t.id,
     x: t.x || 0,
@@ -125,17 +124,11 @@ export default function FriendProfile() {
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      {/* back link */}
-      <Link
-        to="/friends"
-        className="inline-block mt-4 mb-6 text-blue-600 hover:underline"
-      >
+      <Link to="/friends" className="inline-block mt-4 mb-6 text-blue-600 hover:underline">
         ← Back to Friends
       </Link>
 
-      {/* ──────────── main column ──────────── */}
       <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-        {/* header */}
         <header className="flex items-center gap-6">
           <img
             src={friend.avatar || 'https://placehold.co/150'}
@@ -150,9 +143,7 @@ export default function FriendProfile() {
 
               {!isOwner && (
                 <button
-                  onClick={() =>
-                    isFollowing ? unfollowUser(id) : followUser(id)
-                  }
+                  onClick={handleFollowToggle}
                   className={`px-4 py-2 rounded-full text-sm transition-colors ${
                     isFollowing
                       ? 'bg-red-500 hover:bg-red-600'
@@ -166,20 +157,17 @@ export default function FriendProfile() {
 
             {friend.bio && <p className="text-white/70">{friend.bio}</p>}
             <p className="text-white/40 text-sm">
-              {followersCount} {followersCount === 1 ? 'follower' : 'followers'} •{' '}
-              {followingCount} following
+              {followersCount} {followersCount === 1 ? 'follower' : 'followers'} • {followingCount} following
             </p>
           </div>
         </header>
 
-        {/* Spotify highlights */}
         <div className="space-y-6 mt-6">
-          <div className="card"><FavoriteSongs   songs   ={spotifyData?.top         ?? []} /></div>
-          <div className="card"><FavoriteArtists artists ={spotifyData?.top_artists ?? []} /></div>
-          <div className="card"><RecentlyPlayed  recent  ={spotifyData?.recent      ?? []} /></div>
+          <div className="card"><FavoriteSongs songs={spotifyData?.top ?? []} /></div>
+          <div className="card"><FavoriteArtists artists={spotifyData?.top_artists ?? []} /></div>
+          <div className="card"><RecentlyPlayed recent={spotifyData?.recent ?? []} /></div>
         </div>
 
-        {/* friend’s tiles (read-only) */}
         <ResponsiveGrid
           className="layout mt-6"
           rowHeight={100}
@@ -199,7 +187,6 @@ export default function FriendProfile() {
         </ResponsiveGrid>
       </section>
 
-      {/* ──────────── right column ──────────── */}
       <aside className="col-span-12 lg:col-span-4">
         <div className="card backdrop-blur-lg h-full">
           <FriendActivity />
@@ -208,7 +195,3 @@ export default function FriendProfile() {
     </div>
   );
 }
-
-/* utility classname matches UserProfile */
-const card =
-  'rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6';
