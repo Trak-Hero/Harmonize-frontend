@@ -120,7 +120,7 @@ export default function UserProfile() {
     try {
       // → ALWAYS prefix with `${API}` so we don’t accidentally land on React’s HTML
       const res = await withTokenRefresh(
-        () => fetch(`${API}/api/me/spotify`,  { credentials: 'include' }),
+        () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
         () => fetch(`${API}/api/auth/refresh`, { credentials: 'include' })
       );
 
