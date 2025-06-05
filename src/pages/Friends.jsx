@@ -4,7 +4,7 @@ import { useAuthStore }      from '../state/authStore';
 import useFriendStore        from '../state/friendStore';
 
 import FriendCard            from '../components/FriendsPage/FriendCard';
-import FriendSearchModal     from '../components/FriendsPage/FriendSearchModal';
+import FriendSearchModal     from '../components/FriendsPage/FriendSearch';
 
 export default function Friends() {
   /* modal state */

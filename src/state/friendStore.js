@@ -1,10 +1,8 @@
-/* src/state/friendStore.js
-   -------------------------------------------------------------- */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API = import.meta.env.VITE_API_BASE_URL;
 axios.defaults.withCredentials = true;
 
 export const useFriendStore = create(
@@ -43,7 +41,7 @@ export const useFriendStore = create(
       followUser: async (friendId) => {
         try {
           const res = await axios.post(
-            `${API_BASE}/api/friends/follow/${friendId}`
+            `${API}/api/friends/follow/${friendId}`
           );
           if (res.status !== 201) return;
 
@@ -69,7 +67,7 @@ export const useFriendStore = create(
       unfollowUser: async (friendId) => {
         try {
           const res = await axios.delete(
-            `${API_BASE}/api/friends/follow/${friendId}`
+            `${API}/api/friends/follow/${friendId}`
           );
           if (res.status !== 200) return;
 
@@ -95,7 +93,7 @@ export const useFriendStore = create(
       fetchFriend: async (friendId) => {
         set({ isLoading: true });
         try {
-          const res = await axios.get(`${API_BASE}/api/users/${friendId}`, {
+          const res = await axios.get(`${API}/api/users/${friendId}`, {
             timeout: 10000,
             withCredentials: true,
           });
