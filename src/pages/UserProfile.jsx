@@ -120,8 +120,8 @@ export default function UserProfile() {
     try {
       // → ALWAYS prefix with `${API}` so we don’t accidentally land on React’s HTML
       const res = await withTokenRefresh(
-        () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
-        () => fetch(`${API}/auth/refresh`,   { credentials: 'include' })
+        () => fetch(`${API}/api/me/spotify`,  { credentials: 'include' }),
+        () => fetch(`${API}/api/auth/refresh`, { credentials: 'include' })
       );
 
       if (!res?.ok) {
@@ -278,7 +278,7 @@ export default function UserProfile() {
               </h1>
               {isOwner && (
               <a
-                href={`${API}/spotify/auth`}
+                href={`${API}/api/spotify/auth`}
                 className="text-sm mt-2 text-blue-400 underline hover:text-blue-300"
               >
                 Connect your Spotify account to see recent activity.
