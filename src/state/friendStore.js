@@ -119,5 +119,3 @@ export const useFriendStore = create(
 );
 
 export default useFriendStore;
-
-export default useFriendStore;
