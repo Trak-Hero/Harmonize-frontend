@@ -1,20 +1,18 @@
-/* src/pages/FriendProfile.jsx
-   --------------------------------------------------------------- */
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 
-import { useAuthStore }   from '../state/authStore';
+import { useAuthStore } from '../state/authStore';
 import { useProfileStore } from '../state/profileStore';
-import useFriendStore      from '../state/friendStore';
+import useFriendStore from '../state/friendStore';
 
-import withTokenRefresh  from '../utils/withTokenRefresh';
+import withTokenRefresh from '../utils/withTokenRefresh';
 
-import Tile            from '../components/Tile';
-import FavoriteSongs   from '../components/FavoriteSongs';
+import Tile from '../components/Tile';
+import FavoriteSongs from '../components/FavoriteSongs';
 import FavoriteArtists from '../components/FavoriteArtists';
-import RecentlyPlayed  from '../components/RecentlyPlayed';
-import FriendActivity  from '../components/FriendActivity';
+import RecentlyPlayed from '../components/RecentlyPlayed';
+import FriendActivity from '../components/FriendActivity';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -22,19 +20,14 @@ import '../index.css';
 
 const ResponsiveGrid = WidthProvider(Responsive);
 const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
-const cols        = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
+const cols = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
 
 export default function FriendProfile() {
   const { id } = useParams();
   const API = import.meta.env.VITE_API_BASE_URL || '';
 
   const { user: authUser } = useAuthStore();
-  const {
-    tiles,
-    fetchTiles,
-    setCurrentUserId
-  } = useProfileStore();
-
+  const { tiles, fetchTiles, setCurrentUserId } = useProfileStore();
   const {
     currentUserId,
     friends = [],
@@ -47,7 +40,6 @@ export default function FriendProfile() {
   const [profile, setProfile] = useState(null);
   const friend = cached || profile;
 
-  // Correct follow state using authUser (not currentUserId)
   const me = friends.find((f) => String(f._id || f.id) === String(authUser?._id || authUser?.id));
   const isOwner = String(authUser?._id || authUser?.id) === String(id);
   const isFollowing = !!me?.following?.some((fid) => String(fid) === String(id));
@@ -58,8 +50,13 @@ export default function FriendProfile() {
     } else {
       await followUser(id);
     }
-    const updated = friends.find((f) => String(f._id || f.id) === String(id));
-    if (updated) setProfile(updated);
+
+    // Update both friend and me from store after mutation
+    const updatedFriend = friends.find((f) => String(f._id || f.id) === String(id));
+    const updatedMe = friends.find((f) => String(f._id || f.id) === String(authUser?._id || authUser?.id));
+
+    if (updatedFriend) setProfile(updatedFriend);
+    if (updatedMe) addFriendToStore(updatedMe); // sync "me" following list
   };
 
   const [spotifyData, setSpotifyData] = useState(null);
@@ -104,6 +101,7 @@ export default function FriendProfile() {
       </div>
     );
   }
+
   const followersCount = friend.followers?.length ?? 0;
   const followingCount = friend.following?.length ?? 0;
 
