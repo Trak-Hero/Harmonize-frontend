@@ -6,13 +6,17 @@
  * @returns {Promise<Response>}              – the original or the retried response
  */
 export default async function withTokenRefresh(call, refresh) {
-    let res = await call();
-    if (res.status !== 401) return res;     // access‑token still valid
+  let res = await call();
   
-    // One‑shot silent refresh
-    const r = await refresh();
-    if (!r.ok) return res;                  // refresh failed – propagate 401
+  if (res.status !== 401) return res; 
   
-    return await call();                    // retry original request
+  try {
+    const refreshRes = await refresh();
+    if (!refreshRes.ok) return res; 
+    
+    return await call();
+  } catch (err) {
+    console.error('Token refresh failed:', err);
+    return res; 
   }
-  
+}
