@@ -40,18 +40,14 @@ export const useFriendStore = create(
       /* ──────────── FOLLOW / UNFOLLOW ──────────── */
       followUser: async (friendId) => {
         try {
-          const res = await axios.post(
-            `${API}/api/friends/follow/${friendId}`
-          );
+          const res = await axios.post(`${API}/api/users/${friendId}/follow`, {
+            withCredentials: true,
+          });
           if (res.status !== 201) return;
 
           const { current, target } = res.data;
-          console.log('[friendStore] followUser → server returned', {
-            current,
-            target,
-          });
+          console.log('[friendStore] followUser → server returned', { current, target });
 
-          // merge both updated user docs into cache
           set((state) => ({
             friends: state.friends.map((u) => {
               if (String(u._id) === String(current._id)) return current;
@@ -66,16 +62,13 @@ export const useFriendStore = create(
 
       unfollowUser: async (friendId) => {
         try {
-          const res = await axios.delete(
-            `${API}/api/friends/follow/${friendId}`
-          );
+          const res = await axios.delete(`${API}/api/users/${friendId}/follow`, {
+            withCredentials: true,
+          });
           if (res.status !== 200) return;
 
           const { current, target } = res.data;
-          console.log('[friendStore] unfollowUser → server returned', {
-            current,
-            target,
-          });
+          console.log('[friendStore] unfollowUser → server returned', { current, target });
 
           set((state) => ({
             friends: state.friends.map((u) => {
