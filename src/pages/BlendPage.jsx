@@ -61,10 +61,14 @@ function computeBlend(userAData, userBData, userAName, userBName) {
     userA: { name: userAName, avatarUrl: '' },
     userB: { name: userBName, avatarUrl: '' },
     tasteMatch: finalScore,
-    commonArtists: commonArtists.map((a) => ({
-      name: a.name,
-      imageUrl: a.images[0]?.url || '',
-    })),
+    commonArtists: commonArtistIds.map((id) => {
+    const artist = artistMapA.get(id);
+    return {
+        name: artist.name,
+        imageUrl: artist.images[0]?.url || '',
+        spotifyUrl: artist.external_urls?.spotify || '#',
+    };
+    }),
     similarGenres: similarGenres.map((g) => ({ genre: g })),
     differences: {
       userAName,
@@ -87,8 +91,8 @@ function computeBlend(userAData, userBData, userAName, userBName) {
 function generateFriendMockData(yourData) {
   return {
     items: yourData.items.map((artist, idx) => {
-      const sharedArtist = idx % 4 === 0; // 25 % shared artists
-      const sharedGenre = idx % 3 !== 0;  // 66 % shared genres
+      const sharedArtist = idx % 4 === 0; // 25% shared artists
+      const sharedGenre = idx % 3 !== 0;  // 66% shared genres
 
       const newGenres = sharedGenre
         ? artist.genres
