@@ -46,7 +46,7 @@ export default function CommonArtistsCard({ artists }) {
       setVisibleCount(4);
       setIsExpanding(false);
     }
-  }, [showAll, artists.length]);
+  }, [showAll, artists.length, visibleCount]);
 
   return (
     <div className="relative p-6 rounded-2xl text-white shadow-xl bg-gradient-to-br from-green-700 via-emerald-500 to-orange-400 transform transition-all duration-500 hover:scale-105">

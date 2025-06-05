@@ -165,7 +165,7 @@ export default function UserProfile() {
     } finally {
       setSpotifyLoading(false);
     }
-  }, [API, isOwner]);
+  }, [API, isOwner, spotifyLoading]);
 
   useEffect(() => {
     if (!hasCheckedSession || !authUser) return;
