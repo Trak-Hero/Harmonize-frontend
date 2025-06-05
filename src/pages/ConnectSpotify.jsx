@@ -9,13 +9,33 @@ export default function ConnectSpotify() {
   const navigate = useNavigate();
   const API = import.meta.env.VITE_API_BASE_URL;
 
+  // Check for error parameters on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    
+    if (errorParam) {
+      const errorMessages = {
+        invalid_state: 'Session expired during Spotify connection. Please try again.',
+        state_mismatch: 'Security verification failed. Please try again.',
+        no_state: 'Session error. Please try again.',
+        no_code: 'Spotify authorization was cancelled.',
+        spotify_failed: 'Failed to connect to Spotify. Please try again.'
+      };
+      
+      setError(errorMessages[errorParam] || 'Connection failed. Please try again.');
+      
+      // Clear the error from URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const handleSpotifyConnect = () => {
     setLoading(true);
     setError(null);
     
     try {
       // Redirect to the backend Spotify login endpoint
-      // This will redirect to Spotify's authorization page
       window.location.href = `${API}/auth/spotify/login`;
     } catch (err) {
       console.error('Spotify connection error:', err);
@@ -23,7 +43,6 @@ export default function ConnectSpotify() {
       setLoading(false);
     }
   };
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen text-white p-8">
       <div className="max-w-md text-center space-y-6">
