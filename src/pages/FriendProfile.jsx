@@ -39,12 +39,10 @@ export default function FriendProfile() {
   } = useProfileStore();
 
   const {
-    userSlice: {
-      currentUserId,
-      friends = [],
-      followUser,
-      unfollowUser
-    } = {},
+    currentUserId,
+    friends = [],
+    followUser,
+    unfollowUser,
     addFriendToStore
   } = useFriendStore();
 
