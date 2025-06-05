@@ -115,52 +115,40 @@ export default function UserProfile() {
   const loadSpotify = useCallback(async () => {
     if (!isOwner) return;
     if (spotifyLoading) return;
-
+  
     setSpotifyLoading(true);
     try {
-      // → ALWAYS prefix with `${API}` so we don’t accidentally land on React’s HTML
       const res = await withTokenRefresh(
         () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
-        () => fetch(`${API}/auth/refresh`,   { credentials: 'include' })
+        () => fetch(`${API}/auth/refresh`, { credentials: 'include' })
       );
-
+  
       if (!res?.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        
+        if (res.status === 403 && errorData.needsConnection) {
+          console.log('Spotify not connected, redirecting to connect page');
+          // Optionally redirect to connect page or show connection prompt
+          setSpotifyData(null);
+          return;
+        }
+        
         console.warn('[UserProfile] /api/me/spotify status:', res?.status);
         setSpotifyData(null);
         return;
       }
-
-      const contentType = res.headers.get('Content-Type') || '';
-      if (!contentType.includes('application/json')) {
-        const textBody = await res.text();
-        console.warn(
-          '[UserProfile] /api/me/spotify returned non-JSON. Body starts with:',
-          textBody.slice(0, 200).replace(/\s+/g, ' ')
-        );
-        setSpotifyData(null);
-        return;
-      }
-
-      let data = null;
-      try {
-        data = await res.json();
-      } catch (parseErr) {
-        console.error(
-          '[UserProfile] JSON parse error from /api/me/spotify:',
-          parseErr
-        );
-        setSpotifyData(null);
-        return;
-      }
-
+  
+      const data = await res.json();
+      console.log('✅ Spotify data loaded:', data);
+  
       setSpotifyData({
-        top:         Array.isArray(data.top)         ? data.top : [],
+        top: Array.isArray(data.top) ? data.top : [],
         top_artists: Array.isArray(data.top_artists) ? data.top_artists : [],
-        recent:      Array.isArray(data.recent)      ? data.recent : [],
-        playlists:   Array.isArray(data.playlists)   ? data.playlists : []
+        recent: Array.isArray(data.recent) ? data.recent : [],
+        playlists: Array.isArray(data.playlists) ? data.playlists : []
       });
     } catch (error) {
-      console.error('[UserProfile] Unexpected error loading Spotify data:', error);
+      console.error('[UserProfile] Error loading Spotify data:', error);
       setSpotifyData(null);
     } finally {
       setSpotifyLoading(false);
