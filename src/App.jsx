@@ -9,6 +9,7 @@ import ConnectSpotify from './pages/ConnectSpotify';
 import SpotifyDashboard from './pages/SpotifyDashboard';
 import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
+import CreatePost from './pages/CreatePost';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -59,6 +60,7 @@ function App() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/create" element={<CreatePost />} />
           <Route path="/galaxy" element={<Galaxy />} />
           <Route path="/blend" element={<BlendPage />} />
         </Routes>
