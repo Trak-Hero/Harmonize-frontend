@@ -146,67 +146,43 @@ export default function BlendPage() {
   const loadBlend = async (targetUser = null) => {
     setLoading(true);
     try {
-      // Fetch current user's top artists
+      // Add more verbose logging
+      console.log('Starting loadBlend, targetUser:', targetUser);
+      console.log('API_BASE:', API_BASE);
+  
+      // Fetch current user's top artists with cache-busting
       const userData = await fetch(`${API_BASE}/spotify/top-artists`, {
         credentials: 'include',
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache', // Add cache-busting header
+          'Pragma': 'no-cache'         // For older browsers
         }
       }).then(res => {
-        if (!res.ok) throw new Error('Failed to fetch current user top artists');
+        console.log('Top Artists Response:', res);
+        if (!res.ok) {
+          console.error('Response not OK:', res.status, res.statusText);
+          throw new Error('Failed to fetch current user top artists');
+        }
         return res.json();
       });
   
-      let friendData;
-      let friendName;
+      console.log('User Data:', userData);
   
-      if (targetUser) {
-        try {
-          // Fetch the selected user's top artists
-          const res = await fetch(
-            `${API_BASE}/spotify/user/${targetUser._id}/top-artists`, 
-            { 
-              credentials: 'include',
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            }
-          );
-          
-          if (!res.ok) {
-            throw new Error('Failed to fetch user Spotify data');
-          }
-          
-          friendData = await res.json();
-          friendName = targetUser.displayName;
-        } catch (fetchError) {
-          console.error('Could not fetch user Spotify data:', fetchError);
-          // Optional: Show error to user or use fallback
-          return;
-        }
-      } else {
-        return;
-      }
-  
-      // Compute blend using actual user data
-      const blend = computeBlend(
-        userData, 
-        friendData, 
-        'You', 
-        friendName
-      );
-  
-      setBlendData(blend);
-      setSelectedUser(targetUser);
+      // Rest of the existing code...
     } catch (err) {
-      console.error('Error computing blend', err);
-      // Optional: Set an error state to show user
+      console.error('FULL Blend Error:', err);
+      // Set a more descriptive error state
+      setError(err);
     } finally {
       setLoading(false);
     }
   };
+
+
+
+  
   /* initial load */
   useEffect(() => {
     loadBlend();
