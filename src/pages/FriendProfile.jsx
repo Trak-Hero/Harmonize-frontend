@@ -153,12 +153,6 @@ export default function FriendProfile() {
           </div>
         </header>
 
-        <div className="space-y-6 mt-6">
-          <div className="card"><FavoriteSongs songs={spotifyData?.top ?? []} /></div>
-          <div className="card"><FavoriteArtists artists={spotifyData?.top_artists ?? []} /></div>
-          <div className="card"><RecentlyPlayed recent={spotifyData?.recent ?? []} /></div>
-        </div>
-
         <ResponsiveGrid
           className="layout mt-6"
           rowHeight={100}
