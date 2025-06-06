@@ -43,8 +43,8 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="w-full flex items-center justify-between gap-4 px-6 py-3 bg-black/60 backdrop-blur text-white">
-      {/* Left: Logo + Nav Links */}
+    <nav className="w-full flex items-center justify-between gap-4 px-6 py-3
+      bg-black/30 backdrop-blur-md rounded-b-xl border border-white/10 shadow-md text-white">
       <div className="flex items-center gap-4">
         <Link to="/" className="text-2xl font-bold tracking-wide">
           Harmonize
