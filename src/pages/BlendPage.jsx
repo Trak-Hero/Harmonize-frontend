@@ -147,14 +147,23 @@ export default function BlendPage() {
     setLoading(true);
     try {
       // Fetch current user's top artists
-      const userData = await fetchTopArtists();
+      const userData = await fetch(`${API_BASE}/spotify/top-artists`, {
+        credentials: 'include',
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to fetch current user top artists');
+        return res.json();
+      });
   
       let friendData;
       let friendName;
   
       if (targetUser) {
         try {
-          // Fetch the selected user's top artists directly from Spotify
+          // Fetch the selected user's top artists
           const res = await fetch(
             `${API_BASE}/spotify/user/${targetUser._id}/top-artists`, 
             { 
@@ -174,18 +183,17 @@ export default function BlendPage() {
           friendName = targetUser.displayName;
         } catch (fetchError) {
           console.error('Could not fetch user Spotify data:', fetchError);
-          // Fallback to error handling or mock data if needed
+          // Optional: Show error to user or use fallback
           return;
         }
       } else {
-        // Default case, though this should rarely happen with the current UI
         return;
       }
   
       // Compute blend using actual user data
       const blend = computeBlend(
-        { items: userData.items }, 
-        { items: friendData.items }, 
+        userData, 
+        friendData, 
         'You', 
         friendName
       );
