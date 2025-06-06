@@ -4,7 +4,6 @@ import axios from "axios";
 
 import MediaCard   from "../components/MediaCard";
 import Carousel    from "../components/Carousel";
-import FriendFeed  from "../components/FriendFeed";
 import GenreStats  from "../components/GenreStats";
 import mapTrack    from "../utils/mapTrack";
 import GenreTimeline from '../components/GenreTimeline';
@@ -14,7 +13,6 @@ const API = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export default function Home() {
   const [recommendations, setRecommendations] = useState([]);
-  const [friendActivity,  setFriendActivity]  = useState([]);
   const [topAlbums,       setTopAlbums]       = useState([]);
   const [loading,         setLoading]         = useState(true);
   const [error,           setError]           = useState(null);
@@ -46,16 +44,6 @@ export default function Home() {
 
           recRes = { data: [] };
         }
-
-        const friendsRes = await axios
-          .get(`${API}/api/friends/activity`, {
-            withCredentials: true,
-            timeout: 10000,
-          })
-          .catch((err) => {
-            console.warn("Home: Friend activity request failed:", err.response?.status || err.message);
-            return { data: [] };
-          });
 
         if (cancelled) return;
 
@@ -100,7 +88,6 @@ export default function Home() {
 
         if (!cancelled) {
           setRecommendations(mappedRecommendations);
-          setFriendActivity(friendsRes.data ?? []);
           setTopAlbums(albumsArray);
         }
       } catch (err) {
@@ -214,11 +201,6 @@ export default function Home() {
         <GenreTimeline />
         <GenreMap />
       </section>
-
-      {/* ───────── Friend Activity ───────── */}
-      <aside className="lg:fixed lg:right-6 lg:top-28 lg:w-72">
-        <FriendFeed activity={friendActivity} />
-      </aside>
     </main>
   );
 }
