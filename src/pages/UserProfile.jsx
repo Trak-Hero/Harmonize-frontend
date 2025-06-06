@@ -57,8 +57,11 @@ export default function UserProfile() {
   const [spotifyData,    setSpotifyData]   = useState(null);
   const [spotifyLoading, setSpotifyLoading] = useState(false);
 
-  // “appRecent” = data from GET /api/recent
+  // "appRecent" = data from GET /api/recent
   const [appRecent, setAppRecent] = useState([]);
+
+  // User profile data with followers/following counts
+  const [userProfile, setUserProfile] = useState(null);
 
   const [activeTab,  setActiveTab]  = useState('recent');
   const [showEditor, setShowEditor] = useState(false);
@@ -87,7 +90,32 @@ export default function UserProfile() {
     setCurrentUserId
   ]);
 
-  /* ────────────────────────────────── 2) load “app‐recent” from your own API ────────────────────────────────── */
+  /* ────────────────────────────────── 1.5) load user profile data with followers/following ────────────────────────────────── */
+  useEffect(() => {
+    if (!hasCheckedSession || authLoading) return;
+    if (!authUser) return;
+    if (!targetUserId) return;
+
+    // Fetch user profile data to get followers and following counts
+    fetch(`${API}/api/users/${targetUserId}`, { credentials: 'include' })
+      .then((res) => {
+        if (!res.ok) {
+          console.warn('[UserProfile] GET /api/users/:id returned', res.status);
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data) {
+          setUserProfile(data);
+        }
+      })
+      .catch((err) => {
+        console.error('[UserProfile] Error fetching user profile:', err);
+      });
+  }, [hasCheckedSession, authLoading, authUser, targetUserId, API]);
+
+  /* ────────────────────────────────── 2) load "app‐recent" from your own API ────────────────────────────────── */
   useEffect(() => {
     if (!hasCheckedSession || authLoading) return;
     if (!authUser) return;
@@ -118,7 +146,7 @@ export default function UserProfile() {
 
     setSpotifyLoading(true);
     try {
-      // → ALWAYS prefix with `${API}` so we don’t accidentally land on React’s HTML
+      // → ALWAYS prefix with `${API}` so we don't accidentally land on React's HTML
       const res = await withTokenRefresh(
         () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
         () => fetch(`${API}/auth/refresh`,   { credentials: 'include' })
@@ -249,13 +277,18 @@ export default function UserProfile() {
     ? tiles.find((t) => (t._id || t.id) === editingTileId)
     : null;
 
-  // Choose which “recent” list to show:
+  // Choose which "recent" list to show:
   // • If SpotifyData.recent has items, show that
   // • Otherwise fall back to appRecent (from GET /api/recent)
   const effectiveRecent =
     Array.isArray(spotifyData?.recent) && spotifyData.recent.length > 0
       ? spotifyData.recent
       : appRecent;
+
+  // Get followers and following counts from userProfile or fall back to authUser
+  const profileData = userProfile || authUser;
+  const followersCount = profileData?.followers?.length ?? 0;
+  const followingCount = profileData?.following?.length ?? 0;
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
@@ -286,7 +319,9 @@ export default function UserProfile() {
               )}
             </div>
             {authUser.bio && <p className="text-white/70">{authUser.bio}</p>}
-            <p className="text-white/40 text-sm">0 Followers • 0 Following</p>
+            <p className="text-white/40 text-sm">
+              {followersCount} {followersCount === 1 ? 'follower' : 'followers'} • {followingCount} following
+            </p>
           </div>
         </header>
 
@@ -389,7 +424,7 @@ export default function UserProfile() {
                 <p>No tiles to display.</p>
                 {isOwner && (
                   <p className="text-sm mt-2">
-                    Click “Space” → “Add Tile” to start building your profile.
+                    Click "Space" → "Add Tile" to start building your profile.
                   </p>
                 )}
               </div>
