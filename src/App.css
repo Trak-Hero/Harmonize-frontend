@@ -1,3 +1,5 @@
+
+
 #root {
   margin: 0 auto;
   text-align: center;
@@ -5,8 +7,13 @@
   flex-direction: column;
 }
 
-body {
+html, body {
   font-family: 'Afacad', sans-serif;
+  background-color: #121212;
+  color: white; /* Optional: ensures text is visible on black background */
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
 
 .logo {
