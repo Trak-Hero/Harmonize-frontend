@@ -1,22 +1,30 @@
-/* ------------------------------------------------------------ */
-import { useState, useEffect }          from 'react';
-import { useAuthStore }      from '../state/authStore';
-import useFriendStore        from '../state/friendStore';
+import { useState, useEffect } from 'react';
+import { useAuthStore } from '../state/authStore';
+import useFriendStore from '../state/friendStore';
 
-import FriendCard            from '../components/FriendsPage/FriendCard';
-import FriendSearchModal     from '../components/FriendsPage/FriendSearch';
+import FriendCard from '../components/FriendsPage/FriendCard';
+import FriendSearchModal from '../components/FriendsPage/FriendSearch';
 
 export default function Friends() {
   const [open, setOpen] = useState(false);
+  const [isLoadingBlends, setIsLoadingBlends] = useState(false);
   const { fetchFriends } = useFriendStore();
 
   useEffect(() => {
-    fetchFriends?.();
+    const loadFriendsData = async () => {
+      setIsLoadingBlends(true);
+      try {
+        await fetchFriends?.();
+      } finally {
+        setIsLoadingBlends(false);
+      }
+    };
+
+    loadFriendsData();
   }, [fetchFriends]);
 
   /* auth */
   const { user: authUser } = useAuthStore();
-  const myId               = authUser?._id || authUser?.id;
 
   /* friends store */
   const { friends = [], followUser, unfollowUser } = useFriendStore();
@@ -28,6 +36,7 @@ export default function Friends() {
   const visible = friends.filter((f) =>
     following.some((fid) => String(fid) === String(f._id || f.id))
   );
+
   return (
     <div className="max-w-5xl mx-auto pt-8 px-4">
       {/* header + button */}
@@ -40,6 +49,13 @@ export default function Friends() {
           Find friends
         </button>
       </div>
+
+      {/* Loading state */}
+      {isLoadingBlends && (
+        <div className="text-center text-gray-400 mb-4">
+          <p>Calculating blend percentages...</p>
+        </div>
+      )}
 
       {/* friends grid */}
       {visible.length ? (
@@ -55,7 +71,7 @@ export default function Friends() {
         </div>
       ) : (
         <p className="text-center text-gray-400">
-          You don’t follow anyone yet.
+          You don't follow anyone yet.
         </p>
       )}
 
