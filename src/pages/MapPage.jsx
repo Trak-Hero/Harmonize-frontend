@@ -8,6 +8,7 @@ import { fetchEventsByLocation } from '../api/ticketmaster';
 import useLocationStore from '../state/locationStore';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+console.log("API_BASE:", API_BASE);
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
