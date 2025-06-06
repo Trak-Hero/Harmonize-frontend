@@ -7,13 +7,6 @@ import MapView from '../components/map/mapView';
 import { fetchEventsByLocation } from '../api/ticketmaster';
 import useLocationStore from '../state/locationStore';
 
-const sampleFriends = [
-  { _id: 'giselle-wu-1', displayName: 'Giselle Wu', location: { type: 'Point', coordinates: [-72.2802, 43.7025] } },
-  { _id: 'echoi-2', displayName: 'Evelyn Choi', location: { type: 'Point', coordinates: [-72.2840, 43.7040] } },
-  { _id: 'rhuang-3', displayName: 'Rachael Huang', location: { type: 'Point', coordinates: [-72.2815, 43.7060] } },
-  { _id: 'trak-4', displayName: 'Trak Prateepmanowong', location: { type: 'Point', coordinates: [-72.2830, 43.7010] } },
-  { _id: 'storii-5', displayName: 'Shisui Torii', location: { type: 'Point', coordinates: [-72.2865, 43.7035] } }
-];
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -67,18 +60,39 @@ const MapPage = () => {
     }
   }, [userLocation, filters.distance]);
 
-  // Enrich friends with distance to user location
   useEffect(() => {
-    if (!userLocation) return;
+    async function loadFriends() {
+      try {
+        const res = await fetch('/spotify/friends/top', {
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to fetch friends');
+        const data = await res.json();
 
-    const enrichedFriends = sampleFriends.map(friend => {
-      const [lng, lat] = friend.location.coordinates;
-      const dist = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
-      return { ...friend, distance: dist };
-    });
+        // Map to location-enhanced friends
+        const enriched = data.friends
+          .filter(f => f.friend?.location?.coordinates)
+          .map(({ friend, topArtists, topTracks }) => {
+            const [lng, lat] = friend.location.coordinates;
+            const distance = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
+            return {
+              ...friend,
+              distance,
+              topArtists,
+              topTracks,
+            };
+          });
 
-    setAllFriends(enrichedFriends);
-    setFilteredFriends(enrichedFriends);
+        setAllFriends(enriched);
+        setFilteredFriends(enriched);
+      } catch (err) {
+        console.error('Error loading friends:', err);
+      }
+    }
+
+    if (userLocation) {
+      loadFriends();
+    }
   }, [userLocation]);
 
   // Filter and sort friends
