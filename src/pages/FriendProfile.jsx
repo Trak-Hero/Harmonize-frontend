@@ -40,23 +40,23 @@ export default function FriendProfile() {
   const [profile, setProfile] = useState(null);
   const friend = cached || profile;
 
+  // Get the current user from the friends store
   const me = friends.find((f) => String(f._id || f.id) === String(authUser?._id || authUser?.id));
   const isOwner = String(authUser?._id || authUser?.id) === String(id);
+  
+  // Check if the current user is following this profile user
   const isFollowing = !!me?.following?.some((fid) => String(fid) === String(id));
 
   const handleFollowToggle = async () => {
-    if (isFollowing) {
-      await unfollowUser(id);
-    } else {
-      await followUser(id);
+    try {
+      if (isFollowing) {
+        await unfollowUser(id);
+      } else {
+        await followUser(id);
+      }
+    } catch (error) {
+      console.error('Error toggling follow status:', error);
     }
-
-    // Update both friend and me from store after mutation
-    const updatedFriend = friends.find((f) => String(f._id || f.id) === String(id));
-    const updatedMe = friends.find((f) => String(f._id || f.id) === String(authUser?._id || authUser?.id));
-
-    if (updatedFriend) setProfile(updatedFriend);
-    if (updatedMe) addFriendToStore(updatedMe); // sync "me" following list
   };
 
   const [spotifyData, setSpotifyData] = useState(null);
@@ -74,6 +74,20 @@ export default function FriendProfile() {
       recent: data.recent ?? []
     });
   }, [API, id]);
+
+  // Fetch current user data to ensure we have the latest following status
+  useEffect(() => {
+    if (authUser?._id && !me) {
+      fetch(`${API}/api/users/${authUser._id}`, { credentials: 'include' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((u) => {
+          if (u) {
+            addFriendToStore(u);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [API, authUser, me, addFriendToStore]);
 
   useEffect(() => {
     if (cached) return;
