@@ -87,21 +87,25 @@ function computeBlend(userAData, userBData, userAName, userBName) {
   };
 }
 
-/** Create a mock “friend” dataset from the current user’s data */
-function generateFriendMockData(yourData) {
+/** Create a mock "friend" dataset from the current user's data */
+function generateFriendMockData(yourData, selectedUser = null) {
   return {
     items: yourData.items.map((artist, idx) => {
-      const sharedArtist = idx % 4 === 0; // 25% shared artists
-      const sharedGenre = idx % 3 !== 0;  // 66% shared genres
+      // Use user ID to create consistent but different results per user
+      const seed = selectedUser?._id?.slice(-2) || '00';
+      const seedNum = parseInt(seed, 16) || 1;
+      
+      const sharedArtist = (idx + seedNum) % 5 === 0; // Vary based on user
+      const sharedGenre = (idx + seedNum) % 3 !== 0;
 
       const newGenres = sharedGenre
         ? artist.genres
-        : artist.genres.map((g) => `${g}-alt`);
+        : artist.genres.map((g) => `${g}-variant-${seedNum}`);
 
       return {
         ...artist,
-        id: sharedArtist ? artist.id : `${artist.id}_friend_${idx}`,
-        name: sharedArtist ? artist.name : `${artist.name} (Alt)`,
+        id: sharedArtist ? artist.id : `${artist.id}_${seedNum}_${idx}`,
+        name: sharedArtist ? artist.name : `${artist.name} (Alt ${seedNum})`,
         genres: newGenres,
       };
     }),
@@ -114,28 +118,47 @@ export default function BlendPage() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   /** Fetch data & compute blend */
   const loadBlend = async (targetUser = null) => {
     setLoading(true);
+    setError(''); // Clear any previous errors
     try {
-      // current user’s artists
+      // Current user's artists
       const userData = await fetchTopArtists();
 
       let friendData;
       let friendName;
 
       if (targetUser) {
-        // real friend data
-        const res = await fetch(
-          `${API_BASE}/api/users/${targetUser._id}/top-artists`,
-          { credentials: 'include' }
-        );
-        if (!res.ok) throw new Error('Failed to fetch friend data');
-        friendData = await res.json();
-        friendName = targetUser.displayName;
+        try {
+          // Fix the endpoint URL - remove '/api' prefix
+          const res = await fetch(
+            `${API_BASE}/spotify/user/${targetUser._id}/top-artists`,
+            { credentials: 'include' }
+          );
+          
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+          
+          friendData = await res.json();
+          friendName = targetUser.displayName;
+          
+          console.log('Friend data fetched:', friendData); // Debug log
+        } catch (fetchError) {
+          console.warn('Could not fetch user data:', fetchError);
+          // Only fall back to mock if user explicitly hasn't connected Spotify
+          if (fetchError.message.includes('404') || fetchError.message.includes('Spotify not connected')) {
+            friendData = generateFriendMockData(userData, targetUser);
+            friendName = `${targetUser.displayName} (Mock Data)`;
+          } else {
+            throw fetchError; // Re-throw other errors
+          }
+        }
       } else {
-        // mock friend data
+        // Default mock data
         friendData = generateFriendMockData(userData);
         friendName = 'Sample User';
       }
@@ -145,6 +168,8 @@ export default function BlendPage() {
       setSelectedUser(targetUser);
     } catch (err) {
       console.error('Error computing blend', err);
+      // Set error state instead of silently failing
+      setError('Failed to load blend data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -162,6 +187,23 @@ export default function BlendPage() {
   };
 
   /* ---------- render ---------- */
+  if (error) {
+    return (
+      <div className="flex-1 px-6 md:px-12 py-3 space-y-10 bg-gradient-to-b from-slate-900 via-black to-slate-950 text-white">
+        <div className="text-red-400 p-8">
+          <h2 className="text-xl font-bold mb-2">Error</h2>
+          <p>{error}</p>
+          <button 
+            onClick={() => { setError(''); loadBlend(selectedUser); }} 
+            className="mt-4 px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading || !blendData) {
     return <div className="text-white p-8">Loading blend data...</div>;
   }
