@@ -146,47 +146,45 @@ export default function BlendPage() {
   const loadBlend = async (targetUser = null) => {
     setLoading(true);
     try {
-      // current user's artists
+      // Current user's artists
       const userData = await fetchTopArtists();
-      console.log('Current user data:', userData);
   
       let friendData;
       let friendName;
   
       if (targetUser) {
-        // real friend data
-        const res = await fetch(
-          `${API_BASE}/api/users/${targetUser._id}/top-artists`,
-          { credentials: 'include' }
-        );
-        
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('Failed to fetch friend data:', errorText);
-          throw new Error(`Failed to fetch ${targetUser.displayName}'s music data`);
+        try {
+          // Fetch friend's top artists
+          const res = await fetch(
+            `${API_BASE}/api/spotify/user/${targetUser._id}/top-artists`,
+            { credentials: 'include' }
+          );
+          
+          if (!res.ok) {
+            // Handle case where user hasn't connected Spotify
+            throw new Error('User has not connected Spotify');
+          }
+          
+          friendData = await res.json();
+          friendName = targetUser.displayName;
+        } catch (fetchError) {
+          // Fallback to mock data or show error
+          console.warn('Could not fetch user data:', fetchError);
+          friendData = generateFriendMockData(userData);
+          friendName = targetUser.displayName;
         }
-        
-        friendData = await res.json();
-        friendName = targetUser.displayName;
-        console.log('Friend data:', friendData);
       } else {
-        // mock friend data
+        // Default mock data
         friendData = generateFriendMockData(userData);
         friendName = 'Sample User';
       }
   
-      // Ensure both datasets have the expected structure
-      if (!userData.items) userData.items = [];
-      if (!friendData.items) friendData.items = [];
-  
       const blend = computeBlend(userData, friendData, 'You', friendName);
-      console.log('Computed blend:', blend);
-      
       setBlendData(blend);
       setSelectedUser(targetUser);
     } catch (err) {
       console.error('Error computing blend', err);
-      alert(`Error: ${err.message}`);
+      // Optional: Set an error state to show user
     } finally {
       setLoading(false);
     }
