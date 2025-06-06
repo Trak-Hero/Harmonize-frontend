@@ -119,32 +119,45 @@ export default function BlendPage() {
   const loadBlend = async (targetUser = null) => {
     setLoading(true);
     try {
-      // current user’s artists
+      // Current user's artists
       const userData = await fetchTopArtists();
-
+  
       let friendData;
       let friendName;
-
+  
       if (targetUser) {
-        // real friend data
-        const res = await fetch(
-          `${API_BASE}/api/users/${targetUser._id}/top-artists`,
-          { credentials: 'include' }
-        );
-        if (!res.ok) throw new Error('Failed to fetch friend data');
-        friendData = await res.json();
-        friendName = targetUser.displayName;
+        try {
+          // Fetch friend's top artists
+          const res = await fetch(
+            `${API_BASE}/api/spotify/user/${targetUser._id}/top-artists`,
+            { credentials: 'include' }
+          );
+          
+          if (!res.ok) {
+            // Handle case where user hasn't connected Spotify
+            throw new Error('User has not connected Spotify');
+          }
+          
+          friendData = await res.json();
+          friendName = targetUser.displayName;
+        } catch (fetchError) {
+          // Fallback to mock data or show error
+          console.warn('Could not fetch user data:', fetchError);
+          friendData = generateFriendMockData(userData);
+          friendName = targetUser.displayName;
+        }
       } else {
-        // mock friend data
+        // Default mock data
         friendData = generateFriendMockData(userData);
         friendName = 'Sample User';
       }
-
+  
       const blend = computeBlend(userData, friendData, 'You', friendName);
       setBlendData(blend);
       setSelectedUser(targetUser);
     } catch (err) {
       console.error('Error computing blend', err);
+      // Optional: Set an error state to show user
     } finally {
       setLoading(false);
     }
