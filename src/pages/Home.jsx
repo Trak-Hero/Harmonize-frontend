@@ -19,11 +19,11 @@ export default function Home() {
 
   useEffect(() => {
     let cancelled = false;
-
+  
     const fetchData = async () => {
       try {
         console.log("Home: Fetching data from API:", API);
-
+  
         let recRes;
         try {
           recRes = await axios.get(`${API}/api/recommendations`, {
@@ -33,7 +33,7 @@ export default function Home() {
         } catch (err) {
           const status = err.response?.status;
           console.warn("Home: Recommendations request failed:", status || err.message);
-
+  
           if (status === 403) {
             setError("Please connect your Spotify account to see recommendations.");
           } else if (status === 204) {
@@ -41,14 +41,23 @@ export default function Home() {
           } else {
             setError("Unable to load recommendations. Please try again later.");
           }
-
+  
           recRes = { data: [] };
         }
-
+  
         if (cancelled) return;
-
-        const mappedRecommendations = recRes.data ?? [];
-
+  
+        // Fix the artist name mapping here
+        const mappedRecommendations = (recRes.data ?? []).map(track => ({
+          ...track,
+          // Ensure artist names are properly formatted as strings
+          artist: Array.isArray(track.artists) 
+            ? track.artists.map(a => a.name || a).join(", ")
+            : typeof track.artist === 'object'
+            ? track.artist.name || String(track.artist)
+            : track.artist || "Unknown Artist"
+        }));
+  
         let albumsArray = [];
         try {
           const spotifyRes = await axios.get(`${API}/api/me/spotify`, {
@@ -58,7 +67,7 @@ export default function Home() {
           if (!cancelled && spotifyRes.data?.top) {
             const topTracks = spotifyRes.data.top;
             const albumMap = {};
-
+  
             topTracks.forEach((t) => {
               const album = t.album || {};
               const albumId = album.id || album.name || String(Math.random());
@@ -66,9 +75,13 @@ export default function Home() {
                 const imgUrl = Array.isArray(album.images) && album.images.length > 0
                   ? album.images[0].url
                   : "";
+                // Fix artist names for albums too
                 const artistNames = Array.isArray(t.artists)
-                  ? t.artists.map((a) => a.name).join(", ")
-                  : "";
+                  ? t.artists.map((a) => a.name || a).join(", ")
+                  : typeof t.artist === 'object'
+                  ? t.artist.name || String(t.artist)
+                  : t.artist || "Unknown Artist";
+                
                 albumMap[albumId] = {
                   id: albumId,
                   name: album.name || "Unknown Album",
@@ -85,14 +98,13 @@ export default function Home() {
             spotifyErr.response?.status || spotifyErr.message
           );
         }
-
+  
         if (!cancelled) {
           setRecommendations(mappedRecommendations);
           setTopAlbums(albumsArray);
         }
       } catch (err) {
         console.error("Home: Fetch error:", err);
-
         let errorMessage = "Failed to load data.";
         if (err.code === "ECONNABORTED") {
           errorMessage = "Request timed out. Please try again.";
@@ -106,7 +118,7 @@ export default function Home() {
         if (!cancelled) setLoading(false);
       }
     };
-
+  
     fetchData();
     return () => {
       cancelled = true;
