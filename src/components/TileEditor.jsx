@@ -14,7 +14,6 @@ const sizes = [1, 2, 3, 4];          // allowed grid units
 export default function TileEditor() {
   const { tiles, editingTileId, updateTile, setEditorOpen } = useProfileStore();
   const tile = tiles.find((t) => (t._id || t.id) === editingTileId);
-
   const [form, setForm] = useState({});
 
   /* ------------------------------------------------------------ */
@@ -55,8 +54,6 @@ export default function TileEditor() {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <div className="w-full max-w-md rounded-xl bg-zinc-900 p-6 space-y-6">
         <h2 className="text-2xl font-bold text-white">Edit Tile</h2>
-
-        {/* ─────── Type-specific bits ─────── */}
         {(tile.type === 'artist' || tile.type === 'song') && (
           <TextField
             label="Title"
@@ -75,24 +72,29 @@ export default function TileEditor() {
           />
         )}
 
-        {/* ─────── universal customisation ─────── */}
-        <TextField
-          label="Background-image URL"
-          name="bgImage"
-          value={form.bgImage || ''}
-          onChange={onChange}
-          placeholder="https://example.com/photo.jpg"
-        />
+{/* ─────── universal customisation ─────── */}
+{(tile.type === 'picture' || tile.type === 'artist' || tile.type === 'song') && (
+  <>
+    <TextField
+      label={tile.type === 'picture' ? "Image URL" : "Background Image URL (optional)"}
+      name="bgImage"
+      value={form.bgImage || ''}
+      onChange={onChange}
+      placeholder="https://example.com/image.jpg"
+    />
 
-        {/* preview if any image */}
-        {form.bgImage && (
-          <img
-            src={form.bgImage}
-            alt="preview"
-            className="h-32 w-full rounded object-cover"
-            onError={(e) => (e.currentTarget.style.display = 'none')}
-          />
-        )}
+    {/* preview if any image */}
+    {form.bgImage && (
+      <img
+        src={form.bgImage}
+        alt="preview"
+        className="h-32 w-full rounded object-cover"
+        onError={(e) => (e.currentTarget.style.display = 'none')}
+      />
+    )}
+  </>
+)}
+
 
         {/* colour */}
         <ColorField

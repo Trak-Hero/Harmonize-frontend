@@ -9,6 +9,9 @@ import FriendSearchModal     from '../components/FriendsPage/FriendSearch';
 export default function Friends() {
   /* modal state */
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    fetchFriends?.();
+  }, [fetchFriends]);
 
   /* auth */
   const { user: authUser } = useAuthStore();

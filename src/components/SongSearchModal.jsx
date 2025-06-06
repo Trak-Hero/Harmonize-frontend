@@ -5,23 +5,30 @@ const API = import.meta.env.VITE_API_BASE_URL;
 
 export default function SongSearchModal({ onClose, userId }) {
   const addTile = useProfileStore((s) => s.addTile);
-  const [query, setQuery]       = useState('');
-  const [results, setResults]   = useState([]);
-  const [loading, setLoading]   = useState(false);
-  const [error,   setError]     = useState('');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const search = async () => {
     if (!query.trim()) return;
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
     try {
       const url = `${API}/spotify/search?q=${encodeURIComponent(query)}&type=track`;
       const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      
       console.log('[SongSearchModal] received data:', data);
-      // Backend returns { tracks: [...] } for songs
-      setResults(data.tracks || []);  
+
+      let tracks = [];
+      if (data.tracks && Array.isArray(data.tracks)) {
+        tracks = data.tracks;
+      } else if (Array.isArray(data)) {
+        tracks = data;
+      }
+
+      setResults(tracks);
     } catch (e) {
       console.error('[SongSearchModal] search failed:', e);
       setError('Could not fetch songs.');
@@ -31,19 +38,35 @@ export default function SongSearchModal({ onClose, userId }) {
   };
 
   const pickSong = async (track) => {
-    console.log('[pickSong] track data:', track);
-    // Backend sends album.image, not album.images array
-    const albumCover = track.album?.image || '';
-    await addTile({
+    let albumCover = '';
+
+    if (track.album?.images?.length > 0) {
+      const sortedImages = track.album.images.sort((a, b) => (b.width || 0) - (a.width || 0));
+      albumCover = sortedImages[0].url;
+    } else if (track.album?.image) {
+      albumCover = track.album.image;
+    }
+
+    const tileData = {
       userId,
       type: 'song',
-      title: track.name,
+      title: track.name || 'Unknown Song',
       bgImage: albumCover,
-      x: 0, y: Infinity, w: 2, h: 2,
-    });
-    onClose();
+      x: 0,
+      y: Infinity,
+      w: 2,
+      h: 2,
+    };
+
+    try {
+      await addTile(tileData);
+      onClose();
+    } catch (error) {
+      console.error('[pickSong] Failed to add song tile:', error);
+      setError('Failed to add song tile. Please try again.');
+    }
   };
-  
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-zinc-900 w-full max-w-xl rounded-xl p-6 space-y-4">
@@ -69,25 +92,38 @@ export default function SongSearchModal({ onClose, userId }) {
         )}
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
-          {results.map((t) => (
-            <li
-              key={t.id}
-              onClick={() => pickSong(t)}
-              className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
-            >
-              <img
-                src={t.album?.image || 'https://placehold.co/48x48?text=Song'}
-                alt={t.name}
-                className="w-12 h-12 object-cover rounded"
-              />
-              <div className="flex flex-col">
-                <span className="text-white font-medium">{t.name}</span>
-                <span className="text-gray-400 text-sm">
-                  {t.artists?.map(a => a.name).join(', ')}
-                </span>
-              </div>
-            </li>
-          ))}
+          {results.map((track) => {
+            let displayImage = 'https://placehold.co/48x48?text=Song';
+
+            if (track.album?.images?.length > 0) {
+              displayImage = track.album.images[0].url;
+            } else if (track.album?.image) {
+              displayImage = track.album.image;
+            }
+
+            return (
+              <li
+                key={track.id || Math.random()}
+                onClick={() => pickSong(track)}
+                className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700"
+              >
+                <img
+                  src={displayImage}
+                  alt={track.name || 'Song'}
+                  className="w-12 h-12 object-cover rounded"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://placehold.co/48x48?text=Song';
+                  }}
+                />
+                <div className="flex flex-col">
+                  <span className="text-white font-medium">{track.name || 'Unknown Song'}</span>
+                  <span className="text-gray-400 text-sm">
+                    {track.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="text-right">

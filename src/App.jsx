@@ -11,9 +11,15 @@ import ConnectSpotify from './pages/ConnectSpotify';
 import SpotifyDashboard from './pages/SpotifyDashboard';
 import UserProfile from './pages/UserProfile';
 import Friends from './pages/Friends';
+import CreatePost from './pages/CreatePost';
 import Register from './pages/Register';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import FriendProfile from './pages/FriendProfile';
+import { useEffect } from 'react';
+import { useAuthStore } from './state/authStore';
+import Galaxy from './pages/Galaxy';
+import BlendPage from './pages/BlendPage';
 
 import { useAuthStore } from './state/authStore';
 import useFriendStore from './state/friendStore';
@@ -25,6 +31,20 @@ function App() {
   const { addFriendToStore } = useFriendStore();
 
   useEffect(() => {
+    // Only fetch user session if we haven't checked yet
+    // This prevents unnecessary API calls on every reload
+    if (!hasCheckedSession) {
+      fetchUser();
+    }
+  }, [fetchUser, hasCheckedSession]);
+
+  // ✅ Sync authUser into friendStore on login
+  useEffect(() => {
+    if (authUser?._id) {
+      addFriendToStore(authUser);
+    }
+  }, [authUser, addFriendToStore]);
+
     if (!hasCheckedSession) {
       fetchUser();
     }
@@ -52,7 +72,7 @@ function App() {
       <div className="relative z-20 flex flex-col h-full overflow-auto">
         <Navbar />
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<Home />} />
           <Route path="/discover" element={<ForYou />} />
           <Route path="/artist/:id" element={<ArtistProfile />} />
           <Route path="/search" element={<SearchResults />} />
@@ -64,6 +84,9 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/friends/:id" element={<FriendProfile />} />
+          <Route path="/create" element={<CreatePost />} />
+          <Route path="/galaxy" element={<Galaxy />} />
+          <Route path="/blend" element={<BlendPage />} />
         </Routes>
       </div>
     </div>

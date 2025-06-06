@@ -95,7 +95,7 @@ export default function Register() {
       const user = await loginRes.json();
       console.log('Auto-login successful:', user);
       login(user);
-      navigate('/dashboard');
+      navigate('/profile');
 
     } catch (err) {
       console.error('Registration error:', err);

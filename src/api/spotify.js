@@ -1,4 +1,4 @@
-// src/api/spotify.js  (or src/utils/spotify.js)
+// src/api/spotify.js (or src/utils/spotify.js)
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 /* ---------- helpers ---------- */
@@ -7,7 +7,7 @@ const jsonOrThrow = async (res, msg) => {
   return res.json();
 };
 
-/* ---------- current-session user (“me”) ---------- */
+/* ---------- current-session user ("me") ---------- */
 export const fetchMyRecentTracks = async () =>
   jsonOrThrow(
     await fetch(`${API_BASE}/spotify/me/recent`, { credentials: 'include' }),
