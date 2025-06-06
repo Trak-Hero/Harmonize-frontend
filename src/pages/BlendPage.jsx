@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import BlendHeader from '../components/blend/BlendHeader';
 import TasteScoreCard from '../components/blend/TasteScoreCard';
 import CommonArtistsCard from '../components/blend/CommonArtistsCard';
@@ -62,12 +63,12 @@ function computeBlend(userAData, userBData, userAName, userBName) {
     userB: { name: userBName, avatarUrl: '' },
     tasteMatch: finalScore,
     commonArtists: commonArtistIds.map((id) => {
-    const artist = artistMapA.get(id);
-    return {
+      const artist = artistMapA.get(id);
+      return {
         name: artist.name,
         imageUrl: artist.images[0]?.url || '',
         spotifyUrl: artist.external_urls?.spotify || '#',
-    };
+      };
     }),
     similarGenres: similarGenres.map((g) => ({ genre: g })),
     differences: {
@@ -119,6 +120,7 @@ export default function BlendPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [searchParams] = useSearchParams();
 
   /** Fetch data & compute blend */
   const loadBlend = async (targetUser = null) => {
@@ -175,10 +177,31 @@ export default function BlendPage() {
     }
   };
 
-  /* initial load */
+  /* initial load with URL parameter support */
   useEffect(() => {
-    loadBlend();
-  }, []);
+    const userId = searchParams.get('user');
+    
+    if (userId) {
+      // Find the user and load their blend
+      fetch(`${API_BASE}/api/users/${userId}`, { credentials: 'include' })
+        .then(r => r.ok ? r.json() : null)
+        .then(user => {
+          if (user) {
+            console.log('Loading blend for user from URL:', user.displayName || user.username);
+            loadBlend(user);
+          } else {
+            console.warn('User not found from URL parameter, loading default');
+            loadBlend();
+          }
+        })
+        .catch((err) => {
+          console.error('Error fetching user from URL parameter:', err);
+          loadBlend();
+        });
+    } else {
+      loadBlend();
+    }
+  }, [searchParams]);
 
   /* handle selecting a different user */
   const handleSelectUser = (user) => {
