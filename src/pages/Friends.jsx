@@ -18,10 +18,12 @@ export default function Friends() {
   const { friends = [], followUser, unfollowUser } = useFriendStore();
 
   /* show only the people I follow */
-  const me        = friends.find((f) => String(f._id || f.id) === String(myId)) || {};
-  const following = me.following ?? [];
-  const visible   = friends.filter((f) => following.includes(f._id || f.id));
+  const me = friends.find((f) => String(f._id || f.id) === String(authUser?._id || authUser?.id));
+  const following = me?.following ?? [];
 
+  const visible = friends.filter((f) =>
+    following.some((fid) => String(fid) === String(f._id || f.id))
+  );
   return (
     <div className="max-w-5xl mx-auto pt-8 px-4">
       {/* header + button */}

@@ -1,4 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+
 import Navbar from './components/navbar';
 import Landing from './pages/Landing';
 import MapPage from './pages/MapPage';
@@ -12,23 +14,29 @@ import Friends from './pages/Friends';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import FriendProfile from './pages/FriendProfile';
-import { useEffect } from 'react';
+
 import { useAuthStore } from './state/authStore';
+import useFriendStore from './state/friendStore';
 
 import './App.css';
 
 function App() {
-  const { fetchUser, hasCheckedSession, isLoading, user } = useAuthStore();
+  const { fetchUser, hasCheckedSession, isLoading, user: authUser } = useAuthStore();
+  const { addFriendToStore } = useFriendStore();
 
   useEffect(() => {
-    // Only fetch user session if we haven't checked yet
-    // This prevents unnecessary API calls on every reload
     if (!hasCheckedSession) {
       fetchUser();
     }
   }, [fetchUser, hasCheckedSession]);
 
-  // Optional: Show loading spinner while checking session
+  // ✅ Add authUser to friend store for correct "me.following" behavior
+  useEffect(() => {
+    if (authUser?._id) {
+      addFriendToStore(authUser);
+    }
+  }, [authUser, addFriendToStore]);
+
   if (!hasCheckedSession && isLoading) {
     return (
       <div className="relative w-full h-screen overflow-hidden">
@@ -41,10 +49,8 @@ function App() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* App content */}
       <div className="relative z-20 flex flex-col h-full overflow-auto">
         <Navbar />
-
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/discover" element={<ForYou />} />
