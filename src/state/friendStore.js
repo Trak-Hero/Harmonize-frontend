@@ -5,6 +5,7 @@ import axios from 'axios';
 
 const API = import.meta.env.VITE_API_BASE_URL;
 axios.defaults.withCredentials = true;
+console.log('🌐 API base URL:', API);
 
 export const useFriendStore = create(
   persist(
