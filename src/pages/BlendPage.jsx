@@ -146,7 +146,7 @@ export default function BlendPage() {
   const loadBlend = async (targetUser = null) => {
     setLoading(true);
     try {
-      // Current user's artists
+      // Fetch current user's top artists
       const userData = await fetchTopArtists();
   
       let friendData;
@@ -154,32 +154,42 @@ export default function BlendPage() {
   
       if (targetUser) {
         try {
-          // Fetch friend's top artists
+          // Fetch the selected user's top artists directly from Spotify
           const res = await fetch(
-            `${API_BASE}/api/spotify/user/${targetUser._id}/top-artists`,
-            { credentials: 'include' }
+            `${API_BASE}/spotify/user/${targetUser._id}/top-artists`, 
+            { 
+              credentials: 'include',
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            }
           );
           
           if (!res.ok) {
-            // Handle case where user hasn't connected Spotify
-            throw new Error('User has not connected Spotify');
+            throw new Error('Failed to fetch user Spotify data');
           }
           
           friendData = await res.json();
           friendName = targetUser.displayName;
         } catch (fetchError) {
-          // Fallback to mock data or show error
-          console.warn('Could not fetch user data:', fetchError);
-          friendData = generateFriendMockData(userData);
-          friendName = targetUser.displayName;
+          console.error('Could not fetch user Spotify data:', fetchError);
+          // Fallback to error handling or mock data if needed
+          return;
         }
       } else {
-        // Default mock data
-        friendData = generateFriendMockData(userData);
-        friendName = 'Sample User';
+        // Default case, though this should rarely happen with the current UI
+        return;
       }
   
-      const blend = computeBlend(userData, friendData, 'You', friendName);
+      // Compute blend using actual user data
+      const blend = computeBlend(
+        { items: userData.items }, 
+        { items: friendData.items }, 
+        'You', 
+        friendName
+      );
+  
       setBlendData(blend);
       setSelectedUser(targetUser);
     } catch (err) {
@@ -189,7 +199,6 @@ export default function BlendPage() {
       setLoading(false);
     }
   };
-
   /* initial load */
   useEffect(() => {
     loadBlend();
