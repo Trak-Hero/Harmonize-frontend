@@ -1,4 +1,3 @@
-// src/api/spotify.js (or src/utils/spotify.js)
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 /* ---------- helpers ---------- */
@@ -19,6 +18,9 @@ export const fetchMyTopArtists = async () =>
     await fetch(`${API_BASE}/spotify/me/top-artists`, { credentials: 'include' }),
     'Failed to fetch top artists'
   );
+
+// ✅ alias for compatibility with BlendPage.jsx
+export const fetchTopArtists = fetchMyTopArtists;
 
 /* ---------- public profile user ---------- */
 export const fetchUserRecentTracks = async (userId) =>
