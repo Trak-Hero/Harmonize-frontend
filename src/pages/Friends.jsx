@@ -1,29 +1,66 @@
-import React, { useEffect } from 'react';
-import useStore from '../state/friendStore';
-import FriendCard from '../components/FriendsPage/FriendCard';
+/* ------------------------------------------------------------ */
+import { useState, useEffect }          from 'react';
+import { useAuthStore }      from '../state/authStore';
+import useFriendStore        from '../state/friendStore';
 
-const Friends = () => {
-  const { friends, fetchFriends } = useStore((s) => s.userSlice);
+import FriendCard            from '../components/FriendsPage/FriendCard';
+import FriendSearchModal     from '../components/FriendsPage/FriendSearch';
+
+export default function Friends() {
+  const [open, setOpen] = useState(false);
+  const { fetchFriends } = useFriendStore();
 
   useEffect(() => {
     fetchFriends?.();
   }, [fetchFriends]);
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-center mb-10">Your Friends</h1>
+  /* auth */
+  const { user: authUser } = useAuthStore();
+  const myId               = authUser?._id || authUser?.id;
 
-      {friends && friends.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-          {friends.map((friend) => (
-            <FriendCard key={friend.id} friend={friend} />
+  /* friends store */
+  const { friends = [], followUser, unfollowUser } = useFriendStore();
+
+  /* show only the people I follow */
+  const me = friends.find((f) => String(f._id || f.id) === String(authUser?._id || authUser?.id));
+  const following = me?.following ?? [];
+
+  const visible = friends.filter((f) =>
+    following.some((fid) => String(fid) === String(f._id || f.id))
+  );
+  return (
+    <div className="max-w-5xl mx-auto pt-8 px-4">
+      {/* header + button */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Friends</h1>
+        <button
+          onClick={() => setOpen(true)}
+          className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+        >
+          Find friends
+        </button>
+      </div>
+
+      {/* friends grid */}
+      {visible.length ? (
+        <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
+          {visible.map((friend) => (
+            <FriendCard
+              key={friend._id || friend.id}
+              friend={friend}
+              followUser={followUser}
+              unfollowUser={unfollowUser}
+            />
           ))}
         </div>
       ) : (
-        <p className="text-center text-gray-600">No friends yet — start exploring!</p>
+        <p className="text-center text-gray-400">
+          You don’t follow anyone yet.
+        </p>
       )}
+
+      {/* search modal */}
+      {open && <FriendSearchModal onClose={() => setOpen(false)} />}
     </div>
   );
-};
-
-export default Friends;
+}

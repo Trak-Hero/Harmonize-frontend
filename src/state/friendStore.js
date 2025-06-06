@@ -1,51 +1,111 @@
+// src/state/friendStore.js
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import axios from 'axios';
 
-const mockFriends = [
-  {
-    id: '1',
-    name: 'Mruno Bars',
-    avatar: 'feature spec/mruno.png',
-    genres: ['Indie', 'Jazz'],
-    artists: ['Phoebe Bridgers', 'Tom Misch'],
-    sharedPlaylists: [
-      { id: 'p1', name: 'Late Night Vibes' },
-      { id: 'p2', name: 'Roadtrip Mix' },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Chad B Simpson',
-    avatar: 'feature spec/chad.png',
-    genres: ['Hip-Hop', 'R&B'],
-    artists: ['Kendrick Lamar', 'SZA'],
-    sharedPlaylists: [
-      { id: 'p3', name: 'Chill Beats' },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Lena Vibecheck',
-    avatar: 'feature spec/lena.png',
-    genres: ['Rock', 'Electronic'],
-    artists: ['Tame Impala', 'The Valley'],
-    sharedPlaylists: [],
-  },
-];
+const API = import.meta.env.VITE_API_BASE_URL;
+axios.defaults.withCredentials = true;
 
-const useStore = create((set) => ({
-  userSlice: {
-    friends: [],
-    fetchFriends: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+export const useFriendStore = create(
+  persist(
+    (set, get) => ({
+      currentUserId: null,
+      friends: [],
+      isLoading: false,
 
-      set((state) => ({
-        userSlice: {
-          ...state.userSlice,
-          friends: mockFriends,
-        },
-      }));
-    },
-  },
-}));
+      setCurrentUserId: (id) => {
+        console.log('[friendStore] setCurrentUserId →', id);
+        set({ currentUserId: id });
+      },
 
-export default useStore;
+      addFriendToStore: (userDoc) => {
+        if (!userDoc || !userDoc._id) return;
+
+        set((state) => {
+          const updated = state.friends.some((u) => String(u._id) === String(userDoc._id));
+          return {
+            friends: updated
+              ? state.friends.map((u) =>
+                  String(u._id) === String(userDoc._id) ? { ...u, ...userDoc } : u
+                )
+              : [...state.friends, userDoc],
+          };
+        });
+      },
+
+      followUser: async (friendId) => {
+        try {
+          const res = await axios.post(`${API}/api/users/${friendId}/follow`, {
+            withCredentials: true,
+          });
+          if (res.status !== 201) return;
+
+          const { current, target } = res.data;
+          console.log('[friendStore] followUser →', { current, target });
+
+          set((state) => ({
+            friends: [
+              ...state.friends.filter(
+                (u) => String(u._id) !== String(current._id) && String(u._id) !== String(target._id)
+              ),
+              current,
+              target,
+            ],
+          }));
+        } catch (err) {
+          console.error('[friendStore] followUser error:', err);
+        }
+      },
+
+      unfollowUser: async (friendId) => {
+        try {
+          const res = await axios.delete(`${API}/api/users/${friendId}/follow`, {
+            withCredentials: true,
+          });
+          if (res.status !== 200) return;
+
+          const { current, target } = res.data;
+          console.log('[friendStore] unfollowUser →', { current, target });
+
+          set((state) => ({
+            friends: [
+              ...state.friends.filter(
+                (u) => String(u._id) !== String(current._id) && String(u._id) !== String(target._id)
+              ),
+              current,
+              target,
+            ],
+          }));
+        } catch (err) {
+          console.error('[friendStore] unfollowUser error:', err);
+        }
+      },
+
+      fetchFriend: async (friendId) => {
+        set({ isLoading: true });
+        try {
+          const res = await axios.get(`${API}/api/users/${friendId}`, {
+            timeout: 10000,
+            withCredentials: true,
+          });
+          if (res.status === 200) {
+            get().addFriendToStore(res.data);
+          }
+        } catch (err) {
+          console.error('[friendStore] fetchFriend error:', err);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+    }),
+    {
+      name: 'friend-store',
+      partialize: (s) => ({
+        currentUserId: s.currentUserId,
+        friends: s.friends, // ✅ persist friends cache too
+      }),
+    }
+  )
+);
+
+export default useFriendStore;

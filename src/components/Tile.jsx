@@ -9,30 +9,18 @@ const Tile = ({ tile }) => {
 
   try {
     console.log('[Tile.jsx] Rendering tile with full data:', JSON.stringify(tile, null, 2));
-    
+
     const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
     const deleteTile = useProfileStore((s) => s.deleteTile);
 
-    const displayTitle = tile.title ?? tile.name ?? '';
+    const displayTitle = tile.title ?? tile.name ?? tile.content ?? '';
     const displayContent = tile.content ?? '';
     const id = tile._id || tile.id;
 
-    // For text tiles, NEVER show background images
-    // For other tiles, check for bgImage
     let chosenImage = '';
     if (tile.type !== 'text' && tile.bgImage && tile.bgImage.trim() && tile.bgImage !== '/') {
       chosenImage = tile.bgImage.trim();
     }
-
-    console.log('[Tile.jsx] Image analysis:', {
-      type: tile.type,
-      title: displayTitle,
-      content: displayContent,
-      bgImage: tile.bgImage,
-      chosenImage,
-      hasValidImage: !!chosenImage,
-      isTextTile: tile.type === 'text'
-    });
 
     return (
       <div
@@ -42,34 +30,33 @@ const Tile = ({ tile }) => {
           fontFamily: tile.font || 'sans-serif',
         }}
       >
-        {/* Background image - ONLY for non-text tiles that have images */}
+        {/* Background image for non-text tiles */}
         {chosenImage && tile.type !== 'text' && (
           <div className="absolute inset-0 z-0">
             <img
               src={chosenImage}
               alt={displayTitle || tile.type}
               crossOrigin="anonymous"
-              onLoad={() => console.log('[Tile.jsx] ✅ Image loaded successfully:', chosenImage)}
+              onLoad={() => console.log('[Tile.jsx] ✅ Image loaded:', chosenImage)}
               onError={(e) => {
-                console.error('[Tile.jsx] ❌ Image failed to load:', chosenImage);
+                console.error('[Tile.jsx] ❌ Image failed:', chosenImage);
                 e.currentTarget.src = `https://placehold.co/200x200/4B5563/FFFFFF?text=${encodeURIComponent(tile.type.toUpperCase())}`;
               }}
               className="w-full h-full object-cover"
             />
-            {/* Dark overlay for better text readability */}
             <div className="absolute inset-0 bg-black/40 z-10"></div>
           </div>
         )}
 
-        {/* Fallback background for tiles without images (except text tiles) */}
+        {/* Fallback for non-text tiles with no image */}
         {!chosenImage && tile.type !== 'text' && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
             <span className="text-white/60 text-sm">No Image</span>
           </div>
         )}
 
-        {/* ARTIST TILE: show title at bottom */}
-        {tile.type === 'artist' && displayTitle && (
+        {/* ARTIST/SONG TILE */}
+        {(tile.type === 'artist' || tile.type === 'song') && displayTitle && (
           <div className="absolute inset-0 z-20 flex flex-col justify-end p-4">
             <h3 className="text-white font-bold text-lg drop-shadow-lg leading-tight">
               {displayTitle}
@@ -77,16 +64,7 @@ const Tile = ({ tile }) => {
           </div>
         )}
 
-        {/* SONG TILE: show title at bottom */}
-        {tile.type === 'song' && displayTitle && (
-          <div className="absolute inset-0 z-20 flex flex-col justify-end p-4">
-            <h3 className="text-white font-bold text-lg drop-shadow-lg leading-tight">
-              {displayTitle}
-            </h3>
-          </div>
-        )}
-
-        {/* TEXT TILE: show content, no background image */}
+        {/* TEXT TILE */}
         {tile.type === 'text' && (
           <div className="relative z-10 p-4 h-full flex items-center justify-center">
             <div className="text-center text-white break-words whitespace-pre-wrap leading-relaxed">
@@ -95,7 +73,7 @@ const Tile = ({ tile }) => {
           </div>
         )}
 
-        {/* PICTURE TILE: no overlay text, just the image */}
+        {/* PICTURE TILE */}
         {tile.type === 'picture' && !chosenImage && (
           <div className="relative z-10 h-full w-full flex items-center justify-center text-white bg-gray-600">
             <span>🖼️ Click Edit to add image</span>
@@ -109,7 +87,7 @@ const Tile = ({ tile }) => {
           </div>
         )}
 
-        {/* Edit/Delete buttons */}
+        {/* Edit & Delete buttons */}
         <button
           onClick={(e) => {
             e.stopPropagation();

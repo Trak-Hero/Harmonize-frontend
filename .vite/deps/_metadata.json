@@ -1,0 +1,46 @@
+{
+  "hash": "089b459f",
+  "configHash": "bb4eb0cb",
+  "lockfileHash": "13fd8a03",
+  "browserHash": "61dc5ccc",
+  "optimized": {
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "6595faa9",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "fdd887ed",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "27dcc942",
+      "needsInterop": false
+    },
+    "react-grid-layout": {
+      "src": "../../node_modules/react-grid-layout/index.js",
+      "file": "react-grid-layout.js",
+      "fileHash": "ceaf8a8a",
+      "needsInterop": true
+    },
+    "zustand": {
+      "src": "../../node_modules/zustand/esm/index.mjs",
+      "file": "zustand.js",
+      "fileHash": "27347e00",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-ELNDXDY2": {
+      "file": "chunk-ELNDXDY2.js"
+    },
+    "chunk-UCCAB3TN": {
+      "file": "chunk-UCCAB3TN.js"
+    }
+  }
+}
