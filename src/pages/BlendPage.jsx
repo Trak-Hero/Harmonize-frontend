@@ -119,19 +119,25 @@ export default function BlendPage() {
   const loadBlend = async (targetUser = null) => {
     setLoading(true);
     try {
-      // current user’s artists
+      // current user's artists
       const userData = await fetchTopArtists();
-
+  
       let friendData;
       let friendName;
-
+  
       if (targetUser) {
         // real friend data
         const res = await fetch(
           `${API_BASE}/api/users/${targetUser._id}/top-artists`,
           { credentials: 'include' }
         );
-        if (!res.ok) throw new Error('Failed to fetch friend data');
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Failed to fetch friend data:', errorText);
+          throw new Error(`Failed to fetch ${targetUser.displayName}'s music data`);
+        }
+        
         friendData = await res.json();
         friendName = targetUser.displayName;
       } else {
@@ -139,12 +145,13 @@ export default function BlendPage() {
         friendData = generateFriendMockData(userData);
         friendName = 'Sample User';
       }
-
+  
       const blend = computeBlend(userData, friendData, 'You', friendName);
       setBlendData(blend);
       setSelectedUser(targetUser);
     } catch (err) {
       console.error('Error computing blend', err);
+      alert(`Error: ${err.message}`); // Show user-friendly error
     } finally {
       setLoading(false);
     }
