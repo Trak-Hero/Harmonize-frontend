@@ -66,44 +66,54 @@ const MapPage = () => {
 
   // Fetch real friends from the backend
   useEffect(() => {
-    async function loadFriends() {
-      try {
-        const res = await fetch(`${API_BASE}/spotify/friends/top`, {
-          credentials: 'include'
-        });
-        const text = await res.text();
+  async function loadFriends() {
+    try {
+      const res = await fetch(`${API_BASE}/spotify/friends/top`, {
+        credentials: 'include'
+      });
 
-        if (!res.ok) {
-          console.error('🚫 Server responded with:', text);
-          throw new Error('Failed to fetch friends');
-        }
+      const contentType = res.headers.get('content-type');
+      const isJson = contentType && contentType.includes('application/json');
 
-        const data = JSON.parse(text);
-
-        const enriched = data.friends
-          .filter(f => f.friend?.location?.coordinates)
-          .map(({ friend, topArtists, topTracks }) => {
-            const [lng, lat] = friend.location.coordinates;
-            const distance = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
-            return {
-              ...friend,
-              distance,
-              topArtists,
-              topTracks,
-            };
-          });
-
-        setAllFriends(enriched);
-        setFilteredFriends(enriched);
-      } catch (err) {
-        console.error('❌ Error loading friends:', err);
+      if (!res.ok) {
+        const raw = await res.text();
+        console.error('🚫 Backend error (likely not authenticated):', raw);
+        throw new Error(`Fetch failed with status ${res.status}`);
       }
-    }
 
-    if (userLocation) {
-      loadFriends();
+      if (!isJson) {
+        const raw = await res.text();
+        console.error('❌ Not JSON:', raw);
+        throw new Error('Server did not return JSON');
+      }
+
+      const data = await res.json();
+
+      const enriched = data.friends
+        .filter(f => f.friend?.location?.coordinates)
+        .map(({ friend, topArtists, topTracks }) => {
+          const [lng, lat] = friend.location.coordinates;
+          const distance = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
+          return {
+            ...friend,
+            distance,
+            topArtists,
+            topTracks,
+          };
+        });
+
+      setAllFriends(enriched);
+      setFilteredFriends(enriched);
+    } catch (err) {
+      console.error('❌ Error loading friends:', err.message);
     }
-  }, [userLocation]);
+  }
+
+  if (userLocation) {
+    loadFriends();
+  }
+}, [userLocation]);
+
 
   // Filter and sort friends
   useEffect(() => {
