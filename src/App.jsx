@@ -1,4 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+
 import Navbar from './components/navbar';
 import Landing from './pages/Landing';
 import MapPage from './pages/MapPage';
@@ -13,15 +15,20 @@ import CreatePost from './pages/CreatePost';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import FriendProfile from './pages/FriendProfile';
 import { useEffect } from 'react';
 import { useAuthStore } from './state/authStore';
 import Galaxy from './pages/Galaxy';
 import BlendPage from './pages/BlendPage';
 
+import { useAuthStore } from './state/authStore';
+import useFriendStore from './state/friendStore';
+
 import './App.css';
 
 function App() {
-  const { fetchUser, hasCheckedSession, isLoading, user } = useAuthStore();
+  const { fetchUser, hasCheckedSession, isLoading, user: authUser } = useAuthStore();
+  const { addFriendToStore } = useFriendStore();
 
   useEffect(() => {
     // Only fetch user session if we haven't checked yet
@@ -31,7 +38,25 @@ function App() {
     }
   }, [fetchUser, hasCheckedSession]);
 
-  // Optional: Show loading spinner while checking session
+  // ✅ Sync authUser into friendStore on login
+  useEffect(() => {
+    if (authUser?._id) {
+      addFriendToStore(authUser);
+    }
+  }, [authUser, addFriendToStore]);
+
+    if (!hasCheckedSession) {
+      fetchUser();
+    }
+  }, [fetchUser, hasCheckedSession]);
+
+  // ✅ Add authUser to friend store for correct "me.following" behavior
+  useEffect(() => {
+    if (authUser?._id) {
+      addFriendToStore(authUser);
+    }
+  }, [authUser, addFriendToStore]);
+
   if (!hasCheckedSession && isLoading) {
     return (
       <div className="relative w-full h-screen overflow-hidden">
@@ -44,10 +69,8 @@ function App() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* App content */}
       <div className="relative z-20 flex flex-col h-full overflow-auto">
         <Navbar />
-
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/discover" element={<ForYou />} />
@@ -60,6 +83,7 @@ function App() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/friends/:id" element={<FriendProfile />} />
           <Route path="/create" element={<CreatePost />} />
           <Route path="/galaxy" element={<Galaxy />} />
           <Route path="/blend" element={<BlendPage />} />

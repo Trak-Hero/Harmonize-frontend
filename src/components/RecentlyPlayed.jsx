@@ -1,7 +1,6 @@
 import React from 'react';
 
 const RecentlyPlayed = ({ recent = [] }) => {
-  // 1) If `recent` isn’t an array or is empty, show a placeholder instead of crashing.
   if (!Array.isArray(recent) || recent.length === 0) {
     return (
       <div className="p-6 bg-black/50 rounded-xl text-white text-center">
@@ -20,11 +19,12 @@ const RecentlyPlayed = ({ recent = [] }) => {
           // Adjust as needed. Here we assume `item.track` is the actual track object.
           const track = item.track ?? item;
 
-          // Safe‐access `album` (might be undefined)
+          // Safe-access `album` (might be undefined)
           const albumImages = track.album?.images ?? [];
           const imageUrl = albumImages[0]?.url ?? '';
 
-          // Safe‐access `track.name` and `track.artists`
+          // Safe-access `track.name` and `track.artists` (can be undefined in some cases)
+
           const trackName = track.name ?? 'Unknown Title';
           const artistList = Array.isArray(track.artists)
             ? track.artists.map(a => a.name).join(', ')
@@ -35,7 +35,6 @@ const RecentlyPlayed = ({ recent = [] }) => {
               key={track.id ?? idx}
               className="bg-black/50 rounded-xl p-4 backdrop-blur-md text-white flex flex-col items-start"
             >
-              {/* Only render <img> if we have a valid imageUrl */}
               {imageUrl ? (
                 <img
                   src={imageUrl}

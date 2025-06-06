@@ -1,4 +1,3 @@
-// src/components/SongSearchModal.jsx
 import { useState } from 'react';
 import { useProfileStore } from '../state/profileStore';
 
@@ -11,60 +10,54 @@ export default function SongSearchModal({ onClose, userId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-const search = async () => {
-  if (!query.trim()) return;
-  setLoading(true); 
-  setError('');
-  try {
-    const url = `${API}/spotify/search?q=${encodeURIComponent(query)}&type=track`;
-    const res = await fetch(url, { credentials: 'include' });
-    if (!res.ok) throw new Error(`${res.status}`);
-    const data = await res.json();
-    console.log('[SongSearchModal] received data:', data);
-    
-    let tracks = [];
-    if (data.tracks && Array.isArray(data.tracks)) {
-      tracks = data.tracks; 
-    } else if (Array.isArray(data)) {
-      tracks = data; 
+  const search = async () => {
+    if (!query.trim()) return;
+    setLoading(true);
+    setError('');
+    try {
+      const url = `${API}/spotify/search?q=${encodeURIComponent(query)}&type=track`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      console.log('[SongSearchModal] received data:', data);
+
+      let tracks = [];
+      if (data.tracks && Array.isArray(data.tracks)) {
+        tracks = data.tracks;
+      } else if (Array.isArray(data)) {
+        tracks = data;
+      }
+
+      setResults(tracks);
+    } catch (e) {
+      console.error('[SongSearchModal] search failed:', e);
+      setError('Could not fetch songs.');
+    } finally {
+      setLoading(false);
     }
-    
-    setResults(tracks);
-  } catch (e) {
-    console.error('[SongSearchModal] search failed:', e);
-    setError('Could not fetch songs.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const pickSong = async (track) => {
-    // Extract album cover art
     let albumCover = '';
-    
-    if (track.album && track.album.images && Array.isArray(track.album.images) && track.album.images.length > 0) {
-      // Sort by size and get the best quality image
+
+    if (track.album?.images?.length > 0) {
       const sortedImages = track.album.images.sort((a, b) => (b.width || 0) - (a.width || 0));
       albumCover = sortedImages[0].url;
-    } else if (track.album && track.album.image && typeof track.album.image === 'string') {
+    } else if (track.album?.image) {
       albumCover = track.album.image;
     }
-    
-    console.log('[pickSong] Using album cover:', albumCover);
-  
+
     const tileData = {
       userId,
       type: 'song',
       title: track.name || 'Unknown Song',
-      bgImage: albumCover, // This will be used by the Tile component
+      bgImage: albumCover,
       x: 0,
       y: Infinity,
       w: 2,
       h: 2,
     };
-  
-    console.log('[pickSong] Creating tile with data:', tileData);
-  
+
     try {
       await addTile(tileData);
       onClose();
@@ -100,15 +93,14 @@ const search = async () => {
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
           {results.map((track) => {
-            // Display logic for search results preview
             let displayImage = 'https://placehold.co/48x48?text=Song';
-            
-            if (track.album && track.album.images && Array.isArray(track.album.images) && track.album.images.length > 0) {
+
+            if (track.album?.images?.length > 0) {
               displayImage = track.album.images[0].url;
-            } else if (track.album && track.album.image && typeof track.album.image === 'string') {
+            } else if (track.album?.image) {
               displayImage = track.album.image;
             }
-            
+
             return (
               <li
                 key={track.id || Math.random()}
@@ -126,7 +118,7 @@ const search = async () => {
                 <div className="flex flex-col">
                   <span className="text-white font-medium">{track.name || 'Unknown Song'}</span>
                   <span className="text-gray-400 text-sm">
-                    {track.artists?.map(a => a.name).join(', ') || 'Unknown Artist'}
+                    {track.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
                   </span>
                 </div>
               </li>

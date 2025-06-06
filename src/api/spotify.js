@@ -1,27 +1,38 @@
+// src/api/spotify.js (or src/utils/spotify.js)
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-function getAccessToken() {
-  // Update this to match wherever you're storing the token (e.g., localStorage or a global store)
-  return localStorage.getItem('accessToken');
-}
+/* ---------- helpers ---------- */
+const jsonOrThrow = async (res, msg) => {
+  if (!res.ok) throw new Error(`${msg} (${res.status})`);
+  return res.json();
+};
 
-export async function fetchRecentTracks() {
-  const token = getAccessToken();
-  const res = await fetch(`${API_BASE}/api/spotify/recent`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!res.ok) throw new Error('Failed to fetch recent tracks');
-  return await res.json();
-}
+/* ---------- current-session user ("me") ---------- */
+export const fetchMyRecentTracks = async () =>
+  jsonOrThrow(
+    await fetch(`${API_BASE}/spotify/me/recent`, { credentials: 'include' }),
+    'Failed to fetch recent tracks'
+  );
 
-export async function fetchTopArtists() {
-  const res = await fetch(`${API_BASE}/spotify/top-artists`, {
-    method: 'GET',
-    credentials: 'include',
-  });
+export const fetchMyTopArtists = async () =>
+  jsonOrThrow(
+    await fetch(`${API_BASE}/spotify/me/top-artists`, { credentials: 'include' }),
+    'Failed to fetch top artists'
+  );
 
-  if (!res.ok) throw new Error('Failed to fetch top artists');
-  return await res.json();
-}
+/* ---------- public profile user ---------- */
+export const fetchUserRecentTracks = async (userId) =>
+  jsonOrThrow(
+    await fetch(`${API_BASE}/spotify/user/${userId}/recent`, {
+      credentials: 'include',
+    }),
+    'Failed to fetch user recent tracks'
+  );
+
+export const fetchUserTopArtists = async (userId) =>
+  jsonOrThrow(
+    await fetch(`${API_BASE}/spotify/user/${userId}/top-artists`, {
+      credentials: 'include',
+    }),
+    'Failed to fetch user top artists'
+  );
