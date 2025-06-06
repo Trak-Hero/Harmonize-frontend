@@ -1,3 +1,4 @@
+// src/state/friendStore.js
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
@@ -8,36 +9,30 @@ axios.defaults.withCredentials = true;
 export const useFriendStore = create(
   persist(
     (set, get) => ({
-      /* ──────────── STATE ──────────── */
-      currentUserId: null,   // whose profile page you’re on
-      friends: [],           // cached user docs (me + everyone we touch)
+      currentUserId: null,
+      friends: [],
       isLoading: false,
 
-      /* ──────────── MUTATORS ──────────── */
       setCurrentUserId: (id) => {
         console.log('[friendStore] setCurrentUserId →', id);
         set({ currentUserId: id });
       },
 
-      /** Push or replace a user doc in the cache */
       addFriendToStore: (userDoc) => {
         if (!userDoc || !userDoc._id) return;
 
         set((state) => {
-          const exists = state.friends.some(
-            (u) => String(u._id) === String(userDoc._id)
-          );
+          const updated = state.friends.some((u) => String(u._id) === String(userDoc._id));
           return {
-            friends: exists
+            friends: updated
               ? state.friends.map((u) =>
-                  String(u._id) === String(userDoc._id) ? userDoc : u
+                  String(u._id) === String(userDoc._id) ? { ...u, ...userDoc } : u
                 )
               : [...state.friends, userDoc],
           };
         });
       },
 
-      /* ──────────── FOLLOW / UNFOLLOW ──────────── */
       followUser: async (friendId) => {
         try {
           const res = await axios.post(`${API}/api/users/${friendId}/follow`, {
@@ -46,14 +41,16 @@ export const useFriendStore = create(
           if (res.status !== 201) return;
 
           const { current, target } = res.data;
-          console.log('[friendStore] followUser → server returned', { current, target });
+          console.log('[friendStore] followUser →', { current, target });
 
           set((state) => ({
-            friends: state.friends.map((u) => {
-              if (String(u._id) === String(current._id)) return current;
-              if (String(u._id) === String(target._id))  return target;
-              return u;
-            }),
+            friends: [
+              ...state.friends.filter(
+                (u) => String(u._id) !== String(current._id) && String(u._id) !== String(target._id)
+              ),
+              current,
+              target,
+            ],
           }));
         } catch (err) {
           console.error('[friendStore] followUser error:', err);
@@ -68,21 +65,22 @@ export const useFriendStore = create(
           if (res.status !== 200) return;
 
           const { current, target } = res.data;
-          console.log('[friendStore] unfollowUser → server returned', { current, target });
+          console.log('[friendStore] unfollowUser →', { current, target });
 
           set((state) => ({
-            friends: state.friends.map((u) => {
-              if (String(u._id) === String(current._id)) return current;
-              if (String(u._id) === String(target._id))  return target;
-              return u;
-            }),
+            friends: [
+              ...state.friends.filter(
+                (u) => String(u._id) !== String(current._id) && String(u._id) !== String(target._id)
+              ),
+              current,
+              target,
+            ],
           }));
         } catch (err) {
           console.error('[friendStore] unfollowUser error:', err);
         }
       },
 
-      /* ──────────── FETCH SINGLE FRIEND (utility) ──────────── */
       fetchFriend: async (friendId) => {
         set({ isLoading: true });
         try {
@@ -104,6 +102,7 @@ export const useFriendStore = create(
       name: 'friend-store',
       partialize: (s) => ({
         currentUserId: s.currentUserId,
+        friends: s.friends, // ✅ persist friends cache too
       }),
     }
   )
