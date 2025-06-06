@@ -19,11 +19,9 @@ export default function Home() {
 
   useEffect(() => {
     let cancelled = false;
-
     const fetchData = async () => {
       try {
         console.log("Home: Fetching data from API:", API);
-
         let recRes;
         try {
           recRes = await axios.get(`${API}/api/recommendations`, {
@@ -33,7 +31,6 @@ export default function Home() {
         } catch (err) {
           const status = err.response?.status;
           console.warn("Home: Recommendations request failed:", status || err.message);
-
           if (status === 403) {
             setError("Please connect your Spotify account to see recommendations.");
           } else if (status === 204) {
@@ -41,13 +38,53 @@ export default function Home() {
           } else {
             setError("Unable to load recommendations. Please try again later.");
           }
-
           recRes = { data: [] };
         }
-
+        
         if (cancelled) return;
 
-        const mappedRecommendations = recRes.data ?? [];
+        // ADD DEBUGGING CODE HERE:
+        console.log("Raw recommendations data:", recRes.data);
+        
+        // Check the structure of the first item
+        if (recRes.data && recRes.data.length > 0) {
+          console.log("First recommendation item:", recRes.data[0]);
+          console.log("First item artist field:", recRes.data[0].artist);
+          console.log("First item artists field:", recRes.data[0].artists);
+        }
+
+        // Fix the artist name mapping here with better debugging
+        const mappedRecommendations = (recRes.data ?? []).map((track, index) => {
+          console.log(`Processing track ${index}:`, track);
+          
+          let artistName = "Unknown Artist";
+          
+          // Try different ways to extract artist name
+          if (Array.isArray(track.artists)) {
+            artistName = track.artists.map(a => {
+              if (typeof a === 'string') return a;
+              if (typeof a === 'object' && a.name) return a.name;
+              return String(a);
+            }).join(", ");
+          } else if (track.artist) {
+            if (typeof track.artist === 'string') {
+              artistName = track.artist;
+            } else if (typeof track.artist === 'object' && track.artist.name) {
+              artistName = track.artist.name;
+            } else {
+              artistName = String(track.artist);
+            }
+          }
+          
+          console.log(`Mapped artist name for track ${index}:`, artistName);
+          
+          return {
+            ...track,
+            artist: artistName
+          };
+        });
+
+        console.log("Final mapped recommendations:", mappedRecommendations);
 
         let albumsArray = [];
         try {
@@ -58,7 +95,6 @@ export default function Home() {
           if (!cancelled && spotifyRes.data?.top) {
             const topTracks = spotifyRes.data.top;
             const albumMap = {};
-
             topTracks.forEach((t) => {
               const album = t.album || {};
               const albumId = album.id || album.name || String(Math.random());
@@ -66,9 +102,12 @@ export default function Home() {
                 const imgUrl = Array.isArray(album.images) && album.images.length > 0
                   ? album.images[0].url
                   : "";
+                // Fix artist names for albums too
                 const artistNames = Array.isArray(t.artists)
-                  ? t.artists.map((a) => a.name).join(", ")
-                  : "";
+                  ? t.artists.map((a) => a.name || a).join(", ")
+                  : typeof t.artist === 'object'
+                  ? t.artist.name || String(t.artist)
+                  : t.artist || "Unknown Artist";
                 albumMap[albumId] = {
                   id: albumId,
                   name: album.name || "Unknown Album",
@@ -85,14 +124,12 @@ export default function Home() {
             spotifyErr.response?.status || spotifyErr.message
           );
         }
-
         if (!cancelled) {
           setRecommendations(mappedRecommendations);
           setTopAlbums(albumsArray);
         }
       } catch (err) {
         console.error("Home: Fetch error:", err);
-
         let errorMessage = "Failed to load data.";
         if (err.code === "ECONNABORTED") {
           errorMessage = "Request timed out. Please try again.";
@@ -106,7 +143,6 @@ export default function Home() {
         if (!cancelled) setLoading(false);
       }
     };
-
     fetchData();
     return () => {
       cancelled = true;
@@ -183,7 +219,27 @@ export default function Home() {
         {recommendations.length > 0 ? (
           <Carousel
             items={recommendations}
-            renderItem={(item) => <MediaCard key={item.id} media={item} />}
+            renderItem={(item) => (
+              <div key={item.id} className="bg-black/50 rounded-xl p-4 backdrop-blur-md text-white flex flex-col items-center w-40">
+                {item.album?.images?.[0]?.url ? (
+                  <img
+                    src={item.album.images[0].url}
+                    alt={item.name}
+                    className="w-full h-40 object-cover rounded mb-2"
+                  />
+                ) : (
+                  <div className="w-full h-40 bg-gray-800 flex items-center justify-center rounded mb-2">
+                    <span className="text-gray-400 text-sm">No Cover</span>
+                  </div>
+                )}
+                <div className="font-medium text-sm truncate w-full text-center">
+                  {item.name || "Unknown Track"}
+                </div>
+                <div className="text-xs text-gray-400 truncate w-full text-center">
+                  {typeof item.artist === 'string' ? item.artist : JSON.stringify(item.artist)}
+                </div>
+              </div>
+            )}
           />
         ) : (
           <div className="text-center py-8 text-white/60">
