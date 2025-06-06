@@ -15,7 +15,7 @@ export const fetchMyRecentTracks = async () =>
 
 export const fetchMyTopArtists = async () =>
   jsonOrThrow(
-    await fetch(`${API_BASE}/spotify/me/top-artists`, { credentials: 'include' }),
+    await fetch(`${API_BASE}/spotify/top-artists`, { credentials: 'include' }),
     'Failed to fetch top artists'
   );
 
