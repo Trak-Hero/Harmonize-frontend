@@ -6,15 +6,17 @@ import SearchBar from '../components/map/searchBar';
 import MapView from '../components/map/mapView';
 import { fetchEventsByLocation } from '../api/ticketmaster';
 import useLocationStore from '../state/locationStore';
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
-
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat1 * Math.PI / 180) *
+            Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
@@ -62,16 +64,22 @@ const MapPage = () => {
     }
   }, [userLocation, filters.distance]);
 
+  // Fetch real friends from the backend
   useEffect(() => {
     async function loadFriends() {
       try {
         const res = await fetch(`${API_BASE}/spotify/friends/top`, {
           credentials: 'include'
         });
-        if (!res.ok) throw new Error('Failed to fetch friends');
-        const data = await res.json();
+        const text = await res.text();
 
-        // Map to location-enhanced friends
+        if (!res.ok) {
+          console.error('🚫 Server responded with:', text);
+          throw new Error('Failed to fetch friends');
+        }
+
+        const data = JSON.parse(text);
+
         const enriched = data.friends
           .filter(f => f.friend?.location?.coordinates)
           .map(({ friend, topArtists, topTracks }) => {
@@ -88,7 +96,7 @@ const MapPage = () => {
         setAllFriends(enriched);
         setFilteredFriends(enriched);
       } catch (err) {
-        console.error('Error loading friends:', err);
+        console.error('❌ Error loading friends:', err);
       }
     }
 
@@ -104,7 +112,7 @@ const MapPage = () => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(friend =>
-        friend.displayName.toLowerCase().includes(term) ||
+        friend.displayName?.toLowerCase().includes(term) ||
         friend.userName?.toLowerCase().includes(term)
       );
     }
