@@ -36,7 +36,7 @@ const Tile = ({ tile }) => {
             <img
               src={chosenImage}
               alt={displayTitle || tile.type}
-              crossOrigin="anonymous"
+              // crossOrigin="anonymous"
               onLoad={() => console.log('[Tile.jsx] ✅ Image loaded:', chosenImage)}
               onError={(e) => {
                 console.error('[Tile.jsx] ❌ Image failed:', chosenImage);
