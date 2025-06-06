@@ -29,9 +29,9 @@ export default function Friends() {
     following.some((fid) => String(fid) === String(f._id || f.id))
   );
   return (
-    <div className="max-w-5xl mx-auto pt-8 px-4">
+    <div className="max-w-5xl mx-auto pt-4 px-2">
       {/* header + button */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-start justify-between mb-10">
         <h1 className="text-2xl font-bold">Friends</h1>
         <button
           onClick={() => setOpen(true)}
