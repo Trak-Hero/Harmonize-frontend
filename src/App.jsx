@@ -16,8 +16,6 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import FriendProfile from './pages/FriendProfile';
-import { useEffect } from 'react';
-import { useAuthStore } from './state/authStore';
 import Galaxy from './pages/Galaxy';
 import BlendPage from './pages/BlendPage';
 
@@ -31,26 +29,11 @@ function App() {
   const { addFriendToStore } = useFriendStore();
 
   useEffect(() => {
-    // Only fetch user session if we haven't checked yet
-    // This prevents unnecessary API calls on every reload
     if (!hasCheckedSession) {
       fetchUser();
     }
   }, [fetchUser, hasCheckedSession]);
 
-  // ✅ Sync authUser into friendStore on login
-  useEffect(() => {
-    if (authUser?._id) {
-      addFriendToStore(authUser);
-    }
-  }, [authUser, addFriendToStore]);
-
-    if (!hasCheckedSession) {
-      fetchUser();
-    }
-  }, [fetchUser, hasCheckedSession]);
-
-  // ✅ Add authUser to friend store for correct "me.following" behavior
   useEffect(() => {
     if (authUser?._id) {
       addFriendToStore(authUser);

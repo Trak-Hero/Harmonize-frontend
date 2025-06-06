@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------ */
-import { useState }          from 'react';
+import { useState, useEffect }          from 'react';
 import { useAuthStore }      from '../state/authStore';
 import useFriendStore        from '../state/friendStore';
 
@@ -7,8 +7,9 @@ import FriendCard            from '../components/FriendsPage/FriendCard';
 import FriendSearchModal     from '../components/FriendsPage/FriendSearch';
 
 export default function Friends() {
-  /* modal state */
   const [open, setOpen] = useState(false);
+  const { fetchFriends } = useFriendStore();
+
   useEffect(() => {
     fetchFriends?.();
   }, [fetchFriends]);
