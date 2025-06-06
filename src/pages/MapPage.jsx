@@ -6,6 +6,8 @@ import SearchBar from '../components/map/searchBar';
 import MapView from '../components/map/mapView';
 import { fetchEventsByLocation } from '../api/ticketmaster';
 import useLocationStore from '../state/locationStore';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -63,7 +65,7 @@ const MapPage = () => {
   useEffect(() => {
     async function loadFriends() {
       try {
-        const res = await fetch('/spotify/friends/top', {
+        const res = await fetch(`${API_BASE}/spotify/friends/top`, {
           credentials: 'include'
         });
         if (!res.ok) throw new Error('Failed to fetch friends');

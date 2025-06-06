@@ -126,19 +126,20 @@ export default function BlendPage() {
       let friendName;
 
       if (targetUser) {
-        // real friend data
         const res = await fetch(
-          `${API_BASE}/api/users/${targetUser._id}/top-artists`,
-          { credentials: 'include' }
+            `${API_BASE}/spotify/user/${targetUser._id}`,
+            { credentials: 'include' }
         );
-        if (!res.ok) throw new Error('Failed to fetch friend data');
-        friendData = await res.json();
-        friendName = targetUser.displayName;
-      } else {
-        // mock friend data
-        friendData = generateFriendMockData(userData);
-        friendName = 'Sample User';
-      }
+        if (!res.ok) {
+            const message = await res.text();
+            throw new Error(`Spotify not connected or invalid user: ${message}`);
+        }
+
+        const data = await res.json();
+        friendData = { items: data.topArtists };
+        friendName = targetUser.displayName || targetUser.username;
+    }
+
 
       const blend = computeBlend(userData, friendData, 'You', friendName);
       setBlendData(blend);
@@ -178,7 +179,7 @@ export default function BlendPage() {
           >
             {selectedUser
               ? `Change from ${selectedUser.displayName}`
-              : 'Select Real User'}
+              : 'Select Friend'}
           </button>
         </div>
 
