@@ -51,24 +51,37 @@ export const useFriendStore = create(
 
       /* ───────────────────  READERS  ─────────────────── */
 
-      /** Fetch the logged‑in user *and* their following list,
-       * keeping the current‑user record in state.friends. */
       fetchFriends: async () => {
         set({ isLoading: true });
         try {
           const meRes = await axios.get(`${API}/api/users/me`);
           if (meRes.status === 200) {
             const currentUser = meRes.data;
-            get().addFriendToStore(currentUser);   // guarantees ‘me’ is in the array
-
-            // Pull every user the current user follows
-            const followIds = currentUser.following ?? [];
-            if (followIds.length) {
-              const reqs = followIds.map((id) =>
+      
+            // Keep the local version’s `following` and `followers` if it's richer
+            const existing = get().friends.find(
+              (u) => String(u._id) === String(currentUser._id)
+            );
+      
+            const enriched = {
+              ...currentUser,
+              following: union(currentUser.following ?? [], existing?.following ?? []),
+              followers: union(currentUser.followers ?? [], existing?.followers ?? []),
+            };
+      
+            get().addFriendToStore(enriched);  // keeps ‘me’ up to date
+      
+            // Pull followed users (skip ones we already have)
+            const toFetch = (enriched.following ?? []).filter((id) => {
+              return !get().friends.some((f) => String(f._id) === String(id));
+            });
+      
+            if (toFetch.length) {
+              const reqs = toFetch.map((id) =>
                 axios.get(`${API}/api/users/${id}`)
               );
               const results = await Promise.allSettled(reqs);
-
+      
               results.forEach((r) => {
                 if (r.status === 'fulfilled' && r.value.status === 200) {
                   get().addFriendToStore(r.value.data);
@@ -82,6 +95,7 @@ export const useFriendStore = create(
           set({ isLoading: false });
         }
       },
+      
 
       followUser: async (friendId) => {
         try {
