@@ -35,48 +35,29 @@ export const useFriendStore = create(
       },
 
       followUser: async (friendId) => {
-        try {
-          const res = await axios.post(`${API}/api/users/${friendId}/follow`);
-          if (res.status !== 201) return;
+          try {
+            const res = await axios.post(`${API}/api/users/${friendId}/follow`);
+            if (res.status !== 201) return;
 
-          const { current, target } = res.data;
-          console.log('[friendStore] followUser →', { current, target });
-
-          set((state) => ({
-            friends: [
-              ...state.friends.filter(
-                (u) => String(u._id) !== String(current._id) && String(u._id) !== String(target._id)
-              ),
-              current,
-              target,
-            ],
-          }));
-        } catch (err) {
-          console.error('[friendStore] followUser error:', err);
-        }
-      },
+            console.log('[friendStore] followUser → follow succeeded, now refreshing list');
+            await get().fetchAllFriends();
+          } catch (err) {
+            console.error('[friendStore] followUser error:', err);
+          }
+        },
 
       unfollowUser: async (friendId) => {
-        try {
-          const res = await axios.delete(`${API}/api/users/${friendId}/follow`);
-          if (res.status !== 200) return;
+          try {
+            const res = await axios.delete(`${API}/api/users/${friendId}/follow`);
+            if (res.status !== 200) return;
 
-          const { current, target } = res.data;
-          console.log('[friendStore] unfollowUser →', { current, target });
+            console.log('[friendStore] unfollowUser → unfollow succeeded, now refreshing list');
+            await get().fetchAllFriends();
+          } catch (err) {
+            console.error('[friendStore] unfollowUser error:', err);
+          }
+        },
 
-          set((state) => ({
-            friends: [
-              ...state.friends.filter(
-                (u) => String(u._id) !== String(current._id) && String(u._id) !== String(target._id)
-              ),
-              current,
-              target,
-            ],
-          }));
-        } catch (err) {
-          console.error('[friendStore] unfollowUser error:', err);
-        }
-      },
 
       fetchFriend: async (friendId) => {
         set({ isLoading: true });
