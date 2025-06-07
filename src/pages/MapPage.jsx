@@ -91,6 +91,53 @@ const MapPage = () => {
   const { userLocation, fetchUserLocation, locationLoaded } = useLocationStore();
   const { currentUserId, friends, fetchAllFriends } = useFriendStore();
 
+    useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+
+          if (
+            latitude === 0 || longitude === 0 ||
+            Math.abs(latitude) > 90 || Math.abs(longitude) > 180
+          ) {
+            console.error('[❌ Location] Invalid coordinates received:', latitude, longitude);
+            return;
+          }
+
+          console.log('[📍 Location] Sending coordinates:', latitude, longitude);
+          useLocationStore.getState().setUserLocation({ latitude, longitude });
+
+          const res = await fetch(`${API_BASE}/api/users/location`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ latitude, longitude }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            console.error('[❌ Location] Failed to save:', data);
+          } else {
+            console.log('[✅ Location] Saved to backend:', data.location);
+          }
+        } catch (err) {
+          console.error('[❌ Location] Failed to send location:', err);
+        }
+      },
+      (err) => {
+        console.error('[❌ Location] Geolocation error:', err);
+        alert(`❌ Failed to get your location: ${err.message}`);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000,
+      }
+    );
+  }, []);
+
+
   useEffect(() => {
     if (!locationLoaded) fetchUserLocation();
   }, [ fetchUserLocation,locationLoaded]);
