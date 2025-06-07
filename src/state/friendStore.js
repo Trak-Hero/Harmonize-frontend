@@ -94,35 +94,39 @@ export const useFriendStore = create(
 
       fetchAllFriends: async () => {
         const currentUserId = get().currentUserId;
-        if (!currentUserId) {
-          console.warn('[friendStore] fetchAllFriends skipped: no current user');
-          return;
-        }
+        if (!currentUserId) return;
 
         set({ isLoading: true });
-
         try {
-          // Get current user data
-          const res = await axios.get(`${API}/api/users/${currentUserId}`);
-          const user = res.data;
-          const followedIds = user.following || [];
+          const { data: user } = await axios.get(`${API}/api/users/${currentUserId}`);
 
-          console.log('[friendStore] Fetching friends:', followedIds);
+          // both directions count as “friends”
+          const ids = [
+            ...(user.following ?? []),
+            ...(user.followers ?? [])
+          ]
+            .map(u => (typeof u === 'string' ? u : u._id)) // extract the _id if populated
+            .filter(id => String(id) !== String(currentUserId)); // never include yourself
 
-          for (const friendId of followedIds) {
-            try {
-              const friendRes = await axios.get(`${API}/api/users/${friendId}`);
-              get().addFriendToStore(friendRes.data);
-            } catch (innerErr) {
-              console.warn(`[friendStore] Failed to fetch friend ${friendId}:`, innerErr.message);
-            }
-          }
+          // deduplicate
+          const uniqueIds = [...new Set(ids)];
+
+          // pull every profile in parallel
+          const responses = await Promise.allSettled(
+            uniqueIds.map(id => axios.get(`${API}/api/users/${id}`))
+          );
+
+          responses
+            .filter(r => r.status === 'fulfilled' && r.value.status === 200)
+            .forEach(r => get().addFriendToStore(r.value.data));
+
         } catch (err) {
           console.error('[friendStore] fetchAllFriends error:', err.message);
         } finally {
           set({ isLoading: false });
         }
       },
+
     }),
     {
       name: 'friend-store',
