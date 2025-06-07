@@ -81,6 +81,9 @@ const MapPage = () => {
         return { ...f, distance };
       });
 
+      console.log('[👥 Loaded friends]:', friends); // 👈
+      console.log('[📍 Friends with valid locations]:', enriched); // 👈
+
     setAllFriends(enriched);
     setFilteredFriends(enriched);
   }, [friends, userLocation]);

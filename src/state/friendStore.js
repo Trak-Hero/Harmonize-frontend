@@ -23,9 +23,9 @@ export const useFriendStore = create(
         if (!userDoc || !userDoc._id) return;
 
         set((state) => {
-          const updated = state.friends.some((u) => String(u._id) === String(userDoc._id));
+          const exists = state.friends.some((u) => String(u._id) === String(userDoc._id));
           return {
-            friends: updated
+            friends: exists
               ? state.friends.map((u) =>
                   String(u._id) === String(userDoc._id) ? { ...u, ...userDoc } : u
                 )
@@ -36,9 +36,7 @@ export const useFriendStore = create(
 
       followUser: async (friendId) => {
         try {
-          const res = await axios.post(`${API}/api/users/${friendId}/follow`, {
-            withCredentials: true,
-          });
+          const res = await axios.post(`${API}/api/users/${friendId}/follow`);
           if (res.status !== 201) return;
 
           const { current, target } = res.data;
@@ -60,9 +58,7 @@ export const useFriendStore = create(
 
       unfollowUser: async (friendId) => {
         try {
-          const res = await axios.delete(`${API}/api/users/${friendId}/follow`, {
-            withCredentials: true,
-          });
+          const res = await axios.delete(`${API}/api/users/${friendId}/follow`);
           if (res.status !== 200) return;
 
           const { current, target } = res.data;
@@ -85,10 +81,7 @@ export const useFriendStore = create(
       fetchFriend: async (friendId) => {
         set({ isLoading: true });
         try {
-          const res = await axios.get(`${API}/api/users/${friendId}`, {
-            timeout: 10000,
-            withCredentials: true,
-          });
+          const res = await axios.get(`${API}/api/users/${friendId}`);
           if (res.status === 200) {
             get().addFriendToStore(res.data);
           }
@@ -110,11 +103,7 @@ export const useFriendStore = create(
 
         try {
           // Get current user data
-          const res = await axios.get(`${API}/api/users/${currentUserId}`, {
-            timeout: 10000,
-            withCredentials: true,
-          });
-
+          const res = await axios.get(`${API}/api/users/${currentUserId}`);
           const user = res.data;
           const followedIds = user.following || [];
 
@@ -122,10 +111,7 @@ export const useFriendStore = create(
 
           for (const friendId of followedIds) {
             try {
-              const friendRes = await axios.get(`${API}/api/users/${friendId}`, {
-                timeout: 10000,
-                withCredentials: true,
-              });
+              const friendRes = await axios.get(`${API}/api/users/${friendId}`);
               get().addFriendToStore(friendRes.data);
             } catch (innerErr) {
               console.warn(`[friendStore] Failed to fetch friend ${friendId}:`, innerErr.message);
