@@ -26,23 +26,56 @@ const promptForLocation = async () => {
   if (!confirm) return;
 
   navigator.geolocation.getCurrentPosition(
-    (position) => {
+    async (position) => {
       const { latitude, longitude } = position.coords;
+      
+      // Validate coordinates before saving
+      if (latitude === 0 && longitude === 0) {
+        console.error('Invalid coordinates received: 0,0');
+        alert("❌ Invalid location detected. Please try again.");
+        return;
+      }
+      
+      if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+        console.error('Invalid coordinates received:', { latitude, longitude });
+        alert("❌ Invalid location detected. Please try again.");
+        return;
+      }
+      
+      console.log('📍 Valid location received:', { latitude, longitude });
       useLocationStore.getState().setUserLocation({ latitude, longitude });
 
-      fetch(`${API_BASE}/api/users/location`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ latitude, longitude }),
-      });
+      try {
+        const response = await fetch(`${API_BASE}/api/users/location`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ latitude, longitude }),
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          console.error('Location save failed:', error);
+          alert("❌ Failed to save your location. Please try again.");
+        } else {
+          console.log('✅ Location saved successfully');
+        }
+      } catch (err) {
+        console.error('Location save error:', err);
+        alert("❌ Failed to save your location. Please try again.");
+      }
     },
-    () => {
-      alert("❌ Failed to get your location. Please allow it in browser settings.");
+    (error) => {
+      console.error('Geolocation error:', error);
+      alert(`❌ Failed to get your location: ${error.message}. Please allow location access in browser settings.`);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 300000 // 5 minutes
     }
   );
 };
-
 const MapPage = () => {
   const [events, setEvents] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
@@ -60,7 +93,7 @@ const MapPage = () => {
 
   useEffect(() => {
     if (!locationLoaded) fetchUserLocation();
-  }, [locationLoaded]);
+  }, [ fetchUserLocation,locationLoaded]);
 
   useEffect(() => {
     if (!userLocation && locationLoaded) promptForLocation();
