@@ -6,6 +6,7 @@ import useLocationStore from '../../state/locationStore';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
+
 const LocationMarker = () => {
   const [position, setPosition] = useState(null);
 
@@ -52,29 +53,61 @@ const getColor = (name) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
+const OPENCAGE_KEY = import.meta.env.VITE_OPENCAGE_API_KEY;
+
 const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
   const markerRefs = useRef({});
   const fetchedKeysRef = useRef(new Set());
   const [cityMap, setCityMap] = useState({});
   const map = useMap();
 
+  // ✅ Reverse geocode friends' coordinates to city names
   useEffect(() => {
-    friends.forEach(async (friend) => {
-      const [lng, lat] = friend.location.coordinates;
-      const key = `${lat},${lng}`;
-      if (!fetchedKeysRef.current.has(key)) {
+    if (!friends?.length || !OPENCAGE_KEY) return;
+
+    const controller = new AbortController();
+
+    const fetchCities = async () => {
+      const promises = friends.map(async (friend) => {
+        const [lng, lat] = friend.location?.coordinates || [];
+        if (lat == null || lng == null) return;
+
+        const key = `${lat},${lng}`;
+        if (fetchedKeysRef.current.has(key)) return;
+
         fetchedKeysRef.current.add(key);
+
         try {
-          const res = await fetch(`${API_BASE}/api/geocode/reverse?lat=${lat}&lon=${lng}&addressdetails=1`);
+          const res = await fetch(
+            `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_KEY}`,
+            { signal: controller.signal }
+          );
           const data = await res.json();
-          setCityMap((prev) => ({ ...prev, [key]: data.city || 'Unknown' }));
-        } catch {
-          setCityMap((prev) => ({ ...prev, [key]: 'Unknown' }));
+          const components = data?.results?.[0]?.components;
+          const city =
+            components?.city ||
+            components?.town ||
+            components?.village ||
+            components?.state ||
+            'Unknown';
+
+          setCityMap((prev) => ({ ...prev, [key]: city }));
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            setCityMap((prev) => ({ ...prev, [key]: 'Unknown' }));
+          }
         }
-      }
-    });
+      });
+
+      await Promise.all(promises);
+    };
+
+    fetchCities();
+
+    return () => controller.abort();
   }, [friends]);
 
+  // 📍 Focus on selected friend
   useEffect(() => {
     if (selectedFriendId && markerRefs.current[selectedFriendId]) {
       const marker = markerRefs.current[selectedFriendId];

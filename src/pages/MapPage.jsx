@@ -9,7 +9,6 @@ import useLocationStore from '../state/locationStore';
 import useFriendStore from '../state/friendStore';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-console.log("API_BASE:", API_BASE);
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -25,30 +24,24 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 const promptForLocation = async () => {
   const confirm = window.confirm("Allow location access to show events and friends near you?");
   if (!confirm) return;
-  console.log("Prompting for location...")
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
       const { latitude, longitude } = position.coords;
-      // Store it in Zustand, Context, or send to backend:
       useLocationStore.getState().setUserLocation({ latitude, longitude });
 
-      // Optionally POST to backend:
       fetch(`${API_BASE}/api/users/location`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ latitude, longitude }),
       });
     },
-    (error) => {
+    () => {
       alert("❌ Failed to get your location. Please allow it in browser settings.");
     }
   );
 };
-
 
 const MapPage = () => {
   const [events, setEvents] = useState([]);
@@ -61,25 +54,37 @@ const MapPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedFriendId, setSelectedFriendId] = useState(null);
+
   const { userLocation, fetchUserLocation, locationLoaded } = useLocationStore();
-  const { currentUserId, fetchAllFriends } = useFriendStore();
+  const { currentUserId, friends, fetchAllFriends } = useFriendStore();
 
   useEffect(() => {
-    if (!locationLoaded) {
-      fetchUserLocation();
-    }
+    if (!locationLoaded) fetchUserLocation();
   }, [locationLoaded]);
 
   useEffect(() => {
-    if (!userLocation && locationLoaded) {
-      promptForLocation();
-    }
+    if (!userLocation && locationLoaded) promptForLocation();
   }, [userLocation, locationLoaded]);
 
+  useEffect(() => {
+    if (userLocation && currentUserId) fetchAllFriends();
+  }, [userLocation, currentUserId, fetchAllFriends]);
 
+  useEffect(() => {
+    if (!userLocation) return;
 
+    const enriched = friends
+      .filter(f => f.location?.coordinates?.length === 2)
+      .map(f => {
+        const [lng, lat] = f.location.coordinates;
+        const distance = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
+        return { ...f, distance };
+      });
 
-  // Fetch events based on user location
+    setAllFriends(enriched);
+    setFilteredFriends(enriched);
+  }, [friends, userLocation]);
+
   useEffect(() => {
     async function loadEvents() {
       const radius = filters.distance || 100;
@@ -97,7 +102,6 @@ const MapPage = () => {
           };
         });
 
-
         setEvents(enriched);
         setAllEvents(enriched);
       } catch (err) {
@@ -105,63 +109,9 @@ const MapPage = () => {
       }
     }
 
-    if (userLocation || filters.distance) {
-      loadEvents();
-    }
+    if (userLocation || filters.distance) loadEvents();
   }, [userLocation, filters.distance]);
 
-  // Fetch real friends from the backend
-  useEffect(() => {
-  async function loadFriends() {
-    try {
-      const res = await fetch(`${API_BASE}/spotify/friends/top`, {
-        credentials: 'include'
-      });
-
-      const contentType = res.headers.get('content-type');
-      const isJson = contentType && contentType.includes('application/json');
-
-      if (!res.ok) {
-        const raw = await res.text();
-        console.error('🚫 Backend error (likely not authenticated):', raw);
-        throw new Error(`Fetch failed with status ${res.status}`);
-      }
-
-      if (!isJson) {
-        const raw = await res.text();
-        console.error('❌ Not JSON:', raw);
-        throw new Error('Server did not return JSON');
-      }
-
-      const data = await res.json();
-
-      const enriched = data.friends
-        .filter(f => f.friend?.location?.coordinates)
-        .map(({ friend, topArtists, topTracks }) => {
-          const [lng, lat] = friend.location.coordinates;
-          const distance = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lng);
-          return {
-            ...friend,
-            distance,
-            topArtists,
-            topTracks,
-          };
-        });
-
-      setAllFriends(enriched);
-      setFilteredFriends(enriched);
-    } catch (err) {
-      console.error('❌ Error loading friends:', err.message);
-    }
-  }
-
-  if (userLocation) {
-    loadFriends();
-  }
-}, [userLocation]);
-
-
-  // Filter and sort friends
   useEffect(() => {
     let filtered = [...allFriends];
 
@@ -185,7 +135,6 @@ const MapPage = () => {
     setFilteredFriends(filtered);
   }, [filters, searchTerm, allFriends]);
 
-  // Filter and sort events
   useEffect(() => {
     let filtered = [...allEvents];
 
@@ -215,12 +164,6 @@ const MapPage = () => {
 
     setEvents(filtered);
   }, [filters, searchTerm, allEvents]);
-
-  useEffect(() => {
-  if (userLocation && currentUserId) {
-    fetchAllFriends();
-  }
-}, [userLocation, currentUserId, fetchAllFriends]);
 
   const genreOptions = Array.from(new Set(allEvents.map(e => e.genre))).sort();
 
