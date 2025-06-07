@@ -243,7 +243,7 @@ export default function BlendPage() {
           >
             {selectedUser
               ? `Change from ${selectedUser.displayName}`
-              : 'Select Real User'}
+              : 'Select Friend'}
           </button>
         </div>
 

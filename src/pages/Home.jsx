@@ -53,6 +53,13 @@ export default function Home() {
           console.log("First item artists field:", recRes.data[0].artists);
         }
 
+        if (!Array.isArray(recRes.data)) {
+          console.error("❌ Unexpected response (not an array):", recRes.data);
+          setError("We couldn't load recommendations. Are you logged in?");
+          return;
+        }
+
+
         // Fix the artist name mapping here with better debugging
         const mappedRecommendations = (recRes.data ?? []).map((track, index) => {
           console.log(`Processing track ${index}:`, track);

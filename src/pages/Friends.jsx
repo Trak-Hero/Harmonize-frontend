@@ -1,33 +1,47 @@
-/* ------------------------------------------------------------ */
-import { useState, useEffect }          from 'react';
-import { useAuthStore }      from '../state/authStore';
-import useFriendStore        from '../state/friendStore';
+import { useState, useEffect } from 'react';
+import { useAuthStore } from '../state/authStore';
+import useFriendStore from '../state/friendStore';
 
-import FriendCard            from '../components/FriendsPage/FriendCard';
-import FriendSearchModal     from '../components/FriendsPage/FriendSearch';
+import FriendCard from '../components/FriendsPage/FriendCard';
+import FriendSearchModal from '../components/FriendsPage/FriendSearch';
 
 export default function Friends() {
   const [open, setOpen] = useState(false);
-  const { fetchFriends } = useFriendStore();
-
-  useEffect(() => {
-    fetchFriends?.();
-  }, [fetchFriends]);
-
-  /* auth */
   const { user: authUser } = useAuthStore();
-  const myId               = authUser?._id || authUser?.id;
+  const { 
+    friends = [], 
+    fetchFriends, 
+    followUser, 
+    unfollowUser, 
+    setCurrentUserId 
+  } = useFriendStore();
 
-  /* friends store */
-  const { friends = [], followUser, unfollowUser } = useFriendStore();
+  // Set current user ID when component mounts
+  useEffect(() => {
+    if (authUser?._id) {
+      setCurrentUserId(authUser._id);
+    }
+  }, [authUser, setCurrentUserId]);
 
-  /* show only the people I follow */
-  const me = friends.find((f) => String(f._id || f.id) === String(authUser?._id || authUser?.id));
+  // Fetch friends when component mounts
+  useEffect(() => {
+    if (authUser?._id) {
+      fetchFriends?.();
+    }
+  }, [fetchFriends, authUser]);
+
+  const myId = authUser?._id || authUser?.id;
+
+  // Find current user in friends store
+  const me = friends.find((f) => String(f._id || f.id) === String(myId));
   const following = me?.following ?? [];
 
+  // Show only the people I follow
   const visible = friends.filter((f) =>
-    following.some((fid) => String(fid) === String(f._id || f.id))
+    following.some((fid) => String(fid) === String(f._id || f.id)) &&
+    String(f._id || f.id) !== String(myId) // Don't show self
   );
+
   return (
     <div className="w-full max-w-5xl mx-auto pt-8 px-4">
       {/* header + button */}
@@ -56,7 +70,7 @@ export default function Friends() {
       ) : (
         <div className="mt-24 w-full flex justify-center">
           <p className="max-w-xs text-center text-gray-400">
-            You don’t follow anyone yet. Add a friend to see their activity here.
+            You don't follow anyone yet. Add a friend to see their activity here.
           </p>
         </div>
       )}
