@@ -34,16 +34,61 @@ export const useFriendStore = create(
         });
       },
 
+      // ADD THIS MISSING FUNCTION
+      fetchFriends: async () => {
+        set({ isLoading: true });
+        try {
+          const res = await axios.get(`${API}/api/users/me`);
+          if (res.status === 200) {
+            const currentUser = res.data;
+            get().addFriendToStore(currentUser);
+            
+            // Fetch following users
+            if (currentUser.following?.length > 0) {
+              const followingPromises = currentUser.following.map(id => 
+                axios.get(`${API}/api/users/${id}`)
+              );
+              
+              const responses = await Promise.allSettled(followingPromises);
+              responses.forEach(response => {
+                if (response.status === 'fulfilled' && response.value.status === 200) {
+                  get().addFriendToStore(response.value.data);
+                }
+              });
+            }
+          }
+        } catch (err) {
+          console.error('[friendStore] fetchFriends error:', err);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
       followUser: async (friendId) => {
         try {
           const res = await axios.post(`${API}/api/users/${friendId}/follow`);
           if (res.status !== 201) return;
 
-          // Get the full user doc for the followed user
-          const { data: updatedUser } = await axios.get(`${API}/api/users/${friendId}`);
-          set((state) => ({
-            friends: [...state.friends, updatedUser]
-          }));
+          // Update current user's following list
+          set((state) => {
+            const currentUser = state.friends.find(f => String(f._id) === String(state.currentUserId));
+            if (currentUser) {
+              const updatedUser = {
+                ...currentUser,
+                following: [...(currentUser.following || []), friendId]
+              };
+              return {
+                friends: state.friends.map(f => 
+                  String(f._id) === String(currentUser._id) ? updatedUser : f
+                )
+              };
+            }
+            return state;
+          });
+
+          // Fetch the followed user's data
+          const { data: followedUser } = await axios.get(`${API}/api/users/${friendId}`);
+          get().addFriendToStore(followedUser);
 
           console.log('[friendStore] followUser → updated store');
         } catch (err) {
@@ -56,9 +101,22 @@ export const useFriendStore = create(
           const res = await axios.delete(`${API}/api/users/${friendId}/follow`);
           if (res.status !== 200) return;
 
-          set((state) => ({
-            friends: state.friends.filter((f) => String(f._id) !== String(friendId))
-          }));
+          // Update current user's following list
+          set((state) => {
+            const currentUser = state.friends.find(f => String(f._id) === String(state.currentUserId));
+            if (currentUser) {
+              const updatedUser = {
+                ...currentUser,
+                following: (currentUser.following || []).filter(id => String(id) !== String(friendId))
+              };
+              return {
+                friends: state.friends.map(f => 
+                  String(f._id) === String(currentUser._id) ? updatedUser : f
+                )
+              };
+            }
+            return state;
+          });
 
           console.log('[friendStore] unfollowUser → updated store');
         } catch (err) {
@@ -66,7 +124,7 @@ export const useFriendStore = create(
         }
       },
 
-
+      // Keep existing functions...
       fetchFriend: async (friendId) => {
         set({ isLoading: true });
         try {
@@ -117,7 +175,6 @@ export const useFriendStore = create(
           set({ isLoading: false });
         }
       }
-
     }),
     {
       name: 'friend-store',
