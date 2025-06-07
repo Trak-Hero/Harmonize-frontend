@@ -7,6 +7,9 @@ const API = import.meta.env.VITE_API_BASE_URL;
 axios.defaults.withCredentials = true;
 console.log('🌐 API base URL:', API);
 
+// Helper to combine two arrays of IDs without duplicates
+const union = (a = [], b = []) => [...new Set([...a.map(String), ...b.map(String)])];
+
 export const useFriendStore = create(
   persist(
     (set, get) => ({
@@ -32,7 +35,14 @@ export const useFriendStore = create(
           return {
             friends: exists
               ? state.friends.map((u) =>
-                  String(u._id) === String(userDoc._id) ? { ...u, ...userDoc } : u
+                  String(u._id) === String(userDoc._id)
+                    ? {
+                        ...u,
+                        ...userDoc,
+                        following: union(u.following, userDoc.following),
+                        followers: union(u.followers, userDoc.followers),
+                      }
+                    : u
                 )
               : [...state.friends, userDoc],
           };
@@ -87,7 +97,7 @@ export const useFriendStore = create(
 
             const updatedMe = {
               ...me,
-              following: [...(me.following || []), friendId],
+              following: union(me.following, [friendId]),
             };
 
             return {
