@@ -39,8 +39,13 @@ export const useFriendStore = create(
           const res = await axios.post(`${API}/api/users/${friendId}/follow`);
           if (res.status !== 201) return;
 
-          console.log('[friendStore] followUser → follow succeeded, now refreshing list');
-          await get().fetchAllFriends();
+          // Get the full user doc for the followed user
+          const { data: updatedUser } = await axios.get(`${API}/api/users/${friendId}`);
+          set((state) => ({
+            friends: [...state.friends, updatedUser]
+          }));
+
+          console.log('[friendStore] followUser → updated store');
         } catch (err) {
           console.error('[friendStore] followUser error:', err);
         }
@@ -51,12 +56,16 @@ export const useFriendStore = create(
           const res = await axios.delete(`${API}/api/users/${friendId}/follow`);
           if (res.status !== 200) return;
 
-          console.log('[friendStore] unfollowUser → unfollow succeeded, now refreshing list');
-          await get().fetchAllFriends();
+          set((state) => ({
+            friends: state.friends.filter((f) => String(f._id) !== String(friendId))
+          }));
+
+          console.log('[friendStore] unfollowUser → updated store');
         } catch (err) {
           console.error('[friendStore] unfollowUser error:', err);
         }
       },
+
 
       fetchFriend: async (friendId) => {
         set({ isLoading: true });
