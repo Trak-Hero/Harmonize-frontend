@@ -35,29 +35,28 @@ export const useFriendStore = create(
       },
 
       followUser: async (friendId) => {
-          try {
-            const res = await axios.post(`${API}/api/users/${friendId}/follow`);
-            if (res.status !== 201) return;
+        try {
+          const res = await axios.post(`${API}/api/users/${friendId}/follow`);
+          if (res.status !== 201) return;
 
-            console.log('[friendStore] followUser → follow succeeded, now refreshing list');
-            await get().fetchAllFriends();
-          } catch (err) {
-            console.error('[friendStore] followUser error:', err);
-          }
-        },
+          console.log('[friendStore] followUser → follow succeeded, now refreshing list');
+          await get().fetchAllFriends();
+        } catch (err) {
+          console.error('[friendStore] followUser error:', err);
+        }
+      },
 
       unfollowUser: async (friendId) => {
-          try {
-            const res = await axios.delete(`${API}/api/users/${friendId}/follow`);
-            if (res.status !== 200) return;
+        try {
+          const res = await axios.delete(`${API}/api/users/${friendId}/follow`);
+          if (res.status !== 200) return;
 
-            console.log('[friendStore] unfollowUser → unfollow succeeded, now refreshing list');
-            await get().fetchAllFriends();
-          } catch (err) {
-            console.error('[friendStore] unfollowUser error:', err);
-          }
-        },
-
+          console.log('[friendStore] unfollowUser → unfollow succeeded, now refreshing list');
+          await get().fetchAllFriends();
+        } catch (err) {
+          console.error('[friendStore] unfollowUser error:', err);
+        }
+      },
 
       fetchFriend: async (friendId) => {
         set({ isLoading: true });
@@ -81,25 +80,24 @@ export const useFriendStore = create(
         try {
           const { data: user } = await axios.get(`${API}/api/users/${currentUserId}`);
 
-          // both directions count as “friends”
           const ids = [
             ...(user.following ?? []),
             ...(user.followers ?? [])
           ]
-            .map(u => (typeof u === 'string' ? u : u._id)) // extract the _id if populated
-            .filter(id => String(id) !== String(currentUserId)); // never include yourself
+            .map(u => (typeof u === 'string' ? u : u._id))
+            .filter(id => String(id) !== String(currentUserId));
 
-          // deduplicate
           const uniqueIds = [...new Set(ids)];
 
-          // pull every profile in parallel
           const responses = await Promise.allSettled(
             uniqueIds.map(id => axios.get(`${API}/api/users/${id}`))
           );
 
-          responses
+          const validFriends = responses
             .filter(r => r.status === 'fulfilled' && r.value.status === 200)
-            .forEach(r => get().addFriendToStore(r.value.data));
+            .map(r => r.value.data);
+
+          set({ friends: validFriends });
 
         } catch (err) {
           console.error('[friendStore] fetchAllFriends error:', err.message);
@@ -107,7 +105,6 @@ export const useFriendStore = create(
           set({ isLoading: false });
         }
       },
-
     }),
     {
       name: 'friend-store',
