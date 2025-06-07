@@ -4,6 +4,10 @@ const useLocationStore = create((set) => ({
   userLocation: null,
   locationError: null,
 
+  setUserLocation: ({ latitude, longitude }) => {
+    set({ userLocation: { latitude, longitude } });
+  },
+
   fetchUserLocation: () => {
     if (!navigator.geolocation) {
       set({ locationError: 'Geolocation not supported' });
