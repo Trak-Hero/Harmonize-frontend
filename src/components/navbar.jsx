@@ -11,6 +11,7 @@ import {
   SpotifyLogo,
   SignIn,
   SignOut,
+  Flask,
 } from '@phosphor-icons/react';
 
 export default function Navbar() {
@@ -38,7 +39,7 @@ export default function Navbar() {
     { name: "Discover", icon: <Compass size={18} weight="regular" /> },
     { name: "Friends", icon: <Users size={18} weight="regular" /> },
     { name: "Map", icon: <MapTrifold size={18} weight="regular" /> },
-    { name: "Blend", icon: <MapTrifold size={18} weight="regular" /> },
+    { name: "Blend", icon: <Flask size={18} weight="regular" /> },
     { name: "Galaxy", icon: <Planet size={18} weight="regular" /> },
   ];
 
