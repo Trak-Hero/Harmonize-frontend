@@ -6,6 +6,7 @@ import SearchBar from '../components/map/searchBar';
 import MapView from '../components/map/mapView';
 import { fetchEventsByLocation } from '../api/ticketmaster';
 import useLocationStore from '../state/locationStore';
+import useFriendStore from '../state/friendStore';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 console.log("API_BASE:", API_BASE);
@@ -61,6 +62,7 @@ const MapPage = () => {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedFriendId, setSelectedFriendId] = useState(null);
   const { userLocation, fetchUserLocation, locationLoaded } = useLocationStore();
+  const { currentUserId, fetchAllFriends } = useFriendStore();
 
   useEffect(() => {
     if (!locationLoaded) {
@@ -213,6 +215,12 @@ const MapPage = () => {
 
     setEvents(filtered);
   }, [filters, searchTerm, allEvents]);
+
+  useEffect(() => {
+  if (userLocation && currentUserId) {
+    fetchAllFriends();
+  }
+}, [userLocation, currentUserId, fetchAllFriends]);
 
   const genreOptions = Array.from(new Set(allEvents.map(e => e.genre))).sort();
 

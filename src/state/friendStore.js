@@ -98,12 +98,51 @@ export const useFriendStore = create(
           set({ isLoading: false });
         }
       },
+
+      fetchAllFriends: async () => {
+        const currentUserId = get().currentUserId;
+        if (!currentUserId) {
+          console.warn('[friendStore] fetchAllFriends skipped: no current user');
+          return;
+        }
+
+        set({ isLoading: true });
+
+        try {
+          // Get current user data
+          const res = await axios.get(`${API}/api/users/${currentUserId}`, {
+            timeout: 10000,
+            withCredentials: true,
+          });
+
+          const user = res.data;
+          const followedIds = user.following || [];
+
+          console.log('[friendStore] Fetching friends:', followedIds);
+
+          for (const friendId of followedIds) {
+            try {
+              const friendRes = await axios.get(`${API}/api/users/${friendId}`, {
+                timeout: 10000,
+                withCredentials: true,
+              });
+              get().addFriendToStore(friendRes.data);
+            } catch (innerErr) {
+              console.warn(`[friendStore] Failed to fetch friend ${friendId}:`, innerErr.message);
+            }
+          }
+        } catch (err) {
+          console.error('[friendStore] fetchAllFriends error:', err.message);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
     }),
     {
       name: 'friend-store',
       partialize: (s) => ({
         currentUserId: s.currentUserId,
-        friends: s.friends, // ✅ persist friends cache too
+        friends: s.friends,
       }),
     }
   )
