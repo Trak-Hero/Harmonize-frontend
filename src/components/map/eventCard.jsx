@@ -194,10 +194,10 @@ const EventCard = ({ event, onSelect }) => {
                 />
                 <div>
                   <Typography variant="body2" className="font-medium text-gray-800">
-                    Venue
+                    Location
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    {event.venue || 'Location TBD'}
+                    {event.locationName || 'Location TBD'}
                   </Typography>
                 </div>
               </div>

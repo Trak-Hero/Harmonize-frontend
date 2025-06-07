@@ -60,20 +60,20 @@ const MapPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedFriendId, setSelectedFriendId] = useState(null);
-
-  const { userLocation, fetchUserLocation } = useLocationStore();
+  const { userLocation, fetchUserLocation, locationLoaded } = useLocationStore();
 
   useEffect(() => {
-  const fetchOrPromptLocation = async () => {
-    await fetchUserLocation();
-    const stored = useLocationStore.getState().userLocation;
-    if (!stored) {
+    if (!locationLoaded) {
+      fetchUserLocation();
+    }
+  }, [locationLoaded]);
+
+  useEffect(() => {
+    if (!userLocation && locationLoaded) {
       promptForLocation();
     }
-  };
+  }, [userLocation, locationLoaded]);
 
-  fetchOrPromptLocation();
-}, [fetchUserLocation]);
 
 
 
@@ -87,10 +87,15 @@ const MapPage = () => {
 
       try {
         const rawEvents = await fetchEventsByLocation(latitude, longitude, radius);
-        const enriched = rawEvents.map(e => ({
-          ...e,
-          distance: calculateDistance(latitude, longitude, e.location.coordinates[1], e.location.coordinates[0])
-        }));
+        const enriched = rawEvents.map((e) => {
+          const [lng, lat] = e.location.coordinates;
+          return {
+            ...e,
+            distance: calculateDistance(latitude, longitude, lat, lng),
+          };
+        });
+
+
         setEvents(enriched);
         setAllEvents(enriched);
       } catch (err) {
@@ -214,7 +219,7 @@ const MapPage = () => {
   return (
     <div className="w-screen h-screen flex bg-gradient-to-b from-[#012e40] via-[#001c29] to-black text-white">
       <div className="flex flex-1 overflow-hidden h-full">
-        <div className="w-[24rem] min-w-[300px] top-50 p-6 space-y-6 bg-black/30 backdrop-blur-lg overflow-y-auto max-h-screen">
+        <div className="w-[24rem] min-w-[300px] top-50 p-6 space-y-3 bg-black/30 backdrop-blur-lg overflow-y-auto max-h-screen">
           <SearchBar onSearchChange={setSearchTerm} />
           <FilterBar onFilterChange={setFilters} genres={genreOptions} />
           <EventList events={showEvents ? events : []} onSelect={setSelectedEventId} visible={showEvents} />
