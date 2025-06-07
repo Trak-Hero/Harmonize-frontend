@@ -80,12 +80,15 @@ export const useFriendStore = create(
         try {
           const { data: user } = await axios.get(`${API}/api/users/${currentUserId}`);
 
+          const extractId = (entry) =>
+            typeof entry === 'string' ? entry : entry?._id;
+
           const ids = [
             ...(user.following ?? []),
-            ...(user.followers ?? [])
+            ...(user.followers ?? []),
           ]
-            .map(u => (typeof u === 'string' ? u : u._id))
-            .filter(id => String(id) !== String(currentUserId));
+            .map(extractId)
+            .filter(id => id && String(id) !== String(currentUserId));
 
           const uniqueIds = [...new Set(ids)];
 
@@ -104,7 +107,8 @@ export const useFriendStore = create(
         } finally {
           set({ isLoading: false });
         }
-      },
+      }
+
     }),
     {
       name: 'friend-store',
