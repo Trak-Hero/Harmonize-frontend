@@ -21,6 +21,34 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
+const promptForLocation = async () => {
+  const confirm = window.confirm("Allow location access to show events and friends near you?");
+  if (!confirm) return;
+  console.log("Prompting for location...")
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+      // Store it in Zustand, Context, or send to backend:
+      useLocationStore.getState().setUserLocation({ latitude, longitude });
+
+      // Optionally POST to backend:
+      fetch(`${API_BASE}/api/users/location`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ latitude, longitude }),
+      });
+    },
+    (error) => {
+      alert("❌ Failed to get your location. Please allow it in browser settings.");
+    }
+  );
+};
+
+
 const MapPage = () => {
   const [events, setEvents] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
@@ -36,8 +64,18 @@ const MapPage = () => {
   const { userLocation, fetchUserLocation } = useLocationStore();
 
   useEffect(() => {
-    fetchUserLocation();
-  }, [fetchUserLocation]);
+  const fetchOrPromptLocation = async () => {
+    await fetchUserLocation();
+    const stored = useLocationStore.getState().userLocation;
+    if (!stored) {
+      promptForLocation();
+    }
+  };
+
+  fetchOrPromptLocation();
+}, [fetchUserLocation]);
+
+
 
   // Fetch events based on user location
   useEffect(() => {
