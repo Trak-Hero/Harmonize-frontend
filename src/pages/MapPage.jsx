@@ -81,8 +81,12 @@ const MapPage = () => {
         return { ...f, distance };
       });
 
-      console.log('[👥 Loaded friends]:', friends); // 👈
-      console.log('[📍 Friends with valid locations]:', enriched); // 👈
+    // 🔍 DEBUG: Add these console logs to see what's happening
+    console.log('[🔍 DEBUG] All friends from store:', friends);
+    console.log('[🔍 DEBUG] Friends with location data:', friends.filter(f => f.location));
+    console.log('[🔍 DEBUG] Friends with valid coordinates:', friends.filter(f => f.location?.coordinates?.length === 2));
+    console.log('[🔍 DEBUG] Your location:', userLocation);
+    console.log('[🔍 DEBUG] Enriched friends with distances:', enriched);
 
     setAllFriends(enriched);
     setFilteredFriends(enriched);
