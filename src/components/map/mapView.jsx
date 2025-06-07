@@ -7,6 +7,20 @@ import useLocationStore from '../../state/locationStore';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 
+const UserMarker = () => {
+  const { userLocation } = useLocationStore();
+
+  if (!userLocation) return null;
+
+  return (
+    <Marker position={[userLocation.latitude, userLocation.longitude]}>
+      <Popup>
+        You are here
+      </Popup>
+    </Marker>
+  );
+};
+
 const LocationMarker = () => {
   const [position, setPosition] = useState(null);
 
@@ -346,26 +360,41 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
   });
 };
 
-const MapView = ({ events, showEvents, setShowEvents, showFriends, setShowFriends, selectedEventId, friends, selectedFriendId }) => {
+const MapView = ({
+  events,
+  showEvents,
+  setShowEvents,
+  showFriends,
+  setShowFriends,
+  selectedEventId,
+  friends,
+  selectedFriendId,
+}) => {
   const { userLocation } = useLocationStore();
   const defaultCenter = { lat: 43.7022, lng: -72.2896 };
-  const center = userLocation ? { lat: userLocation.latitude, lng: userLocation.longitude } : defaultCenter;
+  const center = userLocation
+    ? { lat: userLocation.latitude, lng: userLocation.longitude }
+    : defaultCenter;
 
   return (
     <div className="w-full h-full relative">
       <div className="absolute top-4 left-4 z-[999] space-x-2">
         <button
-          onClick={() => setShowEvents(prev => !prev)}
+          onClick={() => setShowEvents((prev) => !prev)}
           className={`px-4 py-2 rounded-md shadow transition ${
-            showEvents ? 'bg-blue-500 text-white' : 'bg-white text-black hover:bg-gray-300'
+            showEvents
+              ? 'bg-blue-500 text-white'
+              : 'bg-white text-black hover:bg-gray-300'
           }`}
         >
           Events
         </button>
         <button
-          onClick={() => setShowFriends(prev => !prev)}
+          onClick={() => setShowFriends((prev) => !prev)}
           className={`px-4 py-2 rounded-md shadow transition ${
-            showFriends ? 'bg-blue-500 text-white' : 'bg-white text-black hover:bg-gray-300'
+            showFriends
+              ? 'bg-blue-500 text-white'
+              : 'bg-white text-black hover:bg-gray-300'
           }`}
         >
           Friends
@@ -379,11 +408,11 @@ const MapView = ({ events, showEvents, setShowEvents, showFriends, setShowFriend
         className="w-full h-full z-0"
       >
         <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
+          attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapResizeFix />
-        <LocationMarker />
+        <UserMarker /> {/* ✅ This shows your actual location */}
         <FriendsMarkers
           visible={showFriends}
           friends={friends}
@@ -398,5 +427,6 @@ const MapView = ({ events, showEvents, setShowEvents, showFriends, setShowFriend
     </div>
   );
 };
+
 
 export default MapView;
