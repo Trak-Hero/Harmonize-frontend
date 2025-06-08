@@ -23,10 +23,11 @@
 ## Project Description
 Harmonize is a social music discovery platform where users can discover new music, express their taste through customizable profiles, and connect with other listeners. Our goal was to make the experience of finding new music feel more personal, expressive, and socially engaging.
 
-- Customizable profile tiles
+- Discovery Page
 <img width="1512" alt="Screenshot 2025-06-08 at 3 03 42 PM" src="https://github.com/user-attachments/assets/4df9a868-24b9-4b34-badc-789d8bf6caea" />
-- Real-time friend/event map view
+- Home Page
 <img width="1512" alt="Screenshot 2025-06-08 at 3 04 15 PM" src="https://github.com/user-attachments/assets/d8846edc-8ef0-41e5-afc5-31d63adeb767" />
+- Mag Page
 <img width="1512" alt="Screenshot 2025-06-08 at 3 04 33 PM" src="https://github.com/user-attachments/assets/526dc814-0cfa-4978-8ab3-52f704ddd98b" />
 <img width="1507" alt="Screenshot 2025-06-08 at 3 05 21 PM" src="https://github.com/user-attachments/assets/04b895e3-dba9-4fe1-ba9f-cd0504ba3469" />
 <img width="1509" alt="Screenshot 2025-06-08 at 3 05 43 PM" src="https://github.com/user-attachments/assets/fce174a3-7d93-41e2-8442-7ce66cb95584" />
