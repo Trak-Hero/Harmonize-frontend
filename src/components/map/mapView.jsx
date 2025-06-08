@@ -231,16 +231,41 @@ const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
           if (ref) markerRefs.current[friend._id] = ref;
         }}
       >
-        <Popup minWidth={210} maxWidth={260}>
-          <div className="backdrop-blur-sm bg-black/50 rounded-2xl p-4 shadow-xl space-y-2 text-white font-sans">
-            <h2 className="text-md font-semibold">{friend.displayName || friend.username}</h2>
-            <p className="text-sm italic text-gray-300">📍 {city}</p>
-            <div className="flex gap-1">
+        <Popup minWidth={260} maxWidth={300}>
+          <div className="backdrop-blur-sm bg-black/60 rounded-2xl p-4 shadow-xl text-white space-y-4 font-sans">
+            <div className="flex gap-3 items-center">
+              {/* Left: Avatar */}
+              {friend.pfpUrl ? (
+                <img
+                  src={friend.pfpUrl}
+                  alt={friend.displayName || friend.username}
+                  className="w-14 h-14 rounded-lg object-cover border border-white shadow"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow border border-white">
+                  {initials}
+                </div>
+              )}
+
+              {/* Right: Info */}
+              <div className="flex flex-col gap-1 text-sm text-white/90">
+                <h2 className="text-base font-semibold text-white leading-snug">
+                  {friend.displayName || friend.username}
+                </h2>
+                <div className="flex items-center gap-1 text-white/70">
+                  <span>📍</span>
+                  <span>{city}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Map Buttons */}
+            <div className="flex gap-2">
               <a
                 href={`http://maps.apple.com/?daddr=${lat},${lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-xl hover:bg-gray-700 transition"
               >
                 Apple Maps
               </a>
@@ -248,13 +273,14 @@ const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
                 href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-xl hover:bg-gray-700 transition"
               >
                 Google Maps
               </a>
             </div>
           </div>
         </Popup>
+
       </Marker>
     );
   });
