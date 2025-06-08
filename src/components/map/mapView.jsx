@@ -47,7 +47,7 @@ function UserMarker() {
     iconSize: [44, 44],
     iconAnchor: [22, 44],
     popupAnchor: [0, -44],
-    className: '', // prevent leaflet default styling
+    className: 'custom-div-icon',
   });
 
   return (
@@ -127,7 +127,7 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
              <img src="${friend.avatar}" style="width:100%;height:100%;object-fit:cover;" />
            </div>`
         : `<div style="background-color:${getColor(friend.displayName || friend.username)};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:bold;border:2px solid white;box-shadow:0 0 3px rgba(0,0,0,0.3);">${initials}</div>`,
-      iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36],
+      iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36],className: 'custom-div-icon',
     });
 
     return (
@@ -140,7 +140,10 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
         <Popup
           minWidth={260}
           maxWidth={300}
-          onOpen={() => handlePopupOpen(fid)}
+          onOpen={() => {
+            handlePopupOpen(fid);
+            map.flyTo([lat, lng], 15, { duration: 0.5 });
+          }}
         >
           <div className="backdrop-blur-sm bg-black/60 rounded-2xl p-4 shadow-xl text-white space-y-4 font-sans">
             <div className="flex gap-3 items-center">
@@ -165,7 +168,7 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
 
             <Link
               to={`/friends/${fid}`}
-              className="block w-full bg-blue-600 text-white text-center font-semibold py-2 rounded-xl hover:bg-blue-700 transition"
+              className="block w-full bg-white text-blue-600 text-center font-semibold py-2 rounded-lg border border-blue-600 hover:bg-blue-600 hover:text-white transition-colors duration-200"
             >
               Go to Profile
             </Link>
@@ -231,13 +234,19 @@ function EventMarkers({ visible, events = [], selectedEventId }) {
           html: `<div style="background-color:#3B82F6;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:bold;border:2px solid white;box-shadow:0 0 3px rgba(0,0,0,0.3);">
                ${getInitials(event.title)}
              </div>`,
-          iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36],
+          iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36],className: 'custom-div-icon',
         });
 
     return (
       <Marker key={id} position={[lat, lng]} icon={icon}
               ref={ref => ref && (markerRefs.current[id] = ref)}>
-        <Popup minWidth={280} maxWidth={320}>
+        <Popup 
+        minWidth={280} 
+        maxWidth={320}
+        onOpen={() => {
+          map.flyTo([lat, lng], 15, { duration: 0.5 });
+        }}
+        >
           <div className="backdrop-blur-sm bg-black/60 rounded-2xl p-4 shadow-xl text-white space-y-4">
             <div className="flex gap-3 items-center">
               {event.image ? (

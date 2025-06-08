@@ -91,3 +91,31 @@ button:focus-visible {
 .leaflet-popup-close-button {
   display: none !important;
 }
+
+/* 🚫 Kill ALL unwanted styles on Leaflet icons */
+.leaflet-marker-icon,
+.leaflet-div-icon,
+.leaflet-marker-icon.custom-div-icon,
+.leaflet-div-icon.custom-div-icon {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-block !important;
+  width: auto !important;
+  height: auto !important;
+  filter: none !important; /* just in case */
+}
+
+/* Prevent image inside divIcon from getting inherited box */
+.leaflet-marker-icon img,
+.leaflet-div-icon img {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}

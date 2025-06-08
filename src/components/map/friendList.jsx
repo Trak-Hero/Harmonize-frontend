@@ -6,9 +6,12 @@ const FriendList = ({ friends, onSelect, visible=true }) => {
   const { currentUser } = useLocationStore();
   if (!visible) return null;
 
-  const filteredFriends = friends.filter(
-    (friend) => friend._id !== currentUser?._id && friend.id !== currentUser?.id
-  );
+  const filteredFriends = currentUser?.id || currentUser?._id
+  ? friends.filter(
+      (friend) => friend._id !== currentUser._id && friend.id !== currentUser.id
+    )
+  : friends;
+
 
   return (
     <div className="flex flex-col gap-4">
