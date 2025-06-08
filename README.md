@@ -9,7 +9,8 @@
 [Frontend](https://project-music-and-memories-umzm.onrender.com/discover)
 [API Server](https://project-music-and-memories-api.onrender.com/)
 
-TODO: short project description, some sample screenshots or mockups
+## Project Description
+Harmonize is a social music discovery platform where users can discover new music, express their taste through customizable profiles, and connect with other listeners. Our goal was to make the experience of finding new music feel more personal, expressive, and socially engaging.
 
 <img width="1512" alt="Screenshot 2025-06-08 at 3 03 42 PM" src="https://github.com/user-attachments/assets/4df9a868-24b9-4b34-badc-789d8bf6caea" />
 <img width="1512" alt="Screenshot 2025-06-08 at 3 04 15 PM" src="https://github.com/user-attachments/assets/d8846edc-8ef0-41e5-afc5-31d63adeb767" />
