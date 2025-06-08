@@ -16,6 +16,7 @@ import useLocationStore from '../../state/locationStore';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 const OPENCAGE_KEY = import.meta.env.VITE_OPENCAGE_API_KEY;
 
+
 function getInitials(name = '') {
   const words = name.trim().split(' ');
   if (words.length < 2) return words[0]?.[0]?.toUpperCase() || '';
@@ -134,7 +135,16 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
 
   if (!visible) return null;
 
-  return friends.map(friend => {
+  const validFriends = friends.filter(f => {
+    const coords = f.location?.coordinates;
+    return (
+      Array.isArray(coords) &&
+      coords.length === 2 &&
+      (coords[0] !== 0 || coords[1] !== 0)
+    );
+  });
+
+  return validFriends.map(friend => {
     const fid = friend.id || friend._id;
     const [lng, lat] = friend.location.coordinates;
     const city = cityMap[`${lat},${lng}`] || 'Loading...';
