@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
-import { calculateBlendPercentage } from '../../utils/blendCalculator';
 import { Link } from 'react-router-dom';
 import useLocationStore from '../../state/locationStore';
 
@@ -94,7 +93,6 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
   const markerRefs = useRef({});
   const map = useMap();
   const [cityMap, setCityMap] = useState({});
-  const [blendMap, setBlendMap] = useState({}); // friendId → {pct, loading}
 
   // fetch city names
   useEffect(() => {
@@ -126,20 +124,12 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
     }
   }, [selectedFriendId, map]);
 
-  const handlePopupOpen = async (friendId) => {
-    if (blendMap[friendId]?.loading || blendMap[friendId]?.pct != null) return;
-    setBlendMap(prev => ({ ...prev, [friendId]: { pct: null, loading: true } }));
-    const pct = await calculateBlendPercentage(friendId).catch(() => 0);
-    setBlendMap(prev => ({ ...prev, [friendId]: { pct, loading: false } }));
-  };
-
   if (!visible) return null;
 
   return friends.map(friend => {
     const fid = friend.id || friend._id;
     const [lng, lat] = friend.location.coordinates;
     const city = cityMap[`${lat},${lng}`] || 'Loading...';
-    const { pct, loading } = blendMap[fid] || {};
 
     const initials = getInitials(friend.displayName || friend.username);
     const hasAvatar = !!friend.avatar;
@@ -163,7 +153,6 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
           minWidth={260}
           maxWidth={300}
           onOpen={() => {
-            handlePopupOpen(fid);
             map.flyTo([lat, lng], 15, { duration: 0.5 });
           }}
         >
@@ -181,11 +170,6 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
                   <span>{city}</span>
                 </div>
               </div>
-            </div>
-
-            <div className="text-sm font-medium text-white/90">
-              Blend Match:{' '}
-              {loading ? '...' : pct != null ? <span className="font-bold text-green-400">{pct}%</span> : '—'}
             </div>
 
             <Link
