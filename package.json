@@ -40,7 +40,7 @@
     "react-markdown": "^10.1.0",
     "react-resizable": "^3.0.5",
     "react-router-dom": "^7.6.0",
-    "react-simple-maps": "^1.0.0",
+    "react-simple-maps": "^3.0.0",
     "shadcn": "^2.5.0",
     "styled-components": "^6.1.18",
     "three": "^0.177.0",
