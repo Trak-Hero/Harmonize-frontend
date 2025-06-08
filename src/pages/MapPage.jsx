@@ -11,7 +11,7 @@ import useFriendStore from '../state/friendStore';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371;
+  const R = 3958.8;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) ** 2 +
