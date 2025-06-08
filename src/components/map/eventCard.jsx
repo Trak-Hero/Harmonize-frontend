@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
-import PeopleIcon from '@mui/icons-material/People';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
@@ -199,7 +198,7 @@ const EventCard = ({ event, onSelect }) => {
       {/* Main Card */}
       <div
         onClick={handleCardClick}
-        className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border-l-4 border-green-500 text-black shadow transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-95 cursor-pointer h-28 w-full"
+        className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border-l-4 border-green-500 text-black shadow transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-95 cursor-pointer h-24 w-full"
       >
         {hasImage ? (
           <img src={event.image} alt={event.title} className="w-12 h-12 rounded-xl object-cover" />
@@ -221,8 +220,7 @@ const EventCard = ({ event, onSelect }) => {
         </div>
 
 
-        <div className="flex items-center gap-3 text-black/70">
-          <PeopleIcon fontSize="small" />
+        <div className="flex items-center text-black/80">
           <InfoOutlineIcon
             fontSize="small"
             className="cursor-pointer hover:text-green-600 hover:scale-110 transition-all duration-200"
