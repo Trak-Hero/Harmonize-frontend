@@ -220,8 +220,8 @@ export default function BlendPage() {
           <BlendHeader selectedUser={selectedUser} />
           <button
             onClick={() => setShowUserModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white font-semibold hover:from-purple-600 hover:to-pink-600 transition-all"
-          >
+            className="whitespace-nowrap px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-afacad font-semibold hover:from-purple-700 hover:to-pink-700 transition-all"
+            >
             {selectedUser
               ? `Change from ${selectedUser.displayName}`
               : 'Select Friend'}

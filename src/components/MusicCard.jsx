@@ -223,7 +223,7 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
         )}
       </div>
 
-      <div className="p-4 flex flex-col justify-between h-[200px]">
+      <div className="p-4 flex flex-col justify-between min-h-[200px]">
         <div>
           <h2 className="text-2xl font-bold">{item.title}</h2>
           <p className="text-sm text-gray-400">
@@ -268,7 +268,7 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
             </div>
 
             {duration > 0 && (
-              <div className="flex items-center space-x-2 text-xs text-gray-400">
+              <div className="mt-3 flex items-center space-x-2 text-xs text-gray-400">
                 <span>{formatTime(currentTime)}</span>
                 <div className="flex-1 bg-gray-700 rounded-full h-1">
                   <div 

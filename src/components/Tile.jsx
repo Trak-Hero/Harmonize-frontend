@@ -1,4 +1,3 @@
-// src/components/Tile.jsx
 import { useProfileStore } from '../state/profileStore';
 
 const Tile = ({ tile, readOnly = false }) => {

@@ -41,9 +41,8 @@ export default function DifferencesCard({ differences }) {
   }, [expanded, genreDifferences.length, totalToShow]);
 
   return (
-    <div className="bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-700 p-6 rounded-2xl text-white shadow-xl">
-      <h2 className="text-2xl font-serif font-semibold mb-4 text-white">Different Genres</h2>
-
+    <div className="bg-gradient-to-br from-pink-400/70 via-purple-500/70 to-indigo-700/60 p-6 rounded-2xl text-white shadow-xl transform transition-all duration-500 hover:scale-105">
+      <h2 className="text-2xl font-afacad font-semibold mb-4 text-white">Different Genres</h2>
       {hasDifferences ? (
         <>
           <ul className="space-y-2">

@@ -152,9 +152,10 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen text-white text-lg">
+      <div className="bg-black flex items-center justify-center h-screen text-white text-lg">
         <div className="text-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent border-white mx-auto" />          <p>Loading your music...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent border-white mx-auto" />
+        <p>Loading your music...</p>
         </div>
       </div>
     );

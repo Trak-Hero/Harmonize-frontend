@@ -22,9 +22,7 @@ export default function SimilarGenresCard({ genres = [] }) {
   }, [expanded, genres.length, totalToShow]);
 
   return (
-    <div className="bg-gradient-to-br from-green-700 via-lime-400 to-rose-200 p-6 rounded-2xl text-white shadow-xl">
-      <h2 className="text-2xl font-serif font-semibold text-white mb-4">Similar Genres</h2>
-
+  <div className="bg-gradient-to-br from-emerald-600/70 via-lime-400/50 to-green-200/40 p-6 rounded-2xl text-white shadow-xl transform transition-all duration-500 hover:scale-105">      <h2 className="text-2xl font-afacad font-semibold text-white mb-4">Similar Genres</h2>
       {hasGenres ? (
         <>
           <ul className="space-y-2">

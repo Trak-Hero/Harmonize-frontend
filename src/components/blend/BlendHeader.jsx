@@ -25,13 +25,13 @@ export default function BlendHeader({ selectedUser }) {
     <div className={`w-full flex flex-col items-start text-left space-y-2 transition-all duration-1000 ease-out ${
       isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
     }`}>
-      <h1 className={`text-5xl sm:text-[8rem] md:text-[10rem] font-extrabold tracking-tight leading-none transition-all duration-1200 ease-out delay-200 ${
+      <h1 className={`text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-none transition-all duration-1200 ease-out delay-200 ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
       }`}>
-        BLEND MODE
+        Blend Mode
       </h1>
 
-      <p className={`text-3xl italic text-gray-300 transition-all duration-1000 ease-out delay-400 ${
+      <p className={`text-xl italic text-gray-300 transition-all duration-1000 ease-out delay-400 ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
       }`}>
         {selectedUser ? (
@@ -40,7 +40,7 @@ export default function BlendHeader({ selectedUser }) {
           </>
         ) : (
           <>
-            These are <span className="font-semibold text-white underline underline-offset-4">our</span> tastes
+            See how similar your taste is to your friends
           </>
         )}
       </p>

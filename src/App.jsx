@@ -2,7 +2,6 @@ import { Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 
 import Navbar from './components/navbar';
-import Landing from './pages/Landing';
 import MapPage from './pages/MapPage';
 import ForYou from './pages/ForYou';
 import ArtistProfile from './pages/ArtistProfile';
@@ -51,26 +50,28 @@ function App() {
   }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
-      <div className="relative z-20 flex flex-col h-full overflow-auto">
+    <div className="relative w-full h-full">
+      <div className="relative z-20 flex flex-col h-full">
         <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/discover" element={<ForYou />} />
-          <Route path="/artist/:id" element={<ArtistProfile />} />
-          <Route path="/search" element={<SearchResults />} />
-          <Route path="/connect" element={<ConnectSpotify />} />
-          <Route path="/dashboard" element={<SpotifyDashboard />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/friends" element={<Friends />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/friends/:id" element={<FriendProfile />} />
-          <Route path="/create" element={<CreatePost />} />
-          <Route path="/galaxy" element={<Galaxy />} />
-          <Route path="/blend" element={<BlendPage />} />
-        </Routes>
+        <main className="pt-16 flex-1 overflow-auto">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/discover" element={<ForYou />} />
+            <Route path="/artist/:id" element={<ArtistProfile />} />
+            <Route path="/search" element={<SearchResults />} />
+            <Route path="/connect" element={<ConnectSpotify />} />
+            <Route path="/dashboard" element={<SpotifyDashboard />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/map" element={<MapPage />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/friends/:id" element={<FriendProfile />} />
+            <Route path="/create" element={<CreatePost />} />
+            <Route path="/galaxy" element={<Galaxy />} />
+            <Route path="/blend" element={<BlendPage />} />
+          </Routes>
+        </main>
       </div>
     </div>
   );
