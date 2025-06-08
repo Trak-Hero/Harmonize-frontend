@@ -193,9 +193,9 @@ const ForYou = () => {
   }
 
   return (
-    <div className="bg-black text-white min-h-screen">
+    <div className="bg-black text-white min-h-screen flex flex-col">
       {/* Header with Create Post tab */}
-      <div className="relative flex items-center justify-center px-6 py-4 bg-black/80 backdrop-blur-sm shadow-sm">
+      <div className="relative flex items-center justify-center px-6 py-4 bg-black/80 backdrop-blur-sm shadow-sm flex-shrink-0">
         <h1 className="text-2xl font-bold text-center">Discover New Music For You</h1>
         <Link
           to="/create"
@@ -206,7 +206,7 @@ const ForYou = () => {
       </div>
 
       {/* Feed */}
-      <div className="flex flex-col items-center snap-y snap-mandatory overflow-y-scroll h-screen px-4 py-6 space-y-6">
+      <div className="flex flex-col items-center snap-y snap-mandatory overflow-y-auto flex-grow px-4 py-6 space-y-6">
         {feed.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-gray-400 text-lg mb-4">No music posts yet!</p>
