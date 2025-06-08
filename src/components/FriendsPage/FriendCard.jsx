@@ -54,7 +54,7 @@ const FriendCard = ({ friend }) => {
 
         <h2 className="text-lg font-semibold mb-2">{safeName}</h2>
 
-        <p className="text-sm text-gray-100 mb-1">
+        {/* <p className="text-sm text-gray-100 mb-1">
           <span className="font-medium text-gray-300">Genres:</span>{' '}
           {(genres ?? []).join(', ') || '—'}
         </p>
@@ -62,7 +62,7 @@ const FriendCard = ({ friend }) => {
         <p className="text-sm text-gray-500 mb-4">
           <span className="font-medium text-gray-300">Top Artists:</span>{' '}
           {(artists ?? []).join(', ') || '—'}
-        </p>
+        </p> */}
 
         <p className="text-sm text-gray-300 font-medium">Percent Match:</p>
         <p className="text-xl font-bold text-green-400">
