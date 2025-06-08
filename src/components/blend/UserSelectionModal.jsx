@@ -11,39 +11,31 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
   const searchUsers = async (query = '') => {
     setLoading(true);
     setError('');
-    
+
     try {
-      const url = `${API_BASE}/api/users/search?q=${encodeURIComponent(query)}`;
-      console.log('🔍 Fetching users from:', url);
-      console.log('🌐 Current origin:', window.location.origin);
-      console.log('🔧 API_BASE:', API_BASE);
-      
-      const res = await fetch(url, {
+      const res = await fetch(`${API_BASE}/spotify/api/friends/top`, {
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
-      
-      console.log('📡 Response status:', res.status);
-      console.log('📡 Response headers:', Object.fromEntries(res.headers.entries()));
-      
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('❌ Error response:', errorText);
-        throw new Error(`HTTP ${res.status}: ${res.statusText} - ${errorText}`);
-      }
-      
-      const userData = await res.json();
-      console.log('✅ Users data received:', userData);
-      setUsers(userData);
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+
+      const { friends } = await res.json();
+      const filtered = friends.filter(entry => {
+        const name = entry.friend?.name || '';
+        return name.toLowerCase().includes(query.toLowerCase());
+      });
+
+
+      setUsers(filtered);
     } catch (err) {
-      console.error('❌ Failed to search users:', err);
-      setError(`Failed to load users: ${err.message}`);
+      console.error('❌ Failed to load friends:', err);
+      setError(`Failed to load friends: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     searchUsers();
@@ -90,25 +82,23 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
             <p className="text-white/60">No users found. Try a different search.</p>
           )}
 
-          {users.map((user) => (
-            <div
-              key={user._id}
-              onClick={() => onSelectUser(user)}
-              className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700 transition-colors"
-            >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                {user.displayName?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || '?'}
-              </div>
-              <div>
-                <div className="text-white font-medium">
-                  {user.displayName || user.username}
+          {users.map((entry) => {
+            const user = entry.friend;
+            return (
+              <div
+                key={user.id}
+                onClick={() => onSelectUser(user)}
+                className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700 transition-colors"
+              >
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                  {user.name?.[0]?.toUpperCase() || '?'}
                 </div>
-                {user.displayName && user.username && (
-                  <div className="text-gray-400 text-sm">@{user.username}</div>
-                )}
+                <div>
+                  <div className="text-white font-medium">{user.name}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="text-right pt-4 border-t border-zinc-700">
