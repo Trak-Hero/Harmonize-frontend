@@ -49,23 +49,23 @@ Our goal is to make the experience of finding music more **personal, expressive,
 
 ## IMPORTANT!! SIGN UP/ONBOARDING INSTRUCTIONS
 
-1. **Create an Account**
+1. **Create an Account**  
    To sign up with our account, click **Sign Up** and fill in your Name, Username, Email, and Password. Once done, you need to click Connect to spotify (see instruction #2).
-2. **Connect to Spotify**
+2. **Connect to Spotify**  
    Due to Spotify's production API restrictions, we still need to manually add users due to us not being a company.
    !! **Send the email** you use to log in to spotify to one of our developers so we can authorize your account.
-3. **Personalize Your Account**
+3. **Personalize Your Account**  
    After signing in, navigate to your **Profile page** to:
    - Add a bio and a profile picture
    - Add tiles to your spaces which can be toggled under your Profile page.
 > Note: When you click edit or delete a tile, you need to click on "Edit" or "delete" over the tile, and press **Enter** one more time or move the tile to enter the Edit or Delete mode. 
-4. **Connect with Friends**
+4. **Connect with Friends**  
   If you want to see friends, we have a list of user accounts you can test. Search up any of these names in the list in the Friend's page search bar: ["Trak", "Shisui", "Giselle", "Rachael", "Evelyn"].
-6. **Find Friends & Events on Map**
+6. **Find Friends & Events on Map**  
   Navigate to the Map page and allow location access.
 > Note: You’ll only see friends who’ve shared their location.
-7. Have fun playing around with our application!
 
+**That’s it!** You’re ready to harmonize, discover fresh tracks, and connect with the music-loving community. Enjoy our app!
 
 Harmonize is a music discovery social media platform that connects listeners with emerging artists, and with each other. It is a platform that allows music lovers to explore fresh, undiscovered tracks while engaging with a diverse community of users and supporting new artists.
 
