@@ -1,4 +1,3 @@
-// src/components/ArtistSearchModal.jsx
 import { useState } from 'react';
 import { useProfileStore } from '../state/profileStore';
 
@@ -31,7 +30,6 @@ export default function ArtistSearchModal({ onClose, userId }) {
   };
 
   const pickArtist = async (artist) => {
-    // Extract the best quality image
     let artistImage = '';
     
     if (artist.images && Array.isArray(artist.images) && artist.images.length > 0) {
@@ -60,10 +58,10 @@ export default function ArtistSearchModal({ onClose, userId }) {
   
     try {
       const result = await addTile(tileData);
-      console.log('✅ [pickArtist] Tile creation result:', result);
+      console.log('[pickArtist] Tile creation result:', result);
       onClose();
     } catch (error) {
-      console.error('❌ [pickArtist] Failed to add artist tile:', error);
+      console.error('[pickArtist] Failed to add artist tile:', error);
       setError('Failed to add artist tile. Please try again.');
     }
   };
@@ -94,7 +92,6 @@ export default function ArtistSearchModal({ onClose, userId }) {
 
         <ul className="max-h-64 overflow-y-auto space-y-2">
           {results.map((artist) => {
-            // Display logic for search results preview
             let displayImage = 'https://placehold.co/48x48?text=Artist';
             
             if (artist.images && Array.isArray(artist.images) && artist.images.length > 0) {

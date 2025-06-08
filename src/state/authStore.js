@@ -3,7 +3,6 @@ import { persist } from 'zustand/middleware';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-// Debug logging
 console.log('Auth Store - API_BASE:', API_BASE);
 console.log('Environment variables:', {
   VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
@@ -21,7 +20,6 @@ export const useAuthStore = create(
       fetchUser: async () => {
         const currentState = get();
         
-        // If we're already loading or have checked session, don't fetch again
         if (currentState.isLoading) return;
         
         set({ isLoading: true });
@@ -32,7 +30,6 @@ export const useAuthStore = create(
           });
           
           if (!res.ok) {
-            // If session is invalid, clear stored user but don't throw
             if (res.status === 401) {
               set({ user: null, isLoading: false, hasCheckedSession: true });
               return;
@@ -44,8 +41,6 @@ export const useAuthStore = create(
           set({ user: userData, isLoading: false, hasCheckedSession: true });
         } catch (err) {
           console.error('Error loading user session:', err);
-          // Don't clear user on network errors - keep the persisted user
-          // Only clear on explicit auth failures (401)
           set({ isLoading: false, hasCheckedSession: true });
         }
       },
@@ -60,7 +55,6 @@ export const useAuthStore = create(
 
       logout: async () => {
         try {
-          // Call logout endpoint to clear server session
           await fetch(`${API_BASE}/auth/logout`, {
             method: 'POST',
             credentials: 'include',
@@ -68,7 +62,6 @@ export const useAuthStore = create(
         } catch (err) {
           console.error('Logout request failed:', err);
         } finally {
-          // Always clear local state regardless of server response
           set({ user: null, hasCheckedSession: true });
         }
       },
@@ -80,7 +73,6 @@ export const useAuthStore = create(
     }),
     {
       name: 'auth-storage',
-      // Only persist the user data, not loading states
       partialize: (state) => ({ 
         user: state.user,
         hasCheckedSession: state.hasCheckedSession 

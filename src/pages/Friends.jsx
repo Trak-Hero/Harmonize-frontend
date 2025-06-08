@@ -16,14 +16,12 @@ export default function Friends() {
     setCurrentUserId 
   } = useFriendStore();
 
-  // Set current user ID when component mounts
   useEffect(() => {
     if (authUser?._id) {
       setCurrentUserId(authUser._id);
     }
   }, [authUser, setCurrentUserId]);
 
-  // Fetch friends when component mounts
   useEffect(() => {
     if (authUser?._id) {
       fetchFriends?.();
@@ -32,19 +30,16 @@ export default function Friends() {
 
   const myId = authUser?._id || authUser?.id;
 
-  // Find current user in friends store
   const me = friends.find((f) => String(f._id || f.id) === String(myId));
   const following = me?.following ?? [];
 
-  // Show only the people I follow
   const visible = friends.filter((f) =>
     following.some((fid) => String(fid) === String(f._id || f.id)) &&
-    String(f._id || f.id) !== String(myId) // Don't show self
+    String(f._id || f.id) !== String(myId) 
   );
 
   return (
     <div className="w-full max-w-5xl mx-auto pt-8 px-4">
-      {/* header + button */}
       <div className="flex items-center justify-between gap-6 mb-6">
         <h1 className="text-2xl font-bold">Friends</h1>
         <button
@@ -55,7 +50,6 @@ export default function Friends() {
         </button>
       </div>
 
-      {/* friends grid */}
       {visible.length ? (
         <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
           {visible.map((friend) => (
@@ -75,7 +69,6 @@ export default function Friends() {
         </div>
       )}
 
-      {/* search modal */}
       {open && <FriendSearchModal onClose={() => setOpen(false)} />}
     </div>
   );

@@ -29,20 +29,19 @@ const promptForLocation = async () => {
     async (position) => {
       const { latitude, longitude } = position.coords;
       
-      // Validate coordinates before saving
       if (latitude === 0 && longitude === 0) {
         console.error('Invalid coordinates received: 0,0');
-        alert("❌ Invalid location detected. Please try again.");
+        alert("Invalid location detected. Please try again.");
         return;
       }
       
       if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
         console.error('Invalid coordinates received:', { latitude, longitude });
-        alert("❌ Invalid location detected. Please try again.");
+        alert("Invalid location detected. Please try again.");
         return;
       }
       
-      console.log('📍 Valid location received:', { latitude, longitude });
+      console.log('Valid location received:', { latitude, longitude });
       useLocationStore.getState().setUserLocation({ latitude, longitude });
 
       try {
@@ -56,23 +55,23 @@ const promptForLocation = async () => {
         if (!response.ok) {
           const error = await response.json();
           console.error('Location save failed:', error);
-          alert("❌ Failed to save your location. Please try again.");
+          alert("Failed to save your location. Please try again.");
         } else {
-          console.log('✅ Location saved successfully');
+          console.log('Location saved successfully');
         }
       } catch (err) {
         console.error('Location save error:', err);
-        alert("❌ Failed to save your location. Please try again.");
+        alert("Failed to save your location. Please try again.");
       }
     },
     (error) => {
       console.error('Geolocation error:', error);
-      alert(`❌ Failed to get your location: ${error.message}. Please allow location access in browser settings.`);
+      alert(`Failed to get your location: ${error.message}. Please allow location access in browser settings.`);
     },
     {
       enableHighAccuracy: true,
       timeout: 10000,
-      maximumAge: 300000 // 5 minutes
+      maximumAge: 300000 
     }
   );
 };
@@ -101,11 +100,11 @@ const MapPage = () => {
             latitude === 0 || longitude === 0 ||
             Math.abs(latitude) > 90 || Math.abs(longitude) > 180
           ) {
-            console.error('[❌ Location] Invalid coordinates received:', latitude, longitude);
+            console.error('[Location] Invalid coordinates received:', latitude, longitude);
             return;
           }
 
-          console.log('[📍 Location] Sending coordinates:', latitude, longitude);
+          console.log('[Location] Sending coordinates:', latitude, longitude);
           useLocationStore.getState().setUserLocation({ latitude, longitude });
 
           const res = await fetch(`${API_BASE}/api/users/location`, {
@@ -117,17 +116,17 @@ const MapPage = () => {
 
           const data = await res.json();
           if (!res.ok) {
-            console.error('[❌ Location] Failed to save:', data);
+            console.error('[Location] Failed to save:', data);
           } else {
-            console.log('[✅ Location] Saved to backend:', data.location);
+            console.log('[Location] Saved to backend:', data.location);
           }
         } catch (err) {
-          console.error('[❌ Location] Failed to send location:', err);
+          console.error('[Location] Failed to send location:', err);
         }
       },
       (err) => {
-        console.error('[❌ Location] Geolocation error:', err);
-        alert(`❌ Failed to get your location: ${err.message}`);
+        console.error('[Location] Geolocation error:', err);
+        alert(`Failed to get your location: ${err.message}`);
       },
       {
         enableHighAccuracy: true,
@@ -161,12 +160,11 @@ const MapPage = () => {
         return { ...f, distance };
       });
 
-    // 🔍 DEBUG: Add these console logs to see what's happening
-    console.log('[🔍 DEBUG] All friends from store:', friends);
-    console.log('[🔍 DEBUG] Friends with location data:', friends.filter(f => f.location));
-    console.log('[🔍 DEBUG] Friends with valid coordinates:', friends.filter(f => f.location?.coordinates?.length === 2));
-    console.log('[🔍 DEBUG] Your location:', userLocation);
-    console.log('[🔍 DEBUG] Enriched friends with distances:', enriched);
+    console.log('[DEBUG] All friends from store:', friends);
+    console.log('[DEBUG] Friends with location data:', friends.filter(f => f.location));
+    console.log('[DEBUG] Friends with valid coordinates:', friends.filter(f => f.location?.coordinates?.length === 2));
+    console.log('[DEBUG] Your location:', userLocation);
+    console.log('[DEBUG] Enriched friends with distances:', enriched);
 
     setAllFriends(enriched);
     setFilteredFriends(enriched);

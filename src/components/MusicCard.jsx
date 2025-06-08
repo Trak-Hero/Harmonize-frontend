@@ -12,20 +12,17 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
   const [likeCount, setLikeCount] = useState(item.likes || 0);
   const [isLiking, setIsLiking] = useState(false);
 
-  // check if current user has liked this post
   useEffect(() => {
     if (currentUser && item.likedBy) {
       setIsLiked(item.likedBy.includes(currentUser._id || currentUser.id));
     }
   }, [currentUser, item.likedBy]);
 
-  // update like count when item changes
   useEffect(() => {
     setLikeCount(item.likes || 0);
   }, [item.likes]);
 
 
-  // auto-play the audio when card becomes visible
   useEffect(() => {
     if (audioRef.current && item.previewUrl && !audioError) {
       if (isVisible) {
@@ -60,7 +57,7 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
           .then(() => {
             setIsPlaying(true);
             setAudioLoading(false);
-            setAudioError(false); // reset error state on successful play
+            setAudioError(false);
           })
           .catch((error) => {
             console.error('Play error:', error);
@@ -109,58 +106,46 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
     return '30s preview';
   };
 
-  // function to get tooltip text based on device type
   const getSpotifyTooltip = () => {
     const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     return isMobile ? 'Open in Spotify app' : 'Open in Spotify web';
   };
 
-  // function to open Spotify track in app or web
   const openSpotifyTrack = () => {
     if (!item.spotifyTrackId) {
       console.error('No Spotify track ID available');
       return;
     }
 
-    // construct Spotify URL
     const spotifyUrl = `https://open.spotify.com/track/${item.spotifyTrackId}`;
     
-    // open in Spotify app first (mobile), then fallback to web
     const spotifyAppUrl = `spotify:track:${item.spotifyTrackId}`;
     
-    // temporary link to test if Spotify app is available
     const link = document.createElement('a');
     
-    // for mobile devices, try the Spotify app protocol first
     if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      // Try to open in Spotify app
       window.location.href = spotifyAppUrl;
       
-      // fallback to web version after a short delay if app didn't open
       setTimeout(() => {
         window.open(spotifyUrl, '_blank');
       }, 2000);
     } else {
-      // for desktop, open in web browser
       window.open(spotifyUrl, '_blank');
     }
   };
 
-  // function to handle like/unlike action
   const handleLike = async () => {
     if (!currentUser || isLiking) return;
 
     setIsLiking(true);
     try {
       if (isLiked) {
-        // Unlike the post
         if (onUnlike) {
           await onUnlike(item._id);
         }
         setIsLiked(false);
         setLikeCount(prev => Math.max(0, prev - 1));
       } else {
-        // Like the post
         if (onLike) {
           await onLike(item._id);
         }
@@ -169,7 +154,6 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
       }
     } catch (error) {
       console.error('Error toggling like:', error);
-      // revert the optimistic update on error
       setIsLiked(!isLiked);
       setLikeCount(item.likes || 0);
     } finally {
@@ -177,7 +161,6 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
     }
   };
 
-  // function to handle sharing the song
   const handleShare = async () => {
     const shareData = {
       title: `${item.title} by ${item.artist}`,
@@ -186,19 +169,15 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
     };
 
     try {
-      // check if Web Share API is supported (mainly on mobile)
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        // fallback: copy to clipboard
         const textToCopy = `Check out "${item.title}" by ${item.artist} on Spotify: https://open.spotify.com/track/${item.spotifyTrackId}`;
         
         if (navigator.clipboard) {
           await navigator.clipboard.writeText(textToCopy);
-          // show a toast notification here
           alert('Link copied to clipboard!');
         } else {
-          // fallback for older browsers
           const textArea = document.createElement('textarea');
           textArea.value = textToCopy;
           document.body.appendChild(textArea);
@@ -222,7 +201,6 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
           className="w-full h-[500px] object-cover"
         />
         
-        {/* Play/Pause Overlay */}
         {item.previewUrl && !audioError && (
           <div 
             className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
@@ -259,7 +237,6 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
           )}
         </div>
 
-        {/* Hidden Audio Element for Auto-play */}
         {item.previewUrl && !audioError && (
           <audio
             ref={audioRef}
@@ -273,7 +250,6 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
           </audio>
         )}
 
-        {/* Audio Controls (visible) */}
         {item.previewUrl && !audioError ? (
           <div className="mt-2">
             <div className="flex items-center space-x-2">
@@ -291,7 +267,6 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
               <span className="text-xs text-gray-400">{getPreviewStatus()}</span>
             </div>
 
-            {/* Progress bar */}
             {duration > 0 && (
               <div className="mt-3 flex items-center space-x-2 text-xs text-gray-400">
                 <span>{formatTime(currentTime)}</span>
@@ -311,9 +286,7 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
               </div>
             )}
 
-        {/* Action Buttons */}
         <div className="flex justify-between mt-4 text-gray-300 text-sm">
-          {/* Spotify button with tooltip */}
           <div className="relative">
             <button 
               onClick={openSpotifyTrack}
@@ -328,7 +301,6 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
               <span>Spotify</span>
             </button>
             
-            {/* tooltip */}
             {showTooltip && (
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded whitespace-nowrap z-10">
                 {getSpotifyTooltip()}
@@ -339,7 +311,6 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
 
           <button className="hover:text-pink-400 transition">Follow artist</button>
 
-          {/* Like button */}
           <button 
             onClick={handleLike}
             disabled={!currentUser || isLiking}
@@ -363,7 +334,6 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
             <span>{isLiking ? '...' : likeCount}</span>
           </button>
 
-          {/* Share button */}
           <button 
             onClick={handleShare}
             className="hover:text-blue-400 transition flex items-center space-x-1"

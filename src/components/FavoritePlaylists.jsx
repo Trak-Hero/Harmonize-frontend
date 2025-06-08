@@ -1,4 +1,3 @@
-// lightweight scrollable list of the user’s playlists
 export default function FavoritePlaylists({ playlists = [] }) {
   if (!playlists.length) return null;
 

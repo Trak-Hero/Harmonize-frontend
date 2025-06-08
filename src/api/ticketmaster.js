@@ -11,7 +11,7 @@ export async function fetchEventsByLocation(lat, lng, radius = 100) {
 
     if (data._embedded && data._embedded.events) {
       return data._embedded.events
-        .filter(event => event.classifications?.[0]?.genre?.name) // only include events with genre
+        .filter(event => event.classifications?.[0]?.genre?.name)
         .map((event) => ({
           _id: event.id,
           title: event.name,

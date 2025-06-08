@@ -14,8 +14,7 @@ export default function ConnectSpotify() {
     setError(null);
     
     try {
-      // Redirect to the backend Spotify login endpoint
-      // This will redirect to Spotify's authorization page
+    
       window.location.href = `${API}/auth/spotify/login`;
     } catch (err) {
       console.error('Spotify connection error:', err);

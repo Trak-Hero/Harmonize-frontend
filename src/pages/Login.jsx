@@ -10,7 +10,6 @@ export default function Login() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   
-  // Use consistent API base URL
   const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
   const handleSubmit = async (e) => {
@@ -56,7 +55,6 @@ export default function Login() {
     } catch (err) {
       console.error('Login error:', err);
       
-      // Handle specific CORS errors
       if (err.message.includes('CORS') || err.name === 'TypeError') {
         setError('Connection error. Please check if the server is running and accessible.');
       } else {
@@ -71,7 +69,6 @@ export default function Login() {
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
       <h1 className="text-4xl font-bold mb-6">Log in to Harmonize</h1>
 
-      {/* Debug info in development */}
       {import.meta.env.DEV && (
         <div className="mb-4 p-2 bg-gray-800 rounded text-xs text-gray-300">
           <div>API Base: {API_BASE}</div>
