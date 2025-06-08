@@ -6,20 +6,63 @@ import useLocationStore from '../../state/locationStore';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-
 const UserMarker = () => {
-  const { userLocation } = useLocationStore();
+  const { userLocation, currentUser } = useLocationStore();
 
-  if (!userLocation) return null;
+  if (!userLocation || !currentUser) return null;
+
+  const initials = getInitials(currentUser.displayName || currentUser.username);
+  const hasAvatar = !!currentUser.avatar;
+  const bgColor = getColor(currentUser.displayName || currentUser.username);
+
+  const icon = hasAvatar
+    ? L.divIcon({
+        html: `<div style="
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          overflow: hidden;
+          border: 2px solid white;
+          box-shadow: 0 0 4px rgba(0,0,0,0.4);
+        ">
+          <img src="${currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover;" />
+        </div>`,
+        className: '',
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+        popupAnchor: [0, -36],
+      })
+    : L.divIcon({
+        html: `<div style="
+          background-color: ${bgColor};
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 14px;
+          font-weight: bold;
+          border: 2px solid white;
+          box-shadow: 0 0 3px rgba(0,0,0,0.3);
+        ">${initials}</div>`,
+        className: '',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+      });
 
   return (
-    <Marker position={[userLocation.latitude, userLocation.longitude]}>
-      <Popup>
-        You are here
-      </Popup>
+    <Marker
+      position={[userLocation.latitude, userLocation.longitude]}
+      icon={icon}
+    >
+      <Popup>You are here</Popup>
     </Marker>
   );
 };
+
 
 const LocationMarker = () => {
   const [position, setPosition] = useState(null);
@@ -75,7 +118,6 @@ const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
   const [cityMap, setCityMap] = useState({});
   const map = useMap();
 
-  // ✅ Reverse geocode friends' coordinates to city names
   useEffect(() => {
     if (!friends?.length || !OPENCAGE_KEY) return;
 
@@ -121,7 +163,7 @@ const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
     return () => controller.abort();
   }, [friends]);
 
-  // 📍 Focus on selected friend
+ 
   useEffect(() => {
     if (selectedFriendId && markerRefs.current[selectedFriendId]) {
       const marker = markerRefs.current[selectedFriendId];
