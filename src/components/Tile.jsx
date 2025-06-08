@@ -1,11 +1,6 @@
 // src/components/Tile.jsx
 import { useProfileStore } from '../state/profileStore';
 
-/**
- * Generic tile component.
- * Pass `readOnly={true}` when the viewer should *not* be able
- * to edit or delete the tile (e.g. on a friend’s profile page).
- */
 const Tile = ({ tile, readOnly = false }) => {
   if (!tile || typeof tile !== 'object') {
     console.warn('[Tile.jsx] Skipped rendering invalid tile:', tile);
