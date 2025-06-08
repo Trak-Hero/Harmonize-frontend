@@ -89,7 +89,7 @@ const Friend = ({ friend, onSelect }) => {
               <span className="text-green-600 font-medium">{friendDistance} km</span>
             )}
             {friendDistance && ' • '}
-            {friend.lastActive || 'Active now'}
+            {typeof blendPercentage === 'number' && `${blendPercentage}% match`}
           </p>
         </div>
 
@@ -123,16 +123,6 @@ const Friend = ({ friend, onSelect }) => {
           </div>
 
           <h2 className="text-base font-semibold mb-1">{friend.displayName}</h2>
-
-          <p className="text-xs text-gray-600 mb-1">
-            <span className="font-medium text-gray-700">Genres:</span>{' '}
-            {friend.genres?.length ? friend.genres.join(', ') : '—'}
-          </p>
-
-          <p className="text-xs text-gray-500 mb-2">
-            <span className="font-medium text-gray-700">Top Artists:</span>{' '}
-            {friend.artists?.length ? friend.artists.join(', ') : '—'}
-          </p>
 
           <p className="text-xs text-gray-600 font-medium">Blend Match:</p>
           <p className="text-lg font-bold text-green-600 mb-2">
