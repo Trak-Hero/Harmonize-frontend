@@ -1,4 +1,3 @@
-// src/pages/UserProfile.jsx
 import { useState, useEffect, useCallback } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { useParams } from 'react-router-dom';
@@ -291,60 +290,60 @@ export default function UserProfile() {
   const followingCount = profileData?.following?.length ?? 0;
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      {/* ──────────────── main column ──────────────── */}
-      <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-        {/* header */}
-        <header className="space-y-3 flex items-center gap-6">
-          {authUser.avatar && (
-            <img
-              src={authUser.avatar}
-              className="h-24 w-24 rounded-full object-cover border border-white/20"
-              alt="Profile avatar"
-            />
-          )}
+    <div className="max-w-screen-xl mx-auto px-6 py-12">
+      {/* Profile Header - Always constrained width */}
+      <header className="space-y-3 flex items-center gap-6 mb-6">
+        {authUser.avatar && (
+          <img
+            src={authUser.avatar}
+            className="h-24 w-24 rounded-full object-cover border border-white/20"
+            alt="Profile avatar"
+          />
+        )}
 
-          <div className="flex-1 space-y-2">
-            <div className="flex items-center gap-3">
-              <h1 className="text-5xl font-extrabold">
-                {authUser.displayName || authUser.username || 'Your Profile'}
-              </h1>
-              {isOwner && (
-                <button
-                  onClick={() => setShowEditor(true)}
-                  className="px-4 py-2 bg-white text-black rounded-full text-sm hover:bg-zinc-200"
-                >
-                  Edit
-                </button>
-              )}
-            </div>
-            {authUser.bio && <p className="text-white/70">{authUser.bio}</p>}
-            <p className="text-white/40 text-sm">
-              {followersCount} {followersCount === 1 ? 'follower' : 'followers'} • {followingCount} following
-            </p>
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-5xl font-extrabold">
+              {authUser.displayName || authUser.username || 'Your Profile'}
+            </h1>
+            {isOwner && (
+              <button
+                onClick={() => setShowEditor(true)}
+                className="px-4 py-2 bg-white text-black rounded-full text-sm hover:bg-zinc-200"
+              >
+                Edit
+              </button>
+            )}
           </div>
-        </header>
+          {authUser.bio && <p className="text-white/70">{authUser.bio}</p>}
+          <p className="text-white/40 text-sm">
+            {followersCount} {followersCount === 1 ? 'follower' : 'followers'} • {followingCount} following
+          </p>
+        </div>
+      </header>
 
-        {/* tab selector */}
-        <nav className="flex gap-3 mt-4">
-          {['recent', 'space'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-full text-lg font-semibold ${
-                activeTab === tab
-                  ? 'bg-white text-black'
-                  : 'bg-white/10 text-white/70 border border-white/30'
-              }`}
-            >
-              {tab === 'recent' ? 'Recent' : 'Space'}
-            </button>
-          ))}
-        </nav>
+      {/* Tab selector - Always constrained width */}
+      <nav className="flex gap-3 mb-6">
+        {['recent', 'space'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-6 py-2 rounded-full text-lg font-semibold ${
+              activeTab === tab
+                ? 'bg-white text-black'
+                : 'bg-white/10 text-white/70 border border-white/30'
+            }`}
+          >
+            {tab === 'recent' ? 'Recent' : 'Space'}
+          </button>
+        ))}
+      </nav>
 
-        {/* tab content */}
-        {activeTab === 'recent' ? (
-          <div className="space-y-6 mt-6">
+      {/* Tab content */}
+      {activeTab === 'recent' ? (
+        /* Recent tab - Constrained width with sidebar layout */
+        <div className="grid grid-cols-12 gap-6">
+          <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
             {spotifyLoading ? (
               <div className="text-center py-8 text-white/60">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
@@ -377,21 +376,30 @@ export default function UserProfile() {
                 )}
               </div>
             )}
-          </div>
-        ) : (
-          <div className="space-y-6 mt-6">
-            {isOwner && (
-              <div className="mb-4">
-                <TilePicker onAdd={handleAddTile} />
-              </div>
-            )}
+          </section>
+          {/* Right sidebar for Recent tab - commented out for now */}
+          {/* <aside className="col-span-12 lg:col-span-4">
+            <div className="card backdrop-blur-lg h-full">
+              <FriendActivity />
+            </div>
+          </aside> */}
+        </div>
+      ) : (
+        /* Space tab - Full width layout */
+        <div className="space-y-6">
+          {isOwner && (
+            <div className="mb-4 flex justify-center">
+              <TilePicker onAdd={handleAddTile} />
+            </div>
+          )}
 
-            {tilesLoading ? (
-              <div className="text-center py-8 text-white/60">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-                <p>Loading tiles…</p>
-              </div>
-            ) : Array.isArray(tiles) && tiles.length > 0 ? (
+          {tilesLoading ? (
+            <div className="text-center py-8 text-white/60">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+              <p>Loading tiles…</p>
+            </div>
+          ) : Array.isArray(tiles) && tiles.length > 0 ? (
+            <div className="w-full">
               <ResponsiveGrid
                 className="layout"
                 rowHeight={100}
@@ -401,6 +409,7 @@ export default function UserProfile() {
                 onLayoutChange={isOwner ? updateLayout : undefined}
                 isDraggable={isOwner}
                 isResizable={isOwner}
+                width={1200} // Force a wider grid
               >
                 {tiles.map((t) => (
                   <div
@@ -419,26 +428,19 @@ export default function UserProfile() {
                   </div>
                 ))}
               </ResponsiveGrid>
-            ) : (
-              <div className="text-center py-8 text-white/60">
-                <p>No tiles to display.</p>
-                {isOwner && (
-                  <p className="text-sm mt-2">
-                    Click "Space" → "Add Tile" to start building your profile.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </section>
-
-      {/* ──────────────── right column ──────────────── */}
-      <aside className="col-span-12 lg:col-span-4">
-        <div className="card backdrop-blur-lg h-full">
-          {/* <FriendActivity /> */}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-white/60">
+              <p>No tiles to display.</p>
+              {isOwner && (
+                <p className="text-sm mt-2">
+                  Click "Add Tile" to start building your profile.
+                </p>
+              )}
+            </div>
+          )}
         </div>
-      </aside>
+      )}
 
       {/* ──────────────── modal editors ──────────────── */}
       {editorOpen && isOwner && <TileEditor tile={tileBeingEdited} />}
