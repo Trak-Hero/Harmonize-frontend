@@ -1,28 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
-import PeopleIcon from '@mui/icons-material/People';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import CloseIcon from '@mui/icons-material/Close';
-import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
 import useLocationStore from '../../state/locationStore';
 
-function distance(lat1, lon1, lat2, lon2) {
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
+const distance = (lat1, lon1, lat2, lon2) => {
   const r = 6371;
   const p = Math.PI / 180;
   const a =
     0.5 -
     Math.cos((lat2 - lat1) * p) / 2 +
-    Math.cos(lat1 * p) *
-      Math.cos(lat2 * p) *
-      (1 - Math.cos((lon2 - lon1) * p)) / 2;
+    Math.cos(lat1 * p) * Math.cos(lat2 * p) * (1 - Math.cos((lon2 - lon1) * p)) / 2;
   return 2 * r * Math.asin(Math.sqrt(a));
-}
+};
 
 const getInitials = (title = '') => {
   const words = title.trim().split(' ');
@@ -34,24 +32,33 @@ const getInitials = (title = '') => {
 const EventCard = ({ event, onSelect }) => {
   const { userLocation } = useLocationStore();
   const [eventDistance, setEventDistance] = useState(null);
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [city, setCity] = useState('Loading...');
+
+  const [lng, lat] = event.location?.coordinates || [];
 
   useEffect(() => {
-    if (userLocation && event.location?.coordinates?.length === 2) {
-      const [lng, lat] = event.location.coordinates;
+    if (userLocation && lat != null && lng != null) {
       const dist = distance(userLocation.latitude, userLocation.longitude, lat, lng);
       setEventDistance(dist.toFixed(2));
     }
-  }, [userLocation, event]);
+  }, [userLocation, lat, lng]);
 
-  const handleInfoClick = (e) => {
-    e.stopPropagation();
-    setAnchorEl(e.currentTarget);
-  };
+  useEffect(() => {
+    const fetchCity = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/geocode/reverse?lat=${lat}&lon=${lng}&addressdetails=1`);
+        const data = await res.json();
+        setCity(data.city || 'Unknown');
+      } catch {
+        setCity('Unknown');
+      }
+    };
 
-  const handleClose = () => setAnchorEl(null);
-  const open = Boolean(anchorEl);
-  const id = open ? 'event-info-popover' : undefined;
+    if (lat != null && lng != null) {
+      fetchCity();
+    }
+  }, [lat, lng]);
 
   const formattedDate = new Date(event.date).toLocaleString('en-US', {
     weekday: 'short',
@@ -64,12 +71,7 @@ const EventCard = ({ event, onSelect }) => {
 
   const hasImage = !!event.image;
 
-  const handleClick = () => {
-    if (onSelect) {
-      onSelect(event._id);
-    }
-  };
-
+  const handleCardClick = () => onSelect?.(event._id);
   const handleTicketClick = (e) => {
     e.stopPropagation();
     if (event.ticketUrl) {
@@ -77,187 +79,158 @@ const EventCard = ({ event, onSelect }) => {
     }
   };
 
-  return (
-    <div
-      onClick={handleClick}
-      className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border-l-4 border-green-500 text-black shadow transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-95 cursor-pointer h-28"
-    >
-      {hasImage ? (
-        <img
-          src={event.image}
-          alt={event.title}
-          className="w-12 h-12 rounded-xl object-cover"
-        />
-      ) : (
-        <div className="w-12 h-12 rounded-xl bg-green-500 text-white flex items-center justify-center font-bold text-lg">
-          {getInitials(event.title)}
-        </div>
-      )}
+  const handleInfoClick = (e) => {
+    e.stopPropagation();
+    setShowPopup((prev) => !prev);
+  };
 
-      <div className="flex-1">
-        <h3 className="text-base font-semibold text-black">{event.title}</h3>
-        <p className="text-sm text-gray-700">
-          {eventDistance && (
-            <span className="text-green-600 font-medium">{eventDistance} km</span>
-          )}
-          {eventDistance && ' • '}
-          {formattedDate}
-        </p>
-      </div>
+  const handleClose = () => setShowPopup(false);
 
-      <div className="flex items-center gap-3 text-black/70">
-        <PeopleIcon fontSize="small" />
-        <InfoOutlineIcon
-          fontSize="small"
-          className="cursor-pointer hover:text-green-600 hover:scale-110 transition-all duration-200"
-          onClick={handleInfoClick}
-        />
-      </div>
-
-      <Popover
-        id={id}
-        open={open}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-        disableRestoreFocus
-        PaperProps={{
-          elevation: 8,
-          sx: {
-            borderRadius: '16px',
-            overflow: 'hidden',
-            maxWidth: '320px',
-            minWidth: '280px',
-            border: '1px solid rgba(0,0,0,0.08)',
-          }
-        }}
-      >
-        <div className="relative">
-          {/* Header with image or gradient */}
-          <div className="relative h-24 bg-gradient-to-br from-green-500 to-green-600 overflow-hidden">
-            {hasImage && (
-              <img
-                src={event.image}
-                alt={event.title}
-                className="w-full h-full object-cover opacity-30"
-              />
-            )}
-            <div className="absolute inset-0 bg-black/20" />
-            
-            {/* Close button */}
-            <IconButton
-              onClick={handleClose}
-              size="small"
-              className="absolute top-2 right-2 text-white hover:bg-white/20"
-              sx={{ 
-                color: 'white',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' }
-              }}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-
-            {/* Title overlay */}
-            <div className="absolute bottom-3 left-4 right-4">
-              <Typography 
-                variant="h6" 
-                className="text-white font-bold truncate"
-                sx={{ fontSize: '1.1rem', lineHeight: 1.2 }}
-              >
+  const popup = showPopup && ReactDOM.createPortal(
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+        onClick={handleClose}
+      />
+      {/* Centered Popup */}
+      <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md">
+        <div className="bg-gradient-to-b from-gray-900 to-black text-white shadow-xl rounded-xl p-6">
+          {/* Header */}
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <Typography variant="h6" sx={{ fontSize: '1.125rem', fontWeight: 600 }}>
                 {event.title}
               </Typography>
+              <Typography variant="body2" sx={{ fontSize: '0.875rem', opacity: 0.7 }}>
+                {city}
+              </Typography>
             </div>
+            <IconButton onClick={handleClose} sx={{ color: 'white' }}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
           </div>
 
-          {/* Content */}
-          <div className="p-4 space-y-3">
-            {/* Distance chip */}
-            {eventDistance && (
-              <div className="flex justify-center">
-                <Chip
-                  label={`${eventDistance} km away`}
-                  size="small"
-                  color="success"
-                  variant="outlined"
-                  sx={{ fontWeight: 500 }}
-                />
-              </div>
-            )}
+          {/* Distance */}
+          {eventDistance && (
+            <div className="inline-flex items-center px-3 py-1.5 mb-4 rounded-full bg-blue-500/20 border border-blue-400/30 text-xs text-blue-300 font-medium">
+              {eventDistance} km away
+            </div>
+          )}
 
-            {/* Event details */}
-            <div className="space-y-2">
-              <div className="flex items-start gap-3">
-                <LocationOnIcon 
-                  fontSize="small" 
-                  className="text-gray-500 mt-0.5 flex-shrink-0" 
-                />
-                <div>
-                  <Typography variant="body2" className="font-medium text-gray-800">
-                    Location
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    {event.locationName || 'Location TBD'}
-                  </Typography>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <AccessTimeIcon 
-                  fontSize="small" 
-                  className="text-gray-500 mt-0.5 flex-shrink-0" 
-                />
-                <div>
-                  <Typography variant="body2" className="font-medium text-gray-800">
-                    Date & Time
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    {formattedDate}
-                  </Typography>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <ConfirmationNumberIcon 
-                  fontSize="small" 
-                  className="text-gray-500 mt-0.5 flex-shrink-0" 
-                />
-                <div>
-                  <Typography variant="body2" className="font-medium text-gray-800">
-                    Tickets
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    {event.ticketUrl ? 'Available for purchase' : 'Not available yet'}
-                  </Typography>
-                </div>
+          {/* Info */}
+          <div className="space-y-4 text-sm">
+            <div className="flex gap-2 items-start">
+              <LocationOnIcon fontSize="small" sx={{ fontSize: '18px', opacity: 0.6 }} />
+              <div>
+                <div className="font-medium text-white">Location</div>
+                <div className="text-white/70">{city}</div>
               </div>
             </div>
 
-            {/* Action button */}
-            {event.ticketUrl && (
-              <div className="pt-2">
-                <Button
-                  variant="contained"
-                  fullWidth
-                  onClick={handleTicketClick}
-                  sx={{
-                    backgroundColor: '#10b981',
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    py: 1.2,
-                    '&:hover': {
-                      backgroundColor: '#059669',
-                    }
-                  }}
-                >
-                  Get Tickets
-                </Button>
+            <div className="flex gap-2 items-start">
+              <AccessTimeIcon fontSize="small" sx={{ fontSize: '18px', opacity: 0.6 }} />
+              <div>
+                <div className="font-medium text-white">Date & Time</div>
+                <div className="text-white/70">{formattedDate}</div>
               </div>
-            )}
+            </div>
+
+            <div className="flex gap-2 items-start">
+              <ConfirmationNumberIcon fontSize="small" sx={{ fontSize: '18px', opacity: 0.6 }} />
+              <div>
+                <div className="font-medium text-white">Tickets</div>
+                <div className="text-white/70">
+                  {event.ticketUrl ? 'Available' : 'Not available yet'}
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Ticket Button */}
+          {event.ticketUrl && (
+            <Button
+              onClick={handleTicketClick}
+              fullWidth
+              variant="contained"
+              sx={{
+                mt: 4,
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 600,
+                py: 1.5,
+                fontSize: '0.875rem',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #059669, #047857)',
+                },
+              }}
+            >
+              Get Tickets
+            </Button>
+          )}
+          <div className="flex mt-4 gap-2">
+              <a
+                href={`http://maps.apple.com/?daddr=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+              >
+                Apple Maps
+              </a>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+              >
+                Google Maps
+              </a>
+            </div>
         </div>
-      </Popover>
+      </div>
+    </>,
+    document.body
+  );
+
+  return (
+    <div className="relative flex">
+      {/* Main Card */}
+      <div
+        onClick={handleCardClick}
+        className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border-l-4 border-green-500 text-black shadow transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-95 cursor-pointer h-24 w-full"
+      >
+        {hasImage ? (
+          <img src={event.image} alt={event.title} className="w-12 h-12 rounded-xl object-cover" />
+        ) : (
+          <div className="w-12 h-12 rounded-xl bg-green-500 text-white flex items-center justify-center font-bold text-lg">
+            {getInitials(event.title)}
+          </div>
+        )}
+
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-semibold text-black leading-snug line-clamp-2">
+            {event.title}
+          </h3>
+          <p className="text-sm text-gray-700 truncate whitespace-normal break-words leading-tight">
+            {eventDistance && <span className="text-green-600 font-medium">{eventDistance} km</span>}
+            {eventDistance && ' • '}
+            {formattedDate}
+          </p>
+        </div>
+
+
+        <div className="flex items-center text-black/80">
+          <InfoOutlineIcon
+            fontSize="small"
+            className="cursor-pointer hover:text-green-600 hover:scale-110 transition-all duration-200"
+            onClick={handleInfoClick}
+          />
+        </div>
+      </div>
+
+      {/* Render Popup (Portal) */}
+      {popup}
     </div>
   );
 };
