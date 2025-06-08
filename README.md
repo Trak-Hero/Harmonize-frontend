@@ -67,9 +67,6 @@ Our goal is to make the experience of finding music more **personal, expressive,
 
 **That’s it!** You’re ready to harmonize, discover fresh tracks, and connect with the music-loving community. Enjoy our app!
 
-Harmonize is a music discovery social media platform that connects listeners with emerging artists, and with each other. It is a platform that allows music lovers to explore fresh, undiscovered tracks while engaging with a diverse community of users and supporting new artists.
-
-
 ## Architecture
 
 ### Front-end: *reverberate-client*
