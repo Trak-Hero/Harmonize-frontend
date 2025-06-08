@@ -13,21 +13,37 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
     setError('');
 
     try {
-      const res = await fetch(`${API_BASE}/spotify/friends/top`, {
+      const meRes = await fetch(`${API_BASE}/api/users/me`, {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+      if (!meRes.ok) throw new Error(`HTTP ${meRes.status}: ${await meRes.text()}`);
 
-      const { friends } = await res.json();
-      const filtered = friends.filter(entry => {
-        const name = entry.friend?.name || '';
-        return name.toLowerCase().includes(query.toLowerCase());
+      const me = await meRes.json();
+      const { following = [], followers = [] } = me;
+
+      const mutualIds = following.filter(id => followers.includes(id));
+      if (mutualIds.length === 0) return setUsers([]);
+
+      // Fetch each mutual friend
+      const res = await fetch(`${API_BASE}/api/users/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ ids: mutualIds }),
       });
 
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+
+      const allMutuals = await res.json();
+      const filtered = allMutuals.filter(user =>
+        user.displayName?.toLowerCase().includes(query.toLowerCase()) ||
+        user.username?.toLowerCase().includes(query.toLowerCase())
+      );
 
       setUsers(filtered);
+
     } catch (err) {
       console.error('❌ Failed to load friends:', err);
       setError(`Failed to load friends: ${err.message}`);
@@ -82,23 +98,25 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
             <p className="text-white/60">No users found. Try a different search.</p>
           )}
 
-          {users.map((entry) => {
-            const user = entry.friend;
-            return (
-              <div
-                key={user.id}
-                onClick={() => onSelectUser(user)}
-                className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700 transition-colors"
-              >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                  {user.name?.[0]?.toUpperCase() || '?'}
-                </div>
-                <div>
-                  <div className="text-white font-medium">{user.name}</div>
-                </div>
+          {users.map((user) => (
+            <div
+              key={user._id || user.id}
+              onClick={() => onSelectUser(user)}
+              className="flex items-center gap-3 bg-zinc-800 p-3 rounded cursor-pointer hover:bg-zinc-700 transition-colors"
+            >
+              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                {user.displayName?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || '?'}
               </div>
-            );
-          })}
+              <div>
+                <div className="text-white font-medium">
+                  {user.displayName || user.username}
+                </div>
+                {user.displayName && user.username && (
+                  <div className="text-gray-400 text-sm">@{user.username}</div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="text-right pt-4 border-t border-zinc-700">
