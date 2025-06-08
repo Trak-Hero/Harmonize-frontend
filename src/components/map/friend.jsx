@@ -59,8 +59,9 @@ const Friend = ({ friend, onSelect }) => {
       }
     };
 
-    if (showPopup) fetchBlend();
-  }, [showPopup, friend]);
+    fetchBlend(); // fetch immediately on mount or friend change
+  }, [friend]);
+
 
   return (
     <div className="relative">
@@ -89,7 +90,9 @@ const Friend = ({ friend, onSelect }) => {
               <span className="text-green-600 font-medium">{friendDistance} km</span>
             )}
             {friendDistance && ' • '}
-            {typeof blendPercentage === 'number' && `${blendPercentage}% match`}
+            {isCalculating
+              ? <span className="text-gray-500 animate-pulse">Calculating...</span>
+              : `${blendPercentage}% match`}
           </p>
         </div>
 
