@@ -13,7 +13,7 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
     setError('');
 
     try {
-      const res = await fetch(`${API_BASE}/spotify/api/friends/top`, {
+      const res = await fetch(`${API_BASE}/spotify/friends/top`, {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
