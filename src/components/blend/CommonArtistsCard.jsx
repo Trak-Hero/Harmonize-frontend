@@ -51,7 +51,7 @@ export default function CommonArtistsCard({ artists }) {
   return (
     <div className="relative p-6 rounded-2xl text-white shadow-xl bg-gradient-to-br from-green-700 via-emerald-500 to-orange-400 transform transition-all duration-500 hover:scale-105">
       {/* Animated header */}
-      <h2 className="text-2xl font-serif font-semibold mb-4 opacity-0 animate-fade-in-up" 
+      <h2 className="text-2xl font-afacad font-semibold mb-4 opacity-0 animate-fade-in-up" 
           style={{ animationDelay: '0ms', animationFillMode: 'forwards' }}>
         Common Artists
       </h2>

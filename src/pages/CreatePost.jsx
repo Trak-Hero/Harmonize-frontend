@@ -36,25 +36,13 @@ const CreatePost = () => {
       }
       
       const data = await res.json();
-      console.log('Search results:', data);
-      
-      // Debug: Log preview URLs
-      data.forEach((track, index) => {
-        console.log(`Track ${index + 1}:`, {
-          name: track.name,
-          artist: track.artists?.[0]?.name,
-          preview_url: track.preview_url || 'No preview available',
-          hasPreview: !!track.preview_url
-        });
-      });
-
       setSearchResults(data || []);
     } catch (err) {
       console.error('Spotify Search Error:', err);
       alert('Failed to search Spotify. Please try again.');
     } finally {
-    setIsSearching(false);
-  }
+      setIsSearching(false);
+    }
   };
 
   const handleTrackSelect = (track) => {
@@ -215,8 +203,8 @@ const CreatePost = () => {
           />
 
           <div className="w-full px-3 py-2 rounded bg-gray-800 text-white">
-            <label className="block text-sm text-gray-400 mb-1">Artist</label>
-            <p>{formData.artist || 'Artist will appear here'}</p>
+            <label className="text-left block text-sm text-gray-400 mb-1">Artist</label>
+            <p className="text-left">{formData.artist || 'Artist will appear here'}</p>
           </div>
 
           <select
