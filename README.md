@@ -53,96 +53,249 @@ Map: Mapbox/Leaflet
 
 Framework: Express.js
 Database: MongoDB (via Mongoose)
-Endpoints:
-- GET /users
-- POST /artists
-- GET /tracks, POST /tracks
-- GET /events
-- GET /blend/:user1/:user2
+# Backend Data Model Documentation
 
-Data Models:
-- User
-`
+## Framework & Technology Stack
+- **Framework:** Express.js
+- **Database:** MongoDB (via Mongoose)
+- **Authentication:** Session-based with Spotify OAuth integration
+- **External APIs:** Spotify Web API, Ticketmaster API, OpenCage Geocoding API
+
+## API Endpoints
+
+### Authentication
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User login
+- `POST /auth/logout` - User logout
+- `GET /auth/spotify/login` - Spotify OAuth login
+- `GET /auth/spotify/callback` - Spotify OAuth callback
+- `GET /auth/api/me` - Get current user profile
+
+### Users
+- `GET /users` - Get all users
+- `GET /users/search` - Search users (authenticated)
+- `GET /users/:id` - Get user profile
+- `POST /users/:id/follow` - Follow user (authenticated)
+- `DELETE /users/:id/follow` - Unfollow user (authenticated)
+- `GET /users/:id/following` - Get user's following list
+- `GET /users/:id/followers` - Get user's followers list
+- `POST /users/location` - Update user location (authenticated)
+
+### Artists
+- `GET /artists` - Get all artists
+- `POST /artists` - Create artist
+- `GET /artists/spotify/search` - Search Spotify artists
+- `GET /artists/spotify/:id` - Get Spotify artist data
+- `PATCH /artists/:id/follow` - Follow/unfollow artist
+- `PATCH /artists/:id/bio` - Update artist bio
+
+### Music Posts
+- `GET /posts` - Get all music posts
+- `POST /posts` - Create music post (authenticated)
+- `GET /posts/spotify/search` - Search Spotify tracks
+- `POST /posts/:id/like` - Like music post (authenticated)
+- `POST /posts/:id/unlike` - Unlike music post (authenticated)
+- `GET /posts/my-posts` - Get user's posts (authenticated)
+
+### Spotify Integration
+- `GET /spotify/search` - Search Spotify (artists/tracks)
+- `GET /spotify/top-artists` - Get user's top artists (authenticated)
+- `GET /spotify/user/:id` - Get friend's Spotify data
+- `GET /spotify/friends/top` - Get friends' top music (authenticated)
+
+### Music Discovery & Recommendations
+- `GET /api/me/spotify` - Get user's Spotify profile + top music
+- `GET /api/recommendations` - Get personalized recommendations
+- `GET /api/discover/:method` - Alternative discovery methods
+- `GET /api/recent` - Get recently played tracks
+- `GET /api/genre-stats` - Get user's genre statistics
+- `GET /api/genre-timeline` - Get genre listening timeline
+
+### Events
+- `GET /events` - Get all events
+- `POST /events` - Create event
+- `GET /ticketmaster/events` - Get Ticketmaster events by location
+
+### Tiles (Dashboard)
+- `GET /tiles` - Get user's tiles
+- `POST /tiles` - Create tile (authenticated)
+- `PATCH /tiles/:id` - Update tile (authenticated)
+- `DELETE /tiles/:id` - Delete tile (authenticated)
+- `PATCH /tiles/bulk-layout` - Bulk update tile positions
+
+### Utilities
+- `GET /geocode/reverse` - Reverse geocoding (lat/lng to city)
+- `GET /blend/:user1/:user2` - Generate music taste comparison
+
+## Data Models
+
+### User
+```javascript
 {
-  username: String,
-  email: String,
-  passwordHash: String,
-  bio: String,
-  profileImage: String,
-  topArtists: [String],
-  favoriteTracks: [ObjectId], 
-  playlists: [ObjectId],
-  friends: [ObjectId],
-  location: { city: String, coordinates: [Number] }
-}
-`
-
-- Artist (extends user)
-
-`
-{
-  userId: ObjectId, // refs User
-  artistName: String,
-  bio: String,
-  tags: [String], // genre, vibe, theme
-  tracks: [ObjectId], // refs Track
-  merchLinks: [String],
-  profilePic: String
-}
-`
-
-- Track
-`
-{
-  title: String,
-  artistId: ObjectId, // refs Artist
-  audioUrl: String,
-  coverArtUrl: String,
-  tags: [String],
-  visibility: String, // public | demo | preview
-  likes: [ObjectId], // refs User
-  comments: [{ userId: ObjectId, content: String, timestamp: Date }]
-}
-`
-
-- Playlist
-
-`
-{
-  userId: ObjectId,
-  name: String,
-  trackIds: [ObjectId],
-  isPublic: Boolean
-}
-`
-
-- Event
-
-`
-{
-  title: String,
-  artistId: ObjectId,
+  username: String,           // Unique username (lowercase)
+  email: String,             // Email address
+  password: String,          // Hashed password (select: false)
+  displayName: String,       // Display name
+  bio: String,              // User biography
+  avatar: String,           // Profile picture URL
+  accountType: String,      // 'user' | 'artist'
+  
+  // Spotify Integration
+  spotifyId: String,        // Spotify user ID
+  spotifyAccessToken: String,
+  spotifyRefreshToken: String,
+  spotifyTokenExpiresAt: Date,
+  
+  // Social Features
+  following: [ObjectId],    // Users followed by this user
+  followers: [ObjectId],    // Users following this user
+  topArtists: [String],     // User's top artist IDs
+  favoriteTracks: [ObjectId], // Favorite track references
+  
+  // Location
   location: {
-    name: String,
-    coordinates: [Number]
+    type: 'Point',
+    coordinates: [Number]   // [longitude, latitude]
   },
-  date: Date,
-  description: String
+  
+  createdAt: Date,
+  updatedAt: Date
 }
-`
-
-- MusicTasteGraph
-
-`
+```
+### Artist
+```
 {
-  user1: ObjectId,
-  user2: ObjectId,
-  overlapScore: Number,
-  sharedArtists: [String],
-  differentGenres: [String],
+  artistName: String,       // Artist name
+  bio: String,             // Artist biography
+  spotifyId: String,       // Spotify artist ID
+  profilePic: String,      // Profile picture URL
+  followers: [ObjectId],   // Users following this artist
+  albums: [{              // Album information
+    id: String,
+    name: String,
+    cover: String,
+    year: String,
+    images: [Object]
+  }],
+  topTracks: [{           // Top tracks
+    id: String,
+    name: String,
+    popularity: Number,
+    album: { images: [Object] }
+  }],
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+MusicPost
+
+```
+{
+  spotifyTrackId: String,   // Spotify track ID
+  title: String,           // Track title
+  artist: String,          // Artist name(s)
+  coverUrl: String,        // Album cover URL
+  previewUrl: String,      // Track preview URL
+  duration: Number,        // Track duration in seconds
+  caption: String,         // User's caption
+  genre: String,          // Music genre
+  tags: [String],         // Post tags
+  uploadedBy: ObjectId,   // User who posted (ref: User)
+  likes: Number,          // Like count
+  likedBy: [ObjectId],    // Users who liked (ref: User)
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+Event
+
+```
+{
+  title: String,          // Event title
+  artistId: ObjectId,     // Artist reference
+  location: {
+    type: 'Point',
+    coordinates: [Number] // [longitude, latitude]
+  },
+  date: Date,            // Event date
+  genre: String,         // Music genre
+  genreKey: String,      // Normalized genre key
+  description: String,   // Event description
+  ticketUrl: String,     // Ticket purchase URL
+  image: String,         // Event image URL
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+Track
+
+```
+{
+  title: String,          // Track title
+  artistId: ObjectId,     // Artist reference
+  audioUrl: String,       // Audio file URL
+  coverArtUrl: String,    // Cover art URL
+  tags: [String],         // Track tags
+  visibility: String,     // 'public' | 'demo' | 'private'
+  likes: [ObjectId],      // Users who liked
+  comments: [{           // Track comments
+    userId: ObjectId,
+    content: String,
+    timestamp: Date
+  }],
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+Tile
+
+```
+{
+  userId: ObjectId,       // User who owns the tile
+  type: String,          // 'text' | 'image' | 'music' | etc.
+  content: String,       // Tile content
+  title: String,         // Tile title
+  bgImage: String,       // Background image URL
+  bgColor: String,       // Background color
+  font: String,          // Font family
+  x: Number,             // Grid X position
+  y: Number,             // Grid Y position
+  w: Number,             // Grid width
+  h: Number,             // Grid height
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+MusicTasteGraph
+
+```
+{
+  user1: ObjectId,           // First user reference
+  user2: ObjectId,           // Second user reference
+  overlapScore: Number,      // Compatibility score (0-1)
+  sharedArtists: [String],   // Common artists
+  differentGenres: [String], // Differing genres
   generatedAt: Date
 }
-`
+```
+
+Friend
+
+```
+{
+  userId: ObjectId,       // User who initiated friendship
+  friendId: ObjectId,     // User who was friended
+  status: String,         // 'pending' | 'accepted' | 'blocked'
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
 
 ## Setup
 
