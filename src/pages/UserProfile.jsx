@@ -433,12 +433,12 @@ export default function UserProfile() {
         )}
       </section>
 
-      {/* ──────────────── right column ────────────────
+      {/* ──────────────── right column ──────────────── */}
       <aside className="col-span-12 lg:col-span-4">
         <div className="card backdrop-blur-lg h-full">
-          <FriendActivity />
+          {/* <FriendActivity /> */}
         </div>
-      </aside> */}
+      </aside>
 
       {/* ──────────────── modal editors ──────────────── */}
       {editorOpen && isOwner && <TileEditor tile={tileBeingEdited} />}
