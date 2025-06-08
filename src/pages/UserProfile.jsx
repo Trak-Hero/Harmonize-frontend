@@ -12,7 +12,7 @@ import TileEditor      from '../components/TileEditor';
 import FavoriteSongs   from '../components/FavoriteSongs';
 import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed  from '../components/RecentlyPlayed';
-import FriendActivity  from '../components/FriendActivity';
+// import FriendActivity  from '../components/FriendActivity';
 import ProfileEditor   from '../components/ProfileEditor';
 import FavoritePlaylists from '../components/FavoritePlaylists';
 
@@ -433,12 +433,12 @@ export default function UserProfile() {
         )}
       </section>
 
-      {/* ──────────────── right column ──────────────── */}
+      {/* ──────────────── right column ────────────────
       <aside className="col-span-12 lg:col-span-4">
         <div className="card backdrop-blur-lg h-full">
           <FriendActivity />
         </div>
-      </aside>
+      </aside> */}
 
       {/* ──────────────── modal editors ──────────────── */}
       {editorOpen && isOwner && <TileEditor tile={tileBeingEdited} />}
