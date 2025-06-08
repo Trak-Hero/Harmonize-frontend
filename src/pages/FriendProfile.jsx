@@ -170,7 +170,7 @@ export default function FriendProfile() {
           {tiles.map((t) => (
             <div key={t._id || t.id} data-grid={{ ...t, i: t._id || t.id }}>
               <div className="card h-full">
-                <Tile tile={t} />
+                <Tile tile={t} readOnly />
               </div>
             </div>
           ))}
