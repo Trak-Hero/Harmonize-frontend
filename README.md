@@ -23,7 +23,9 @@
 ## Project Description
 Harmonize is a social music discovery platform where users can discover new music, express their taste through customizable profiles, and connect with other listeners. Our goal was to make the experience of finding new music feel more personal, expressive, and socially engaging.
 
+- Customizable profile tiles
 <img width="1512" alt="Screenshot 2025-06-08 at 3 03 42 PM" src="https://github.com/user-attachments/assets/4df9a868-24b9-4b34-badc-789d8bf6caea" />
+- Real-time friend/event map view
 <img width="1512" alt="Screenshot 2025-06-08 at 3 04 15 PM" src="https://github.com/user-attachments/assets/d8846edc-8ef0-41e5-afc5-31d63adeb767" />
 <img width="1512" alt="Screenshot 2025-06-08 at 3 04 33 PM" src="https://github.com/user-attachments/assets/526dc814-0cfa-4978-8ab3-52f704ddd98b" />
 <img width="1507" alt="Screenshot 2025-06-08 at 3 05 21 PM" src="https://github.com/user-attachments/assets/04b895e3-dba9-4fe1-ba9f-cd0504ba3469" />
@@ -314,7 +316,7 @@ Database: MongoDB (via Mongoose)
 
 ## Setup
 
-TODO: how to get the project dev environment up and running, npm install etc
+These steps get your dev environment running smoothly:
 
 ### Clone the repo
 git clone https://github.com/dartmouth-cs52-25s/project-music-and-memories.git
@@ -332,15 +334,11 @@ npm run dev
 
 ## Deployment
 
-TODO: how to deploy the project
-
 - **Frontend**: Deployed via [Render](https://render.com), auto-deployed on push to `main` branch.
 - **Backend**: Also hosted on Render with environment variables set securely.
 - **Database**: MongoDB Atlas for managed NoSQL persistence.
 
 ## Authors
-
-TODO: list of authors
 
 - Trak (Purin) Prateepmanowong
 - Shisui Torii
