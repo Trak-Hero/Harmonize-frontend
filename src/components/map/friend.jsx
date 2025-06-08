@@ -96,7 +96,7 @@ const Friend = ({ friend, onSelect }) => {
         <div className="flex items-center text-black/80">
           <InfoOutlineIcon
             fontSize="small"
-            className="cursor-pointer"
+            className="cursor-pointer hover:text-green-600 hover:scale-110 transition-all duration-200"
             onClick={(e) => {
               e.stopPropagation();
               setShowPopup(true);
@@ -106,7 +106,7 @@ const Friend = ({ friend, onSelect }) => {
       </div>
 
       {showPopup && (
-        <div className="absolute z-50 top-20 left-1/2 transform -translate-x-1/2 bg-white p-4 w-64 rounded-xl shadow-xl text-center border">
+        <div className="absolute z-50 top-20 left-24 bg-white p-4 w-64 rounded-xl shadow-xl text-center border">
           <button
             onClick={() => setShowPopup(false)}
             className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -147,6 +147,7 @@ const Friend = ({ friend, onSelect }) => {
           </Link>
         </div>
       )}
+
     </div>
   );
 };

@@ -25,7 +25,7 @@ const FilterBar = ({ onFilterChange, genres = [] }) => {
     onFilterChange({ genre, sortBy, distance: selectedDistance });
   };
   const selectWrapperClass = "flex flex-col relative";
-  const selectClass = "appearance-none pl-3 pr-10 py-2 rounded-full text-sm text-white bg-transparent border border-white focus:outline-none w-full"
+  const selectClass = "appearance-none pl-3 pr-10 py-2 truncate rounded-full text-sm text-white bg-transparent border border-white focus:outline-none w-full"
 
   return (
     <div className="flex flex-row gap-4">
