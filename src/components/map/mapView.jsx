@@ -84,6 +84,7 @@ const LocationMarker = () => {
   );
 };
 
+
 const MapResizeFix = () => {
   const map = useMap();
   useEffect(() => {
@@ -344,45 +345,66 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
         icon={icon}
         ref={(ref) => { if (ref) markerRefs.current[id] = ref; }}
       >
-        <Popup minWidth={260} maxWidth={300}>
-          <div className="backdrop-blur-sm bg-black/50 rounded-2xl p-4 shadow-xl space-y-3 text-white font-sans">
-            <div className="flex items-center gap-3">
+        <Popup minWidth={280} maxWidth={320}>
+          <div className="backdrop-blur-sm bg-black/60 rounded-2xl p-4 shadow-xl text-white space-y-4 font-sans">
+            <div className="flex gap-3 items-center">
+              {/* Left: Image */}
               {event.image ? (
                 <img
                   src={event.image}
                   alt={event.title}
-                  className="w-10 h-10 rounded-full object-cover border border-white shadow"
+                  className="w-14 h-14 rounded-lg object-cover border border-white shadow"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow border border-white">
+                <div className="w-14 h-14 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow border border-white">
                   {getInitials(event.title)}
                 </div>
               )}
-              <div>
-                <h2 className="text-base font-semibold">{event.title}</h2>
-                <p className="text-xs text-gray-300">{new Date(event.date).toLocaleString()}</p>
+
+              {/* Right: Info */}
+              <div className="flex flex-col gap-1 text-sm text-white/90">
+                <h2 className="text-base font-semibold text-white leading-snug">{event.title}</h2>
+
+                <div className="flex items-center gap-1 text-white/70">
+                  <span>🕒</span>
+                  <span>
+                    {new Date(event.date).toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true,
+                    })}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1 text-white/70">
+                  <span>📍</span>
+                  <span>{city}</span>
+                </div>
               </div>
             </div>
 
-            <p className="text-sm italic text-gray-400">📍 {city}</p>
-
+            {/* Ticket Button */}
             {event.ticketUrl && (
               <a
                 href={event.ticketUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full text-center bg-white text-black font-medium py-2 rounded-lg hover:bg-gray-200 transition"
+                className="block w-full text-center bg-white text-black font-semibold py-2 rounded-xl hover:bg-gray-200 transition"
               >
                 Buy Ticket
               </a>
             )}
 
+            {/* Map Buttons */}
             <div className="flex gap-2">
               <a
                 href={`http://maps.apple.com/?daddr=${lat},${lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-xl hover:bg-gray-700 transition"
               >
                 Apple Maps
               </a>
@@ -390,13 +412,15 @@ const EventMarkers = ({ visible, events = [], selectedEventId }) => {
                 href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-xl hover:bg-gray-700 transition"
               >
                 Google Maps
               </a>
             </div>
           </div>
         </Popup>
+
+
       </Marker>
     );
   });

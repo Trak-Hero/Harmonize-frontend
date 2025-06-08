@@ -55,7 +55,7 @@ export default function Navbar() {
           <Link key={name} to={`/${name.toLowerCase()}`} className={navLinkClasses}>
             <div className="flex items-center gap-1">
               {icon}
-              <span>{name}</span>
+              <span className="whitespace-nowrap">{name}</span>
             </div>
             <span className={underlineSpanClasses}></span>
           </Link>

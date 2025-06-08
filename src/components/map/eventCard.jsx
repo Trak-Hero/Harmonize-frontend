@@ -170,6 +170,24 @@ const EventCard = ({ event, onSelect }) => {
               Get Tickets
             </Button>
           )}
+          <div className="flex mt-4 gap-2">
+              <a
+                href={`http://maps.apple.com/?daddr=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+              >
+                Apple Maps
+              </a>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-lg hover:bg-gray-700 transition"
+              >
+                Google Maps
+              </a>
+            </div>
         </div>
       </div>
     </>,
@@ -191,14 +209,17 @@ const EventCard = ({ event, onSelect }) => {
           </div>
         )}
 
-        <div className="flex-1">
-          <h3 className="text-base font-semibold text-black">{event.title}</h3>
-          <p className="text-sm text-gray-700">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-semibold text-black leading-snug line-clamp-2">
+            {event.title}
+          </h3>
+          <p className="text-sm text-gray-700 truncate whitespace-normal break-words leading-tight">
             {eventDistance && <span className="text-green-600 font-medium">{eventDistance} km</span>}
             {eventDistance && ' • '}
             {formattedDate}
           </p>
         </div>
+
 
         <div className="flex items-center gap-3 text-black/70">
           <PeopleIcon fontSize="small" />
