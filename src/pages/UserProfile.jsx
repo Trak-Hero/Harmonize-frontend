@@ -1,4 +1,3 @@
-// src/pages/UserProfile.jsx
 import { useState, useEffect, useCallback } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { useParams } from 'react-router-dom';
@@ -12,7 +11,7 @@ import TileEditor      from '../components/TileEditor';
 import FavoriteSongs   from '../components/FavoriteSongs';
 import FavoriteArtists from '../components/FavoriteArtists';
 import RecentlyPlayed  from '../components/RecentlyPlayed';
-import FriendActivity  from '../components/FriendActivity';
+// import FriendActivity  from '../components/FriendActivity';
 import ProfileEditor   from '../components/ProfileEditor';
 import FavoritePlaylists from '../components/FavoritePlaylists';
 
@@ -291,101 +290,159 @@ export default function UserProfile() {
   const followingCount = profileData?.following?.length ?? 0;
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      {/* ──────────────── main column ──────────────── */}
-      <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-        {/* header */}
-        <header className="space-y-3 flex items-center gap-6">
-          {authUser.avatar && (
-            <img
-              src={authUser.avatar}
-              className="h-24 w-24 rounded-full object-cover border border-white/20"
-              alt="Profile avatar"
-            />
-          )}
-
-          <div className="flex-1 space-y-2">
-            <div className="flex items-center gap-3">
-              <h1 className="text-5xl font-extrabold">
-                {authUser.displayName || authUser.username || 'Your Profile'}
-              </h1>
-              {isOwner && (
-                <button
-                  onClick={() => setShowEditor(true)}
-                  className="px-4 py-2 bg-white text-black rounded-full text-sm hover:bg-zinc-200"
-                >
-                  Edit
-                </button>
-              )}
-            </div>
-            {authUser.bio && <p className="text-white/70">{authUser.bio}</p>}
-            <p className="text-white/40 text-sm">
-              {followersCount} {followersCount === 1 ? 'follower' : 'followers'} • {followingCount} following
-            </p>
-          </div>
-        </header>
-
-        {/* tab selector */}
-        <nav className="flex gap-3 mt-4">
-          {['recent', 'space'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-full text-lg font-semibold ${
-                activeTab === tab
-                  ? 'bg-white text-black'
-                  : 'bg-white/10 text-white/70 border border-white/30'
-              }`}
-            >
-              {tab === 'recent' ? 'Recent' : 'Space'}
-            </button>
-          ))}
-        </nav>
-
-        {/* tab content */}
-        {activeTab === 'recent' ? (
-          <div className="space-y-6 mt-6">
-            {spotifyLoading ? (
-              <div className="text-center py-8 text-white/60">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-                <p>Loading Spotify data…</p>
-              </div>
-            ) : effectiveRecent.length > 0 ? (
-              <>
-                <div className="card">
-                  <FavoriteSongs songs={spotifyData?.top ?? []} />
-                </div>
-                <div className="card">
-                  <FavoriteArtists artists={spotifyData?.top_artists ?? []} />
-                </div>
-                <div className="card">
-                  <RecentlyPlayed recent={effectiveRecent} />
-                </div>
-                {Array.isArray(spotifyData?.playlists) && spotifyData.playlists.length > 0 && (
-                  <div className="card">
-                    <FavoritePlaylists playlists={spotifyData.playlists} />
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-8 text-white/60">
-                <p>No Spotify data available.</p>
-                {isOwner && (
-                  <p className="text-sm mt-2">
-                    Connect your Spotify account to see recent activity.
-                  </p>
-                )}
-              </div>
+    <>
+      {activeTab === 'recent' ? (
+        /* Recent tab - Constrained width layout */
+        <div className="max-w-screen-xl mx-auto px-6 py-12">
+          {/* Profile Header */}
+          <header className="space-y-3 flex items-center gap-6 mb-6">
+            {authUser.avatar && (
+              <img
+                src={authUser.avatar}
+                className="h-24 w-24 rounded-full object-cover border border-white/20"
+                alt="Profile avatar"
+              />
             )}
+
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-3">
+                <h1 className="text-5xl font-extrabold">
+                  {authUser.displayName || authUser.username || 'Your Profile'}
+                </h1>
+                {isOwner && (
+                  <button
+                    onClick={() => setShowEditor(true)}
+                    className="px-4 py-2 bg-white text-black rounded-full text-sm hover:bg-zinc-200"
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+              {authUser.bio && <p className="text-white/70">{authUser.bio}</p>}
+              <p className="text-white/40 text-sm">
+                {followersCount} {followersCount === 1 ? 'follower' : 'followers'} • {followingCount} following
+              </p>
+            </div>
+          </header>
+
+          {/* Tab selector */}
+          <nav className="flex gap-3 mb-6">
+            {['recent', 'space'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-6 py-2 rounded-full text-lg font-semibold ${
+                  activeTab === tab
+                    ? 'bg-white text-black'
+                    : 'bg-white/10 text-white/70 border border-white/30'
+                }`}
+              >
+                {tab === 'recent' ? 'Recent' : 'Space'}
+              </button>
+            ))}
+          </nav>
+
+          {/* Recent content */}
+          <div className="grid grid-cols-12 gap-6">
+            <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+              {spotifyLoading ? (
+                <div className="text-center py-8 text-white/60">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+                  <p>Loading Spotify data…</p>
+                </div>
+              ) : effectiveRecent.length > 0 ? (
+                <>
+                  <div className="card">
+                    <FavoriteSongs songs={spotifyData?.top ?? []} />
+                  </div>
+                  <div className="card">
+                    <FavoriteArtists artists={spotifyData?.top_artists ?? []} />
+                  </div>
+                  <div className="card">
+                    <RecentlyPlayed recent={effectiveRecent} />
+                  </div>
+                  {Array.isArray(spotifyData?.playlists) && spotifyData.playlists.length > 0 && (
+                    <div className="card">
+                      <FavoritePlaylists playlists={spotifyData.playlists} />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-8 text-white/60">
+                  <p>No Spotify data available.</p>
+                  {isOwner && (
+                    <p className="text-sm mt-2">
+                      Connect your Spotify account to see recent activity.
+                    </p>
+                  )}
+                </div>
+              )}
+            </section>
           </div>
-        ) : (
-          <div className="space-y-6 mt-6">
+        </div>
+      ) : (
+        /* Space tab - Full viewport width */
+        <div className="min-h-screen w-full">
+          {/* Header and tabs with constrained width */}
+          <div className="max-w-screen-xl mx-auto px-6 py-12">
+            {/* Profile Header */}
+            <header className="space-y-3 flex items-center gap-6 mb-6">
+              {authUser.avatar && (
+                <img
+                  src={authUser.avatar}
+                  className="h-24 w-24 rounded-full object-cover border border-white/20"
+                  alt="Profile avatar"
+                />
+              )}
+
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-5xl font-extrabold">
+                    {authUser.displayName || authUser.username || 'Your Profile'}
+                  </h1>
+                  {isOwner && (
+                    <button
+                      onClick={() => setShowEditor(true)}
+                      className="px-4 py-2 bg-white text-black rounded-full text-sm hover:bg-zinc-200"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                {authUser.bio && <p className="text-white/70">{authUser.bio}</p>}
+                <p className="text-white/40 text-sm">
+                  {followersCount} {followersCount === 1 ? 'follower' : 'followers'} • {followingCount} following
+                </p>
+              </div>
+            </header>
+
+            {/* Tab selector */}
+            <nav className="flex gap-3 mb-6">
+              {['recent', 'space'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-2 rounded-full text-lg font-semibold ${
+                    activeTab === tab
+                      ? 'bg-white text-black'
+                      : 'bg-white/10 text-white/70 border border-white/30'
+                  }`}
+                >
+                  {tab === 'recent' ? 'Recent' : 'Space'}
+                </button>
+              ))}
+            </nav>
+
+            {/* TilePicker */}
             {isOwner && (
-              <div className="mb-4">
+              <div className="mb-8 flex justify-center">
                 <TilePicker onAdd={handleAddTile} />
               </div>
             )}
+          </div>
 
+          {/* Full-width tile grid */}
+          <div className="w-full px-6">
             {tilesLoading ? (
               <div className="text-center py-8 text-white/60">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
@@ -424,26 +481,19 @@ export default function UserProfile() {
                 <p>No tiles to display.</p>
                 {isOwner && (
                   <p className="text-sm mt-2">
-                    Click "Space" → "Add Tile" to start building your profile.
+                    Click "Add Tile" to start building your profile.
                   </p>
                 )}
               </div>
             )}
           </div>
-        )}
-      </section>
-
-      {/* ──────────────── right column ──────────────── */}
-      <aside className="col-span-12 lg:col-span-4">
-        <div className="card backdrop-blur-lg h-full">
-          <FriendActivity />
         </div>
-      </aside>
+      )}
 
       {/* ──────────────── modal editors ──────────────── */}
       {editorOpen && isOwner && <TileEditor tile={tileBeingEdited} />}
       {showEditor && isOwner && <ProfileEditor onClose={() => setShowEditor(false)} />}
-    </div>
+    </>
   );
 }
 

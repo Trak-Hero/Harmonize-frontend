@@ -9,10 +9,6 @@ import useFriendStore from '../state/friendStore';
 import withTokenRefresh from '../utils/withTokenRefresh';
 
 import Tile from '../components/Tile';
-import FavoriteSongs from '../components/FavoriteSongs';
-import FavoriteArtists from '../components/FavoriteArtists';
-import RecentlyPlayed from '../components/RecentlyPlayed';
-import FriendActivity from '../components/FriendActivity';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -20,7 +16,7 @@ import '../index.css';
 
 const ResponsiveGrid = WidthProvider(Responsive);
 const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
-const cols = { xxs: 1, xs: 2, sm: 4, md: 8, lg: 12 };
+const cols        = { xxs: 1, xs: 2, sm: 4,  md: 8,  lg: 12 };
 
 export default function FriendProfile() {
   const { id } = useParams();
@@ -30,41 +26,36 @@ export default function FriendProfile() {
   const { tiles, fetchTiles, setCurrentUserId } = useProfileStore();
   const {
     currentUserId,
-    friends = [],
+    friends      = [],
     followUser,
     unfollowUser,
     addFriendToStore
   } = useFriendStore();
 
-  const cached = friends.find((f) => (f.id || f._id) === id);
+  /* ────────────────────────────── friend data ───────────────────────────── */
+  const cached   = friends.find((f) => (f.id || f._id) === id);
   const [profile, setProfile] = useState(null);
-  const friend = cached || profile;
+  const friend   = cached || profile;
 
-  // Get the current user from the friends store
-  const me = friends.find((f) => String(f._id || f.id) === String(authUser?._id || authUser?.id));
-  const isOwner = String(authUser?._id || authUser?.id) === String(id);
-  
-  // Check if the current user is following this profile user
+  const me          = friends.find((f) => String(f._id || f.id) === String(authUser?._id || authUser?.id));
+  const isOwner     = String(authUser?._id || authUser?.id) === String(id);
   const isFollowing = !!me?.following?.some((fid) => String(fid) === String(id));
 
   const handleFollowToggle = async () => {
     try {
-      if (isFollowing) {
-        await unfollowUser(id);
-      } else {
-        await followUser(id);
-      }
-    } catch (error) {
-      console.error('Error toggling follow status:', error);
+      if (isFollowing) await unfollowUser(id);
+      else              await followUser(id);
+    } catch (err) {
+      console.error('Error toggling follow status:', err);
     }
   };
 
+  /* ─────────────────────────── spotify (optional) ────────────────────────── */
   const [spotifyData, setSpotifyData] = useState(null);
-
   const loadSpotify = useCallback(async () => {
     const res = await withTokenRefresh(
-      () => fetch(`${API}/spotify/user/${id}`, { credentials: 'include' }),
-      () => fetch(`${API}/auth/refresh`, { credentials: 'include' })
+      () => fetch(`${API}/spotify/user/${id}`,   { credentials: 'include' }),
+      () => fetch(`${API}/auth/refresh`,         { credentials: 'include' })
     );
     if (!res?.ok) return;
     const data = await res.json();
@@ -75,16 +66,12 @@ export default function FriendProfile() {
     });
   }, [API, id]);
 
-  // Fetch current user data to ensure we have the latest following status
+  /* ───────────────────────── fetch friend & tiles ────────────────────────── */
   useEffect(() => {
     if (authUser?._id && !me) {
       fetch(`${API}/api/users/${authUser._id}`, { credentials: 'include' })
         .then((r) => (r.ok ? r.json() : null))
-        .then((u) => {
-          if (u) {
-            addFriendToStore(u);
-          }
-        })
+        .then((u) => u && addFriendToStore(u))
         .catch(console.error);
     }
   }, [API, authUser, me, addFriendToStore]);
@@ -108,6 +95,7 @@ export default function FriendProfile() {
     loadSpotify();
   }, [friend, id, currentUserId, setCurrentUserId, fetchTiles, loadSpotify]);
 
+  /* ───────────────────────────── early returns ───────────────────────────── */
   if (!friend) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
@@ -116,7 +104,8 @@ export default function FriendProfile() {
     );
   }
 
-  const followersCount = friend.followers?.length ?? 0;
+  /* ──────────────────────────────── render ──────────────────────────────── */
+  const followersCount = friend.followers?.length  ?? 0;
   const followingCount = friend.following?.length ?? 0;
 
   const layoutItems = tiles.map((t) => ({
@@ -128,12 +117,13 @@ export default function FriendProfile() {
   }));
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-12 grid grid-cols-12 gap-6">
-      <Link to="/friends" className="inline-block mt-4 mb-6 text-blue-600 hover:underline">
-        ← Back to Friends
-      </Link>
+    <div className="min-h-screen w-full">
+      {/* header (constrained width for aesthetics) */}
+      <div className="max-w-screen-xl mx-auto px-6 py-12">
+        <Link to="/friends" className="inline-block mb-8 text-blue-600 hover:underline">
+          ← Back to Friends
+        </Link>
 
-      <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
         <header className="flex items-center gap-6">
           <img
             src={friend.avatar || 'https://placehold.co/150'}
@@ -145,7 +135,6 @@ export default function FriendProfile() {
               <h1 className="text-5xl font-extrabold">
                 {friend.displayName || friend.username || 'Friend'}
               </h1>
-
               {!isOwner && (
                 <button
                   onClick={handleFollowToggle}
@@ -159,16 +148,18 @@ export default function FriendProfile() {
                 </button>
               )}
             </div>
-
             {friend.bio && <p className="text-white/70">{friend.bio}</p>}
             <p className="text-white/40 text-sm">
               {followersCount} {followersCount === 1 ? 'follower' : 'followers'} • {followingCount} following
             </p>
           </div>
         </header>
+      </div>
 
+      {/* full‑width tile grid */}
+      <div className="w-full px-6">
         <ResponsiveGrid
-          className="layout mt-6"
+          className="layout"
           rowHeight={100}
           breakpoints={breakpoints}
           cols={cols}
@@ -184,13 +175,7 @@ export default function FriendProfile() {
             </div>
           ))}
         </ResponsiveGrid>
-      </section>
-
-      <aside className="col-span-12 lg:col-span-4">
-        <div className="card backdrop-blur-lg h-full">
-          <FriendActivity />
-        </div>
-      </aside>
+      </div>
     </div>
   );
 }
