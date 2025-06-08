@@ -35,19 +35,40 @@ function UserMarker() {
   if (!userLocation || !currentUser) return null;
 
   const initials = getInitials(currentUser.displayName || currentUser.username);
+  const hasAvatar = !!currentUser.avatar;
 
   const icon = L.divIcon({
-    html: currentUser.avatar
-      ? `<div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:3px solid #00D1B2;box-shadow:0 0 12px #00D1B2;">
-           <img src="${currentUser.avatar}" style="width:100%;height:100%;object-fit:cover;" />
-         </div>`
-      : `<div style="background-color:#00D1B2;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:bold;border:3px solid white;box-shadow:0 0 12px #00D1B2;">
-           ${initials}
-         </div>`,
-    iconSize: [44, 44],
-    iconAnchor: [22, 44],
-    popupAnchor: [0, -44],
+    html: hasAvatar
+      ? `<div style="
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          overflow: hidden;
+          border: 2px solid white;
+          box-shadow: 0 0 4px rgba(0,0,0,0.4);
+        ">
+          <img src="${currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover;" />
+        </div>`
+      : `<div style="
+          background-color: #3B82F6;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 14px;
+          font-weight: bold;
+          border: 2px solid white;
+          box-shadow: 0 0 3px rgba(0,0,0,0.3);
+        ">
+          ${initials}
+        </div>`,
     className: 'custom-div-icon',
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -36],
   });
 
   return (
@@ -58,6 +79,7 @@ function UserMarker() {
     </Marker>
   );
 }
+
 
 function LocationMarker() {
   const [pos, setPos] = useState(null);
