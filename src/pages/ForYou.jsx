@@ -168,8 +168,8 @@ const ForYou = () => {
   if (loading) {
     return (
       <div className="bg-black text-white min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent border-white mx-auto"></div>
           <p>Loading your music feed...</p>
         </div>
       </div>
@@ -195,12 +195,12 @@ const ForYou = () => {
   return (
     <div className="bg-black text-white min-h-screen">
       {/* Header with Create Post tab */}
-      <div className="flex justify-between items-center px-6 py-4 border-b border-gray-800">
-        <h1 className="text-3xl font-bold text-center flex-grow">Discover New Music For You</h1>
+      <div className="relative flex items-center justify-center px-6 py-4 bg-black/80 backdrop-blur-sm shadow-sm">
+        <h1 className="text-2xl font-bold text-center">Discover New Music For You</h1>
         <Link
           to="/create"
-          className="ml-4 px-4 py-2 text-sm rounded-full bg-white text-black hover:bg-gray-200 transition"
-        >
+          className="absolute right-6 px-4 py-2 text-sm rounded-full bg-white text-black hover:bg-gray-200 transition"
+          >
           Create a post
         </Link>
       </div>
