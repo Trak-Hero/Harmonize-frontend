@@ -183,8 +183,8 @@ const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
     const key = `${lat},${lng}`;
     const city = cityMap[key] || 'Loading...';
 
-    const hasPfp = !!friend.pfpUrl;
-    const icon = hasPfp
+    const hasAvatar = !!friend.avatar;
+    const icon = hasAvatar
       ? L.divIcon({
           html: `<div style="
             width: 36px;
@@ -194,7 +194,7 @@ const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
             border: 2px solid white;
             box-shadow: 0 0 4px rgba(0,0,0,0.4);
           ">
-            <img src="${friend.pfpUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+            <img src="${friend.avatar}" style="width: 100%; height: 100%; object-fit: cover;" />
           </div>`,
           className: '',
           iconSize: [36, 36],
@@ -235,9 +235,9 @@ const FriendsMarkers = ({ visible, friends = [], selectedFriendId }) => {
           <div className="backdrop-blur-sm bg-black/60 rounded-2xl p-4 shadow-xl text-white space-y-4 font-sans">
             <div className="flex gap-3 items-center">
               {/* Left: Avatar */}
-              {friend.pfpUrl ? (
+              {friend.avatar ? (
                 <img
-                  src={friend.pfpUrl}
+                  src={friend.avatar}
                   alt={friend.displayName || friend.username}
                   className="w-14 h-14 rounded-lg object-cover border border-white shadow"
                 />
