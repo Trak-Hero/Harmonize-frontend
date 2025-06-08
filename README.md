@@ -53,6 +53,7 @@ Map: Mapbox/Leaflet
 
 Framework: Express.js
 Database: MongoDB (via Mongoose)
+
 # Backend Data Model Documentation
 
 ## Framework & Technology Stack
@@ -130,135 +131,129 @@ Database: MongoDB (via Mongoose)
 ## Data Models
 
 ### User
-```javascript
+```
 {
-  username: String,           // Unique username (lowercase)
-  email: String,             // Email address
-  password: String,          // Hashed password (select: false)
-  displayName: String,       // Display name
-  bio: String,              // User biography
-  avatar: String,           // Profile picture URL
-  accountType: String,      // 'user' | 'artist'
+  displayName: String,      // Display name
+  username: String,         // Unique username (lowercase)
+  bio: String,             // User biography
+  avatar: String,          // Profile picture URL
+  email: String,           // Email address (unique, sparse)
+  password: String,        // Hashed password
+  accountType: String,     // 'user' | 'artist'
   
   // Spotify Integration
-  spotifyId: String,        // Spotify user ID
+  spotifyId: String,       // Spotify user ID (unique, sparse)
   spotifyAccessToken: String,
   spotifyRefreshToken: String,
   spotifyTokenExpiresAt: Date,
   
   // Social Features
-  following: [ObjectId],    // Users followed by this user
-  followers: [ObjectId],    // Users following this user
-  topArtists: [String],     // User's top artist IDs
-  favoriteTracks: [ObjectId], // Favorite track references
+  followers: [ObjectId],   // Users following this user (ref: User)
+  following: [ObjectId],   // Users followed by this user (ref: User)
   
-  // Location
+  // Location (GeoJSON Point)
   location: {
     type: 'Point',
-    coordinates: [Number]   // [longitude, latitude]
+    coordinates: [Number]  // [longitude, latitude], default [0, 0]
   },
   
   createdAt: Date,
   updatedAt: Date
 }
 ```
+
 ### Artist
 ```
 {
-  artistName: String,       // Artist name
-  bio: String,             // Artist biography
-  spotifyId: String,       // Spotify artist ID
-  profilePic: String,      // Profile picture URL
-  followers: [ObjectId],   // Users following this artist
-  albums: [{              // Album information
+  artistName: String,      // Artist name
+  bio: String,            // Artist biography
+  spotifyId: String,      // Spotify artist ID
+  profilePic: String,     // Profile picture URL
+  followers: [String],    // User IDs following this artist
+  
+  // Spotify Data
+  albums: [{             // Album information
     id: String,
     name: String,
     cover: String,
     year: String,
-    images: [Object]
+    images: [{ url: String }]
   }],
-  topTracks: [{           // Top tracks
+  topTracks: [{          // Top tracks
     id: String,
     name: String,
     popularity: Number,
-    album: { images: [Object] }
-  }],
-  createdAt: Date,
-  updatedAt: Date
+    album: { images: [{ url: String }] }
+  }]
 }
 ```
-
-MusicPost
-
+### Music Post
 ```
 {
-  spotifyTrackId: String,   // Spotify track ID
-  title: String,           // Track title
-  artist: String,          // Artist name(s)
-  coverUrl: String,        // Album cover URL
-  previewUrl: String,      // Track preview URL
-  duration: Number,        // Track duration in seconds
-  caption: String,         // User's caption
+  spotifyTrackId: String,  // Spotify track ID (required)
+  title: String,          // Track title (required)
+  artist: String,         // Artist name(s) (required)
   genre: String,          // Music genre
+  coverUrl: String,       // Album cover URL
+  previewUrl: String,     // 30s preview URL from Spotify
+  duration: Number,       // Track duration in seconds
+  caption: String,        // User's caption/description
   tags: [String],         // Post tags
   uploadedBy: ObjectId,   // User who posted (ref: User)
-  likes: Number,          // Like count
+  playCount: Number,      // Play count (default: 0)
+  likes: Number,          // Like count (default: 0)
   likedBy: [ObjectId],    // Users who liked (ref: User)
-  createdAt: Date,
-  updatedAt: Date
+  createdAt: Date
 }
 ```
 
-Event
-
+### Event
 ```
 {
-  title: String,          // Event title
-  artistId: ObjectId,     // Artist reference
-  location: {
-    type: 'Point',
-    coordinates: [Number] // [longitude, latitude]
-  },
-  date: Date,            // Event date
-  genre: String,         // Music genre
-  genreKey: String,      // Normalized genre key
-  description: String,   // Event description
-  ticketUrl: String,     // Ticket purchase URL
-  image: String,         // Event image URL
-  createdAt: Date,
-  updatedAt: Date
+  spotifyTrackId: String,  // Spotify track ID (required)
+  title: String,          // Track title (required)
+  artist: String,         // Artist name(s) (required)
+  genre: String,          // Music genre
+  coverUrl: String,       // Album cover URL
+  previewUrl: String,     // 30s preview URL from Spotify
+  duration: Number,       // Track duration in seconds
+  caption: String,        // User's caption/description
+  tags: [String],         // Post tags
+  uploadedBy: ObjectId,   // User who posted (ref: User)
+  playCount: Number,      // Play count (default: 0)
+  likes: Number,          // Like count (default: 0)
+  likedBy: [ObjectId],    // Users who liked (ref: User)
+  createdAt: Date
 }
 ```
 
-Track
-
+### Track
 ```
 {
-  title: String,          // Track title
-  artistId: ObjectId,     // Artist reference
-  audioUrl: String,       // Audio file URL
-  coverArtUrl: String,    // Cover art URL
-  tags: [String],         // Track tags
-  visibility: String,     // 'public' | 'demo' | 'private'
-  likes: [ObjectId],      // Users who liked
-  comments: [{           // Track comments
-    userId: ObjectId,
-    content: String,
-    timestamp: Date
-  }],
-  createdAt: Date,
-  updatedAt: Date
+  spotifyTrackId: String,  // Spotify track ID (required)
+  title: String,          // Track title (required)
+  artist: String,         // Artist name(s) (required)
+  genre: String,          // Music genre
+  coverUrl: String,       // Album cover URL
+  previewUrl: String,     // 30s preview URL from Spotify
+  duration: Number,       // Track duration in seconds
+  caption: String,        // User's caption/description
+  tags: [String],         // Post tags
+  uploadedBy: ObjectId,   // User who posted (ref: User)
+  playCount: Number,      // Play count (default: 0)
+  likes: Number,          // Like count (default: 0)
+  likedBy: [ObjectId],    // Users who liked (ref: User)
+  createdAt: Date
 }
 ```
 
-Tile
-
+### Tile
 ```
 {
-  userId: ObjectId,       // User who owns the tile
-  type: String,          // 'text' | 'image' | 'music' | etc.
-  content: String,       // Tile content
+  userId: ObjectId,       // User who owns the tile (required, ref: User)
+  type: String,          // Tile type (required)
   title: String,         // Tile title
+  content: String,       // Tile content
   bgImage: String,       // Background image URL
   bgColor: String,       // Background color
   font: String,          // Font family
@@ -271,26 +266,35 @@ Tile
 }
 ```
 
-MusicTasteGraph
-
+### MusicTasteGraph
 ```
 {
-  user1: ObjectId,           // First user reference
-  user2: ObjectId,           // Second user reference
-  overlapScore: Number,      // Compatibility score (0-1)
-  sharedArtists: [String],   // Common artists
+  user1: ObjectId,           // First user reference (required, ref: User)
+  user2: ObjectId,           // Second user reference (required, ref: User)
+  overlapScore: Number,      // Compatibility score
+  sharedArtists: [String],   // Common artist IDs
   differentGenres: [String], // Differing genres
-  generatedAt: Date
+  generatedAt: Date          // Generation timestamp (default: Date.now)
 }
 ```
 
-Friend
-
+### Friends
 ```
 {
-  userId: ObjectId,       // User who initiated friendship
-  friendId: ObjectId,     // User who was friended
-  status: String,         // 'pending' | 'accepted' | 'blocked'
+  userId: ObjectId,       // User who initiated friendship (required, ref: User)
+  friendId: ObjectId,     // User who was friended (required, ref: User)
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Playlist
+```
+{
+  userId: ObjectId,       // Playlist owner (required, ref: User)
+  name: String,          // Playlist name (required)
+  trackIds: [ObjectId],  // Track references (ref: Track)
+  isPublic: Boolean,     // Public visibility (default: false)
   createdAt: Date,
   updatedAt: Date
 }
