@@ -301,7 +301,7 @@ export default function ArtistProfile() {
         </section>
 
         {/* RIGHT SIDEBAR (unchanged) */}
-        <aside className="friend-sidebar glass">
+        {/* <aside className="friend-sidebar glass">
           <h3>Friend Activity</h3>
           <p className="subtitle">See what your friends are listening to</p>
           {[...Array(3)].map((_,i)=>(
@@ -316,7 +316,7 @@ export default function ArtistProfile() {
             <button className="btn-secondary">See all</button>
             <button className="btn-location">📍 Locations</button>
           </div>
-        </aside>
+        </aside> */}
       </div>
     </div>
   );
