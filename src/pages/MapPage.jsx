@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import EventList from '../components/map/eventList';
 import FriendList from '../components/map/friendList';
 import FilterBar from '../components/map/filterBar';
 import SearchBar from '../components/map/searchBar';
 import MapView from '../components/map/mapView';
+import debounce from 'lodash/debounce';
 import { fetchEventsByLocation } from '../api/ticketmaster';
 import useLocationStore from '../state/locationStore';
 import useFriendStore from '../state/friendStore';
@@ -91,6 +92,39 @@ const MapPage = () => {
   const { userLocation, fetchUserLocation, locationLoaded } = useLocationStore();
   const { currentUserId, friends, fetchAllFriends } = useFriendStore();
 
+  const debouncedLoadEvents = useRef(
+    debounce(async (latitude, longitude, radius, setEvents, setAllEvents) => {
+      try {
+        const rawEvents = await fetchEventsByLocation(latitude, longitude, radius);
+        const enriched = rawEvents.map((e) => {
+          const [lng, lat] = e.location.coordinates;
+          return {
+            ...e,
+            distance: calculateDistance(latitude, longitude, lat, lng),
+          };
+        });
+        setEvents(enriched);
+        setAllEvents(enriched);
+      } catch (err) {
+        console.error("🎟️ Failed to fetch events", err);
+      }
+    }, 500) // 500ms debounce
+  ).current;
+
+  useEffect(() => {
+    if (!userLocation) return;
+    const radius = filters.distance || 100;
+    debouncedLoadEvents(
+      userLocation.latitude,
+      userLocation.longitude,
+      radius,
+      setEvents,
+      setAllEvents
+    );
+  }, [userLocation, filters.distance, debouncedLoadEvents]);
+
+
+
     useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -172,32 +206,6 @@ const MapPage = () => {
     setFilteredFriends(enriched);
   }, [friends, userLocation]);
 
-  useEffect(() => {
-    async function loadEvents() {
-      const radius = filters.distance || 100;
-      const fallbackCoords = { lat: 43.7, lon: -72.28 };
-      const latitude = userLocation?.latitude ?? fallbackCoords.lat;
-      const longitude = userLocation?.longitude ?? fallbackCoords.lon;
-
-      try {
-        const rawEvents = await fetchEventsByLocation(latitude, longitude, radius);
-        const enriched = rawEvents.map((e) => {
-          const [lng, lat] = e.location.coordinates;
-          return {
-            ...e,
-            distance: calculateDistance(latitude, longitude, lat, lng),
-          };
-        });
-
-        setEvents(enriched);
-        setAllEvents(enriched);
-      } catch (err) {
-        console.error("Failed to fetch events", err);
-      }
-    }
-
-    if (userLocation || filters.distance) loadEvents();
-  }, [userLocation, filters.distance]);
 
   useEffect(() => {
     let filtered = [...allFriends];
