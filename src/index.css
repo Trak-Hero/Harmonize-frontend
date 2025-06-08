@@ -83,7 +83,6 @@ button:focus-visible {
   margin: 0 !important;
 }
 
-/* Hide the white triangle/tip */
 .leaflet-popup-tip-container {
   display: none !important;
 }
@@ -92,7 +91,6 @@ button:focus-visible {
   display: none !important;
 }
 
-/* 🚫 Kill ALL unwanted styles on Leaflet icons */
 .leaflet-marker-icon,
 .leaflet-div-icon,
 .leaflet-marker-icon.custom-div-icon,
@@ -105,10 +103,9 @@ button:focus-visible {
   display: inline-block !important;
   width: auto !important;
   height: auto !important;
-  filter: none !important; /* just in case */
+  filter: none !important; 
 }
 
-/* Prevent image inside divIcon from getting inherited box */
 .leaflet-marker-icon img,
 .leaflet-div-icon img {
   background: none !important;

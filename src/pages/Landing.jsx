@@ -5,10 +5,8 @@ function Landing() {
             Harmonize: Discover new artists and music
             </div>
 
-            {/* transparent black overlay */}
             <div className="absolute top-0 left-0 w-full h-full bg-black/40 z-10" />
 
-            {/* looping background video */}
             <video
             autoPlay
             loop

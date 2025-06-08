@@ -32,7 +32,6 @@ export default function FriendProfile() {
     addFriendToStore
   } = useFriendStore();
 
-  /* ────────────────────────────── friend data ───────────────────────────── */
   const cached   = friends.find((f) => (f.id || f._id) === id);
   const [profile, setProfile] = useState(null);
   const friend   = cached || profile;
@@ -50,7 +49,6 @@ export default function FriendProfile() {
     }
   };
 
-  /* ─────────────────────────── spotify (optional) ────────────────────────── */
   const [spotifyData, setSpotifyData] = useState(null);
   const loadSpotify = useCallback(async () => {
     const res = await withTokenRefresh(
@@ -66,7 +64,6 @@ export default function FriendProfile() {
     });
   }, [API, id]);
 
-  /* ───────────────────────── fetch friend & tiles ────────────────────────── */
   useEffect(() => {
     if (authUser?._id && !me) {
       fetch(`${API}/api/users/${authUser._id}`, { credentials: 'include' })
@@ -95,7 +92,6 @@ export default function FriendProfile() {
     loadSpotify();
   }, [friend, id, currentUserId, setCurrentUserId, fetchTiles, loadSpotify]);
 
-  /* ───────────────────────────── early returns ───────────────────────────── */
   if (!friend) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
@@ -104,7 +100,6 @@ export default function FriendProfile() {
     );
   }
 
-  /* ──────────────────────────────── render ──────────────────────────────── */
   const followersCount = friend.followers?.length  ?? 0;
   const followingCount = friend.following?.length ?? 0;
 
@@ -118,7 +113,6 @@ export default function FriendProfile() {
 
   return (
     <div className="min-h-screen w-full">
-      {/* header (constrained width for aesthetics) */}
       <div className="max-w-screen-xl mx-auto px-6 py-12">
         <Link to="/friends" className="inline-block mb-8 text-blue-600 hover:underline">
           ← Back to Friends
@@ -156,7 +150,6 @@ export default function FriendProfile() {
         </header>
       </div>
 
-      {/* full‑width tile grid */}
       <div className="w-full px-6">
         <ResponsiveGrid
           className="layout"

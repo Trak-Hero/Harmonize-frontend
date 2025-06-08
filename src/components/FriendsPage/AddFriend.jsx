@@ -6,7 +6,7 @@ const AddFriendButton = () => {
 
   const handleAdd = () => {
     const newFriend = {
-      id: Date.now().toString(), // simple unique ID
+      id: Date.now().toString(),
       name: 'New Friend',
       avatar: 'https://i.pravatar.cc/150?img=3',
       genres: ['Rock'],

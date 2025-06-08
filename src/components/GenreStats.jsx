@@ -36,7 +36,6 @@ export default function GenreStats({ title = 'Your Genre Footprint' }) {
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10);
 
-  // generate a soft-pastel colour per bar
   const barColours = top10.map((_, i) => `hsl(${(i * 36) % 360} 70% 55% / .85)`);
 
   return (

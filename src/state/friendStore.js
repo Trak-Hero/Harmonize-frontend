@@ -1,13 +1,11 @@
-// src/state/friendStore.js
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
 
 const API = import.meta.env.VITE_API_BASE_URL;
 axios.defaults.withCredentials = true;
-console.log('🌐 API base URL:', API);
+console.log('API base URL:', API);
 
-/* ───────── helpers ───────── */
 const pickId = (x) =>
   typeof x === 'string'
     ? x
@@ -20,18 +18,15 @@ const uniqIds = (arr = []) => [...new Set(arr.map(pickId).filter(Boolean))];
 export const useFriendStore = create(
   persist(
     (set, get) => ({
-      /* ────────────── STATE ────────────── */
       currentUserId: null,
-      friends: [],            // always includes current user
+      friends: [],
       isLoading: false,
 
-      /* ─────────── MUTATORS ─────────── */
       setCurrentUserId: (id) => set({ currentUserId: id }),
 
       addFriendToStore: (userDoc) => {
         if (!userDoc || !userDoc._id) return;
 
-        // normalise arrays before we touch the store
         const doc = {
           ...userDoc,
           following: uniqIds(userDoc.following),
@@ -49,8 +44,8 @@ export const useFriendStore = create(
             friends: state.friends.map((u) =>
               String(u._id) === String(doc._id)
                 ? {
-                    ...u,                // keep richer local fields first
-                    ...doc,              // then newer scalar props
+                    ...u,                
+                    ...doc,    
                     following: uniqIds([...u.following, ...doc.following]),
                     followers: uniqIds([...u.followers, ...doc.followers]),
                   }
@@ -60,20 +55,16 @@ export const useFriendStore = create(
         });
       },
 
-      /* ─────────── READERS ─────────── */
 
-      /** Logged‑in user + their following list (merge‑safe). */
       fetchFriends: async () => {
         set({ isLoading: true });
         try {
           const { status, data: me } = await axios.get(`${API}/api/users/me`);
           if (status !== 200) throw new Error('failed /me');
 
-          // merge local copy with server copy
           get().addFriendToStore(me);
           const followIds = uniqIds(me.following);
 
-          // fetch only those we don't already have
           const missing = followIds.filter(
             (id) => !get().friends.some((f) => String(f._id) === String(id))
           );
@@ -103,7 +94,6 @@ export const useFriendStore = create(
           );
           if (status !== 201) return;
 
-          /* update me locally */
           set((state) => {
             const me = state.friends.find(
               (u) => String(u._id) === String(state.currentUserId)
@@ -122,7 +112,6 @@ export const useFriendStore = create(
             };
           });
 
-          /* cache the followed user */
           const { data } = await axios.get(`${API}/api/users/${friendId}`);
           get().addFriendToStore(data);
         } catch (err) {
@@ -173,7 +162,6 @@ export const useFriendStore = create(
         }
       },
 
-      /** followers + following (mutuals) */
       fetchAllFriends: async () => {
         const uid = get().currentUserId;
         if (!uid) return;

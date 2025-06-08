@@ -36,7 +36,7 @@ export default function DifferencesCard({ differences }) {
         setTimeout(reveal, 100);
       }
     };
-    setVisibleCount(0); // Reset
+    setVisibleCount(0); 
     setTimeout(reveal, 100);
   }, [expanded, genreDifferences.length, totalToShow]);
 

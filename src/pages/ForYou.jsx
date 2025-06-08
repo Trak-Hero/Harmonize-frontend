@@ -12,7 +12,6 @@ const ForYou = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const observerRef = useRef(null);
 
-  // fetch current user data
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -55,7 +54,6 @@ const ForYou = () => {
         const data = await res.json();
         console.log('Fetched posts:', data);
 
-        // Debug: Check if previewUrl exists
         data.forEach((post, index) => {
           console.log(`Post ${index + 1}:`, {
             title: post.title,
@@ -78,7 +76,6 @@ const ForYou = () => {
     fetchFeed();
   }, []);
 
-  // Intersection Observer for auto-play
   useEffect(() => {
     if (feed.length === 0) return;
 
@@ -92,12 +89,11 @@ const ForYou = () => {
         });
       },
       {
-        threshold: 0.5, // trigger when 50% of the card is visible
-        rootMargin: '-50px 0px', // adjust trigger area
+        threshold: 0.5, 
+        rootMargin: '-50px 0px',
       }
     );
 
-    // observe all music cards
     const cardElements = document.querySelectorAll('[data-card-id]');
     cardElements.forEach((el) => observerRef.current.observe(el));
 
@@ -120,10 +116,8 @@ const ForYou = () => {
       
       if (!response.ok) throw new Error('Failed to like post');
       
-      // optionally refresh the post data
       const updatedPost = await response.json();
 
-      // update the post in the feed
       setFeed(prevFeed => 
         prevFeed.map(post => 
           post._id === postId ? updatedPost : post
@@ -151,7 +145,6 @@ const ForYou = () => {
       
       const updatedPost = await response.json();
 
-      // update the post in the feed
       setFeed(prevFeed => 
         prevFeed.map(post => 
           post._id === postId ? updatedPost : post
@@ -194,7 +187,6 @@ const ForYou = () => {
 
   return (
     <div className="bg-black text-white min-h-screen">
-      {/* Header with Create Post tab */}
       <div className="flex justify-between items-center px-6 py-4 border-b border-gray-800">
         <h1 className="text-3xl font-bold text-center flex-grow">Discover New Music For You</h1>
         <Link
@@ -205,7 +197,6 @@ const ForYou = () => {
         </Link>
       </div>
 
-      {/* Feed */}
       <div className="flex flex-col items-center snap-y snap-mandatory overflow-y-scroll h-screen px-4 py-6 space-y-6">
         {feed.length === 0 ? (
           <div className="text-center py-20">

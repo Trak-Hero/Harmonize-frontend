@@ -25,7 +25,7 @@ const CreatePost = () => {
     try {
       const res = await fetch(`${API}/api/musicPosts/spotify/search?q=${encodeURIComponent(searchQuery)}&type=track`, {
         method: 'GET',
-        credentials: 'include', // include session cookies
+        credentials: 'include', 
         headers: {
           'Content-Type': 'application/json',
         },
@@ -38,7 +38,6 @@ const CreatePost = () => {
       const data = await res.json();
       console.log('Search results:', data);
       
-      // Debug: Log preview URLs
       data.forEach((track, index) => {
         console.log(`Track ${index + 1}:`, {
           name: track.name,
@@ -72,7 +71,7 @@ const CreatePost = () => {
       spotifyTrackId: track.id,
       title: track.name,
       artist: track.artists?.[0]?.name || '',
-      previewUrl: track.preview_url || '', // This might be null
+      previewUrl: track.preview_url || '', 
       coverUrl: track.album?.images?.[0]?.url || '',
       duration: track.duration_ms ? track.duration_ms / 1000 : null,
     }));
@@ -93,7 +92,6 @@ const CreatePost = () => {
     e.preventDefault();
     console.log('Submitting form with data:', formData);
 
-    // validate required fields
     if (!formData.spotifyTrackId || !formData.title || !formData.artist) {
       alert('Please select a track from Spotify search');
       return;
@@ -116,7 +114,6 @@ const CreatePost = () => {
 
       alert('Post created successfully!');
 
-      // reset form data
       setFormData({
         spotifyTrackId: '',
         title: '',

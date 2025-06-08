@@ -29,7 +29,6 @@ export default function Register() {
     setLoading(true);
     setError(null);
 
-    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
@@ -50,7 +49,6 @@ export default function Register() {
         confirmPassword: '***' 
       });
 
-      // Register the user
       const registerRes = await fetch(`${API}/auth/register`, {
         method: 'POST',
         credentials: 'include',
@@ -74,7 +72,6 @@ export default function Register() {
       const registerResult = await registerRes.json();
       console.log('Registration successful:', registerResult);
 
-      // Auto-login after successful registration
       const loginRes = await fetch(`${API}/auth/login`, {
         method: 'POST',
         credentials: 'include',
@@ -86,7 +83,6 @@ export default function Register() {
       });
 
       if (!loginRes.ok) {
-        // Registration succeeded but login failed - redirect to login page
         console.log('Auto-login failed, redirecting to login');
         navigate('/login');
         return;

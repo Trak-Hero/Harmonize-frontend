@@ -9,23 +9,20 @@ const fonts = [
   { label: 'Fantasy',       value: 'fantasy' },
 ];
 
-const sizes = [1, 2, 3, 4];          // allowed grid units
+const sizes = [1, 2, 3, 4];        
 
 export default function TileEditor() {
   const { tiles, editingTileId, updateTile, setEditorOpen } = useProfileStore();
   const tile = tiles.find((t) => (t._id || t.id) === editingTileId);
   const [form, setForm] = useState({});
 
-  /* ------------------------------------------------------------ */
-  /* sync form <-> tile                                           */
-  /* ------------------------------------------------------------ */
+
   useEffect(() => {
     if (tile) setForm(tile);
   }, [tile]);
 
   if (!tile) return null;
 
-  /* generic onChange that parses w/h as numbers */
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm((p) => ({
@@ -38,7 +35,6 @@ export default function TileEditor() {
     const id = tile._id || tile.id;
 
     if (String(id).startsWith('tmp_')) {
-      // replace the temp tile with a real one
       const { addTile } = useProfileStore.getState();
       await addTile(form, id);
     } else {
@@ -47,9 +43,7 @@ export default function TileEditor() {
     setEditorOpen(false);
   };
 
-  /* ------------------------------------------------------------ */
-  /* UI                                                            */
-  /* ------------------------------------------------------------ */
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <div className="w-full max-w-md rounded-xl bg-zinc-900 p-6 space-y-6">
@@ -72,7 +66,6 @@ export default function TileEditor() {
           />
         )}
 
-{/* ─────── universal customisation ─────── */}
 {(tile.type === 'picture' || tile.type === 'artist' || tile.type === 'song') && (
   <>
     <TextField
@@ -83,7 +76,6 @@ export default function TileEditor() {
       placeholder="https://example.com/image.jpg"
     />
 
-    {/* preview if any image */}
     {form.bgImage && (
       <img
         src={form.bgImage}
@@ -96,7 +88,6 @@ export default function TileEditor() {
 )}
 
 
-        {/* colour */}
         <ColorField
           label="Background colour"
           name="bgColor"
@@ -104,7 +95,6 @@ export default function TileEditor() {
           onChange={onChange}
         />
 
-        {/* font selector */}
         <SelectField
           label="Font family"
           name="font"
@@ -113,7 +103,6 @@ export default function TileEditor() {
           options={fonts}
         />
 
-        {/* size picker */}
         <div className="flex gap-4">
           <SelectField
             label="Width (w)"
@@ -131,7 +120,6 @@ export default function TileEditor() {
           />
         </div>
 
-        {/* buttons */}
         <div className="pt-4 flex justify-end gap-2">
           <button
             onClick={() => setEditorOpen(false)}
@@ -151,7 +139,6 @@ export default function TileEditor() {
   );
 }
 
-/* ---------------- little helpers ---------------- */
 const TextField = ({ label, ...props }) => (
   <div>
     <label className="mb-1 block text-white">{label}</label>

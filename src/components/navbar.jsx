@@ -62,7 +62,6 @@ export default function Navbar() {
         ))}
       </div>
 
-      {/* Center: Search */}
       <form onSubmit={search} className="relative w-64">
         <input
           value={q}
@@ -79,7 +78,6 @@ export default function Navbar() {
         </button>
       </form>
 
-    {/* Right: Profile + Dashboard + Connect/Spotify */}
     <div className="flex items-center gap-4">
       {user ? (
         <>

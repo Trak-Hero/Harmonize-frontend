@@ -16,7 +16,6 @@ export default function GenreMap() {
       .then(res => {
         const { histogram } = res.data;
 
-        // Step 1: Group genres by country
         const countryGroups = {};
         Object.entries(histogram).forEach(([genre, count]) => {
           const country = genreOrigins[genre.toLowerCase()];
@@ -25,13 +24,12 @@ export default function GenreMap() {
           countryGroups[country].push({ genre, count });
         });
 
-        // Step 2: Spread stacked genres vertically to avoid overlap
         const genreMarkers = Object.entries(countryGroups).flatMap(([country, genres]) => {
           const [lon, lat] = countryCoords[country];
           return genres.map((g, i) => ({
             ...g,
             country,
-            coordinates: [lon, lat + i * 0.7], // vertical offset
+            coordinates: [lon, lat + i * 0.7],
           }));
         });
 

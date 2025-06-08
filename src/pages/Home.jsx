@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -43,10 +42,8 @@ export default function Home() {
         
         if (cancelled) return;
 
-        // ADD DEBUGGING CODE HERE:
         console.log("Raw recommendations data:", recRes.data);
         
-        // Check the structure of the first item
         if (recRes.data && recRes.data.length > 0) {
           console.log("First recommendation item:", recRes.data[0]);
           console.log("First item artist field:", recRes.data[0].artist);
@@ -60,13 +57,11 @@ export default function Home() {
         }
 
 
-        // Fix the artist name mapping here with better debugging
         const mappedRecommendations = (recRes.data ?? []).map((track, index) => {
           console.log(`Processing track ${index}:`, track);
           
           let artistName = "Unknown Artist";
           
-          // Try different ways to extract artist name
           if (Array.isArray(track.artists)) {
             artistName = track.artists.map(a => {
               if (typeof a === 'string') return a;
@@ -109,7 +104,6 @@ export default function Home() {
                 const imgUrl = Array.isArray(album.images) && album.images.length > 0
                   ? album.images[0].url
                   : "";
-                // Fix artist names for albums too
                 const artistNames = Array.isArray(t.artists)
                   ? t.artists.map((a) => a.name || a).join(", ")
                   : typeof t.artist === 'object'
@@ -185,7 +179,6 @@ export default function Home() {
 
   return (
     <main className="pb-24 space-y-16 pt-20 px-4 bg-gradient-to-br from-[#0D0D0D] to-[#0D0D0D] min-h-screen">
-      {/* ────────────── Top Albums ────────────── */}
       {topAlbums.length > 0 && (
         <section className="max-w-7xl mx-auto space-y-6">
           <h2 className="text-3xl font-semibold tracking-tight text-white drop-shadow">Top Albums</h2>
@@ -218,7 +211,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* ───────── Made for You ───────── */}
       <section className="max-w-7xl mx-auto space-y-6">
         <h2 className="text-3xl font-semibold tracking-tight text-white drop-shadow">Made For You</h2>
         {recommendations.length > 0 ? (
@@ -257,7 +249,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* ───────── Genre Footprint ───────── */}
       <section className="container mx-auto px-4">
         <GenreStats />
         <GenreTimeline />

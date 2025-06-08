@@ -8,7 +8,6 @@ export default function SimilarGenresCard({ genres = [] }) {
   const totalToShow = expanded ? genres.length : Math.min(7, genres.length);
   const visibleGenres = genres.slice(0, visibleCount);
 
-  // Animate initial and expanded items
   useEffect(() => {
     let current = 0;
     const reveal = () => {
@@ -18,7 +17,7 @@ export default function SimilarGenresCard({ genres = [] }) {
         setTimeout(reveal, 100);
       }
     };
-    setVisibleCount(0); // Reset before revealing
+    setVisibleCount(0); 
     setTimeout(reveal, 100);
   }, [expanded, genres.length, totalToShow]);
 

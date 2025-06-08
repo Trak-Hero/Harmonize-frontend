@@ -22,7 +22,6 @@ body, html {
 }
 
 
-/* ── left column ── */
 .artist-left {
   display: flex;
   flex-direction: column;
@@ -76,7 +75,6 @@ body, html {
   background: rgba(85, 85, 85, 0.4);
 }
 
-/* avatar fixed size */
 .profile-photo {
   width: 260px;
   height: 260px;
@@ -85,7 +83,6 @@ body, html {
   object-fit: cover;
 }
 
-/* ── center column ── */
 .artist-main {
   display: flex;
   flex-direction: column;
@@ -112,7 +109,6 @@ body, html {
   margin-bottom: 1rem;
 }
 
-/* Bio editing styles */
 .bio-edit-textarea {
   width: 100%;
   background: rgba(255, 255, 255, 0.1);
@@ -288,7 +284,6 @@ body, html {
   border-radius: 9999px;
 }
 
-/* Loading state */
 .loading {
   display: flex;
   justify-content: center;

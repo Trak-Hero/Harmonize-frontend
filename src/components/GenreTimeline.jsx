@@ -36,9 +36,8 @@ export default function GenreTimeline() {
     return <p className="text-center text-red-400">{error}</p>;
   }
 
-  const ranges = ['long_term', 'medium_term', 'short_term']; // correct order
+  const ranges = ['long_term', 'medium_term', 'short_term']; 
 
-  // Collect all genre names used in any range
   const allGenres = [
     ...new Set(
       Object.values(data)
@@ -46,7 +45,6 @@ export default function GenreTimeline() {
     ),
   ];
 
-  // Pick top 5–7 genres overall
   const genreTotals = {};
   for (const range of ranges) {
     for (const [genre, count] of Object.entries(data[range])) {
