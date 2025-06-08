@@ -17,7 +17,7 @@
 
 ## Dev URLS
 
-[Frontend](https://project-music-and-memories-umzm.onrender.com/discover)
+[Frontend](https://project-music-and-memories-umzm.onrender.com/discover)  
 [API Server](https://project-music-and-memories-api.onrender.com/)
 
 ## Project Description
