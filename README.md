@@ -7,10 +7,26 @@
 
 ## Dev URLS
 
-[Frontend](https://project-music-and-memories.onrender.com/)
+[Frontend](https://project-music-and-memories-umzm.onrender.com/discover)
 [API Server](https://project-music-and-memories-api.onrender.com/)
 
 TODO: short project description, some sample screenshots or mockups
+
+<img width="1512" alt="Screenshot 2025-06-08 at 3 03 42 PM" src="https://github.com/user-attachments/assets/4df9a868-24b9-4b34-badc-789d8bf6caea" />
+<img width="1512" alt="Screenshot 2025-06-08 at 3 04 15 PM" src="https://github.com/user-attachments/assets/d8846edc-8ef0-41e5-afc5-31d63adeb767" />
+<img width="1512" alt="Screenshot 2025-06-08 at 3 04 33 PM" src="https://github.com/user-attachments/assets/526dc814-0cfa-4978-8ab3-52f704ddd98b" />
+<img width="1507" alt="Screenshot 2025-06-08 at 3 05 21 PM" src="https://github.com/user-attachments/assets/04b895e3-dba9-4fe1-ba9f-cd0504ba3469" />
+<img width="1509" alt="Screenshot 2025-06-08 at 3 05 43 PM" src="https://github.com/user-attachments/assets/fce174a3-7d93-41e2-8442-7ce66cb95584" />
+
+## IMPORTANT!! SIGN UP/ONBOARDING INSTRUCTIONS
+
+1. To sign up with our account, click Sign Up and fill in your Name, Username, Email, and Password. Once done, you need to click Connect to spotify (see second instructions).
+2. To connect to Spotify, we need you to send the email you use to log in to spotify to one of our developers. We will add you to our list of verified spotify users for our applications. This must be done as we must be a registered company in order to use the full production version of Spotify's API application. At this stage, we still need to manually add users due to us not being a company.
+3. Once complete, we recommend you to go edit your profile by adding a bio and a profile picture in your Profile page. We also suggest you to add tiles to your spaces which can be toggled under your Profile page. 
+4. If you want to see friends, we have a list of user accounts you can test. Search up any of these names in the list in the Friend's page search bar: ["Trak", "Shisui", "Giselle", "Rachael", "Evelyn"].
+5. If you want to see your friend's location, you need to go to the map page and allow location access.
+6. Have fun playing around with our application!
+
 
 Reverberate is a music discovery social media platform that connects listeners with emerging artists, and with each other. It is a platform that allows music lovers to explore fresh, undiscovered tracks while engaging with a diverse community of users and supporting new artists.
 
