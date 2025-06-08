@@ -8,7 +8,7 @@ Chart.register(BarElement, CategoryScale, LinearScale);
 
 const API = import.meta.env.VITE_API_BASE_URL ?? '';
 
-export default function GenreStats({ title = 'Your genre footprint' }) {
+export default function GenreStats({ title = 'Your Genre Footprint' }) {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState(null);
 
@@ -40,8 +40,8 @@ export default function GenreStats({ title = 'Your genre footprint' }) {
   const barColours = top10.map((_, i) => `hsl(${(i * 36) % 360} 70% 55% / .85)`);
 
   return (
-    <section className="container mx-auto px-4 max-w-4xl">
-      <h2 className="text-2xl font-bold mb-4 text-white text-center">{title}</h2>
+    <section className="max-w-4xl mx-auto px-6 py-10 rounded-xl shadow-lg">
+      <h2 className="text-3xl font-semibold text-white text-center mb-6">{title}</h2>
 
       {top10.length === 0 ? (
         <p className="text-center text-white/60">
@@ -91,8 +91,8 @@ export default function GenreStats({ title = 'Your genre footprint' }) {
       )}
 
       {stats.unlistened?.length > 0 && (
-        <p className="mt-6 text-center text-sm text-white/70">
-          You’ve covered <strong>{(stats.coverage * 100).toFixed(1)}%</strong> of Spotify’s seed
+        <p className="mt-4 text-center text-sm text-white/60 italic">
+        You’ve covered <strong>{(stats.coverage * 100).toFixed(1)}%</strong> of Spotify’s seed
           genres. A few you haven’t tried yet: {stats.unlistened.slice(0, 5).join(', ')}.
         </p>
       )}

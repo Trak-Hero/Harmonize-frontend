@@ -42,8 +42,8 @@ export default function GenreMap() {
 
   return (
     <section className="max-w-6xl mx-auto mt-20 px-4">
-      <h2 className="text-2xl font-bold text-white text-center mb-6">Your Genre Geography</h2>
-      <ComposableMap projection="geoEqualEarth" width={800} height={400}>
+      <h2 className="text-3xl font-semibold text-white text-center mb-6">Your Genre Geography</h2>
+      <ComposableMap projection="geoEqualEarth" width={800} height={500} >
         <Geographies geography={geoUrl}>
           {({ geographies }) =>
             geographies.map(geo => (
@@ -51,8 +51,9 @@ export default function GenreMap() {
                 key={geo.rsmKey}
                 geography={geo}
                 style={{
-                  default: { fill: '#1f1f1f', stroke: '#333' },
-                  hover: { fill: '#444' },
+                  default: { fill: '#1f1f1f', stroke: '#333', outline: 'none', transition: 'fill 0.2s ease' },
+                  hover: { fill: '#444', outline: 'none' },
+                  pressed: { fill: '#666', outline: 'none' },
                 }}
               />
             ))
@@ -70,7 +71,7 @@ export default function GenreMap() {
             <text
               textAnchor="middle"
               y={-8}
-              style={{ fill: '#ccc', fontSize: 9, pointerEvents: 'none' }}
+              style={{ fill: '#ccc', fontSize: 9, pointerEvents: 'none', family: 'Afacad' }}
             >
               {genre}
             </text>

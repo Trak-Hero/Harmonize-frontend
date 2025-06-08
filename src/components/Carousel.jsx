@@ -62,7 +62,7 @@ export default function Carousel({
       `}</style>
 
       {/* ─────────── Carousel wrapper ─────────── */}
-      <div className="relative w-full overflow-hidden">
+      <div className="relative w-full overflow-x-hidden overflow-y-visible">
         {/* 
           ① The “track” is a flex container whose contents are [ items, items ] concatenated.
           ② We apply the marquee animation directly to this flex container:
@@ -72,8 +72,14 @@ export default function Carousel({
               there’s consistent spacing. Finally, we use flex-shrink-0 to prevent cards from
               collapsing in width.
         */}
+        {/* Left gradient overlay */}
+        <div className="pointer-events-none absolute left-0 top-0 h-full w-24 z-10 bg-gradient-to-r from-[#0D0D0D] via-[#0D0D0D]/80 to-transparent" />
+
+        {/* Right gradient overlay */}
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-24 z-10 bg-gradient-to-l from-[#0D0D0D] via-[#0D0D0D]/80 to-transparent" />
+
         <div
-          className="flex flex-nowrap items-center"
+          className="flex flex-nowrap items-center px-4"
           style={{
             animation: `${marqueeAnimationName} ${speed}s linear infinite`
           }}
@@ -84,10 +90,7 @@ export default function Carousel({
               className="flex-shrink-0"
               style={{ marginRight: `${gap}px` }}
             >
-              {/* 
-                We wrap the rendered item in a “hover:scale-105 transition” so that
-                when you mouse over an individual card, it slightly “pops” forward. 
-              */}
+
               <div className="transition-transform duration-200 ease-in-out hover:scale-105">
                 {renderItem(item)}
               </div>

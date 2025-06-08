@@ -160,8 +160,7 @@ export default function Home() {
     return (
       <div className="flex items-center justify-center h-screen text-white text-lg">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-          <p>Loading your music...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent border-white mx-auto" />          <p>Loading your music...</p>
         </div>
       </div>
     );
@@ -185,18 +184,17 @@ export default function Home() {
   }
 
   return (
-    <main className="pb-24 space-y-16">
+    <main className="pb-24 space-y-16 pt-20 px-4 bg-gradient-to-br from-[#0D0D0D] to-[#0D0D0D] min-h-screen">
       {/* ────────────── Top Albums ────────────── */}
       {topAlbums.length > 0 && (
-        <section className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-4 text-white">Top Albums</h2>
+        <section className="max-w-7xl mx-auto space-y-6">
+          <h2 className="text-3xl font-semibold tracking-tight text-white drop-shadow">Top Albums</h2>
           <Carousel
             items={topAlbums}
             renderItem={(album) => (
               <div
                 key={album.id}
-                className="bg-black/50 rounded-xl p-4 backdrop-blur-md text-white flex flex-col items-center w-40"
-              >
+                className="bg-white/5 rounded-2xl p-4 backdrop-blur-lg text-white flex flex-col items-center w-44 shadow-md border border-white/10 transition-transform ease-in-out hover:scale-102 duration-200"              >
                 {album.image ? (
                   <img
                     src={album.image}
@@ -221,13 +219,14 @@ export default function Home() {
       )}
 
       {/* ───────── Made for You ───────── */}
-      <section className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold mb-4 text-white">Made for you</h2>
+      <section className="max-w-7xl mx-auto space-y-6">
+        <h2 className="text-3xl font-semibold tracking-tight text-white drop-shadow">Made For You</h2>
         {recommendations.length > 0 ? (
           <Carousel
             items={recommendations}
             renderItem={(item) => (
-              <div key={item.id} className="bg-black/50 rounded-xl p-4 backdrop-blur-md text-white flex flex-col items-center w-40">
+              <div key={item.id}
+              className="bg-white/5 rounded-2xl p-4 backdrop-blur-lg text-white flex flex-col items-center w-44 shadow-md border border-white/10 transition-transform hover:scale-105 duration-200">
                 {item.album?.images?.[0]?.url ? (
                   <img
                     src={item.album.images[0].url}
