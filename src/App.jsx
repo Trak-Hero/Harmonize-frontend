@@ -2,7 +2,6 @@ import { Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 
 import Navbar from './components/navbar';
-import Landing from './pages/Landing';
 import MapPage from './pages/MapPage';
 import ForYou from './pages/ForYou';
 import ArtistProfile from './pages/ArtistProfile';
@@ -51,8 +50,8 @@ function App() {
   }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
-      <div className="relative z-20 flex flex-col h-full overflow-auto">
+    <div className="relative w-full h-full">
+      <div className="relative z-20 flex flex-col h-full">
         <Navbar />
         <main className="pt-16 flex-1 overflow-auto">
           <Routes>

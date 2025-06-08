@@ -206,7 +206,7 @@ const ForYou = () => {
       </div>
 
       {/* Feed */}
-      <div className="flex flex-col items-center snap-y snap-mandatory overflow-y-auto flex-grow px-4 py-6 space-y-6">
+      <div className="flex flex-col items-center snap-y snap-mandatory overflow-y-scroll h-screen px-4 py-6 space-y-6">
         {feed.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-gray-400 text-lg mb-4">No music posts yet!</p>
