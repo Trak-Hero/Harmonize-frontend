@@ -1,4 +1,3 @@
-// src/components/Tile.jsx
 import { useProfileStore } from '../state/profileStore';
 
 const Tile = ({ tile, readOnly = false }) => {
@@ -10,17 +9,14 @@ const Tile = ({ tile, readOnly = false }) => {
   try {
     console.log('[Tile.jsx] Rendering tile with full data:', JSON.stringify(tile, null, 2));
 
-    /* ──────────────────── global profile store actions ──────────────────── */
     const setEditorOpen = useProfileStore((s) => s.setEditorOpen);
     const deleteTile    = useProfileStore((s) => s.deleteTile);
 
-    /* ────────────────────────── convenience vars ────────────────────────── */
     const id             = tile._id || tile.id;
     const displayTitle   = tile.title   ?? tile.name    ?? tile.content ?? '';
     const displayContent = tile.content ?? '';
     const bgColor        = tile.bgColor ?? (tile.type === 'text' ? '#374151' : 'transparent');
 
-    /* Choose background image if provided and valid */
     let chosenImage = '';
     if (
       tile.type !== 'text' &&
@@ -31,21 +27,19 @@ const Tile = ({ tile, readOnly = false }) => {
       chosenImage = tile.bgImage.trim();
     }
 
-    /* ────────────────────────────────── render ───────────────────────────────── */
     return (
       <div
         className="relative h-full w-full rounded-lg overflow-hidden border border-white/40 group"
         style={{ backgroundColor: bgColor, fontFamily: tile.font || 'sans-serif' }}
       >
-        {/* Non‑text tiles: background image layer */}
         {chosenImage && tile.type !== 'text' && (
           <div className="absolute inset-0 z-0">
             <img
               src={chosenImage}
               alt={displayTitle || tile.type}
-              onLoad={() => console.log('[Tile.jsx] ✅ Image loaded:', chosenImage)}
+              onLoad={() => console.log('[Tile.jsx] Image loaded:', chosenImage)}
               onError={(e) => {
-                console.error('[Tile.jsx] ❌ Image failed:', chosenImage);
+                console.error('[Tile.jsx] Image failed:', chosenImage);
                 e.currentTarget.src = `https://placehold.co/200x200/4B5563/FFFFFF?text=${encodeURIComponent(
                   tile.type.toUpperCase()
                 )}`;
@@ -56,14 +50,12 @@ const Tile = ({ tile, readOnly = false }) => {
           </div>
         )}
 
-        {/* Non‑text tiles without image: gradient placeholder */}
         {!chosenImage && tile.type !== 'text' && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
             <span className="text-white/60 text-sm">No Image</span>
           </div>
         )}
 
-        {/* ARTIST / SONG overlay */}
         {(tile.type === 'artist' || tile.type === 'song') && displayTitle && (
           <div className="absolute inset-0 z-20 flex flex-col justify-end p-4">
             <h3 className="text-white font-bold text-lg drop-shadow-lg leading-tight">
@@ -72,7 +64,6 @@ const Tile = ({ tile, readOnly = false }) => {
           </div>
         )}
 
-        {/* TEXT tile content */}
         {tile.type === 'text' && (
           <div className="relative z-10 p-4 h-full flex items-center justify-center">
             <div className="text-center text-white break-words whitespace-pre-wrap leading-relaxed">
@@ -81,21 +72,18 @@ const Tile = ({ tile, readOnly = false }) => {
           </div>
         )}
 
-        {/* PICTURE tile placeholder when no image yet */}
         {tile.type === 'picture' && !chosenImage && (
           <div className="relative z-10 h-full w-full flex items-center justify-center text-white bg-gray-600">
             <span>🖼️ Click Edit to add image</span>
           </div>
         )}
 
-        {/* SPACER tile */}
         {tile.type === 'spacer' && (
           <div className="h-full w-full bg-transparent flex items-center justify-center text-white/40">
             <span className="text-sm">Spacer</span>
           </div>
         )}
 
-        {/* ───── owner‑only controls (hidden in read‑only mode) ───── */}
         {!readOnly && (
           <>
             <button

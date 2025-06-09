@@ -1,12 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import debounce from 'lodash/debounce';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMapEvents,
+  useMap,
+} from 'react-leaflet';
 import { Link } from 'react-router-dom';
 import useLocationStore from '../../state/locationStore';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 const OPENCAGE_KEY = import.meta.env.VITE_OPENCAGE_API_KEY;
+
 
 function getInitials(name = '') {
   const words = name.trim().split(' ');
@@ -39,31 +48,21 @@ function UserMarker() {
   const icon = L.divIcon({
     html: hasAvatar
       ? `<div style="
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          overflow: hidden;
-          border: 2px solid white;
-          box-shadow: 0 0 4px rgba(0,0,0,0.4);
-        ">
-          <img src="${currentUser.avatar}" style="width: 100%; height: 100%; object-fit: cover;" />
-        </div>`
+           width:36px;height:36px;border-radius:50%;overflow:hidden;
+           border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,0.4);
+         ">
+             <img src="${currentUser.avatar}" style="
+               width:100%;height:100%;object-fit:cover;
+             " />
+         </div>`
       : `<div style="
-          background-color: #3B82F6;
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 14px;
-          font-weight: bold;
-          border: 2px solid white;
-          box-shadow: 0 0 3px rgba(0,0,0,0.3);
-        ">
-          ${initials}
-        </div>`,
+           background-color:#3B82F6;width:32px;height:32px;border-radius:50%;
+           display:flex;align-items:center;justify-content:center;
+           color:white;font-size:14px;font-weight:bold;
+           border:2px solid white;box-shadow:0 0 3px rgba(0,0,0,0.3);
+         ">
+           ${initials}
+         </div>`,
     className: 'custom-div-icon',
     iconSize: [36, 36],
     iconAnchor: [18, 36],
@@ -79,12 +78,16 @@ function UserMarker() {
   );
 }
 
-
 function LocationMarker() {
   const [pos, setPos] = useState(null);
   useMapEvents({
-    click() { this.locate(); },
-    locationfound(e) { setPos(e.latlng); this.flyTo(e.latlng, this.getZoom()); },
+    click() {
+      this.locate();
+    },
+    locationfound(e) {
+      setPos(e.latlng);
+      this.flyTo(e.latlng, this.getZoom());
+    },
   });
   return pos ? <Marker position={pos}><Popup>You are here</Popup></Marker> : null;
 }
@@ -94,28 +97,34 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
   const map = useMap();
   const [cityMap, setCityMap] = useState({});
 
-  // fetch city names
   useEffect(() => {
     if (!friends.length || !OPENCAGE_KEY) return;
     const controller = new AbortController();
-    friends.forEach(({ _id, location }) => {
+
+    const fetchCity = debounce(async (lat, lng, key) => {
+      try {
+        const res = await fetch(
+          `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_KEY}`,
+          { signal: controller.signal }
+        );
+        const data = await res.json();
+        const comp = data.results?.[0]?.components;
+        const city = comp?.city || comp?.town || comp?.village || comp?.state || 'Unknown';
+        setCityMap(prev => ({ ...prev, [key]: city }));
+      } catch {
+        setCityMap(prev => ({ ...prev, [key]: 'Unknown' }));
+      }
+    }, 300);
+
+    friends.forEach(({ location }) => {
       const [lng, lat] = location.coordinates;
       const key = `${lat},${lng}`;
-      if (cityMap[key]) return;
-
-      fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_KEY}`, { signal: controller.signal })
-        .then(res => res.json())
-        .then(data => {
-          const comp = data.results?.[0]?.components;
-          const city = comp?.city || comp?.town || comp?.village || comp?.state || 'Unknown';
-          setCityMap(prev => ({ ...prev, [key]: city }));
-        })
-        .catch(() => setCityMap(prev => ({ ...prev, [key]: 'Unknown' })));
+      if (!cityMap[key]) fetchCity(lat, lng, key);
     });
+
     return () => controller.abort();
   }, [friends, cityMap]);
 
-  // pan and open popup for selected friend
   useEffect(() => {
     if (selectedFriendId && markerRefs.current[selectedFriendId]) {
       const marker = markerRefs.current[selectedFriendId];
@@ -126,20 +135,42 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
 
   if (!visible) return null;
 
-  return friends.map(friend => {
+  const validFriends = friends.filter(f => {
+    const coords = f.location?.coordinates;
+    return (
+      Array.isArray(coords) &&
+      coords.length === 2 &&
+      (coords[0] !== 0 || coords[1] !== 0)
+    );
+  });
+
+  return validFriends.map(friend => {
     const fid = friend.id || friend._id;
     const [lng, lat] = friend.location.coordinates;
     const city = cityMap[`${lat},${lng}`] || 'Loading...';
-
     const initials = getInitials(friend.displayName || friend.username);
     const hasAvatar = !!friend.avatar;
     const icon = L.divIcon({
       html: hasAvatar
-        ? `<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,0.4);">
-             <img src="${friend.avatar}" style="width:100%;height:100%;object-fit:cover;" />
+        ? `<div style="
+             width:36px;height:36px;border-radius:50%;overflow:hidden;
+             border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,0.4);
+           ">
+               <img src="${friend.avatar}" style="width:100%;height:100%;object-fit:cover;" />
            </div>`
-        : `<div style="background-color:${getColor(friend.displayName || friend.username)};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:bold;border:2px solid white;box-shadow:0 0 3px rgba(0,0,0,0.3);">${initials}</div>`,
-      iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36],className: 'custom-div-icon',
+        : `<div style="
+             background-color:${getColor(friend.displayName || friend.username)};
+             width:32px;height:32px;border-radius:50%;
+             display:flex;align-items:center;justify-content:center;
+             color:white;font-size:14px;font-weight:bold;
+             border:2px solid white;box-shadow:0 0 3px rgba(0,0,0,0.3);
+           ">
+             ${initials}
+           </div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+      popupAnchor: [0, -36],
+      className: 'custom-div-icon',
     });
 
     return (
@@ -159,12 +190,20 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
           <div className="backdrop-blur-sm bg-black/60 rounded-2xl p-4 shadow-xl text-white space-y-4 font-sans">
             <div className="flex gap-3 items-center">
               {hasAvatar ? (
-                <img src={friend.avatar} alt={friend.displayName} className="w-14 h-14 rounded-lg object-cover border border-white shadow" />
+                <img
+                  src={friend.avatar}
+                  alt={friend.displayName}
+                  className="w-14 h-14 rounded-lg object-cover border border-white shadow"
+                />
               ) : (
-                <div className="w-14 h-14 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow border border-white">{initials}</div>
+                <div className="w-14 h-14 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow border border-white">
+                  {initials}
+                </div>
               )}
               <div className="flex flex-col gap-1 text-sm text-white/90">
-                <h2 className="text-base font-semibold">{friend.displayName || friend.username}</h2>
+                <h2 className="text-base font-semibold">
+                  {friend.displayName || friend.username}
+                </h2>
                 <div className="flex items-center gap-1 text-white/70">
                   <span>📍</span>
                   <span>{city}</span>
@@ -180,12 +219,20 @@ function FriendsMarkers({ visible, friends = [], selectedFriendId }) {
             </Link>
 
             <div className="flex gap-2">
-              <a href={`http://maps.apple.com/?daddr=${lat},${lng}`} target="_blank" rel="noopener noreferrer"
-                 className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-xl hover:bg-gray-700 transition">
+              <a
+                href={`http://maps.apple.com/?daddr=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-xl hover:bg-gray-700 transition"
+              >
                 Apple Maps
               </a>
-              <a href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`} target="_blank" rel="noopener noreferrer"
-                 className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-xl hover:bg-gray-700 transition">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-gray-800 text-white font-medium py-2 rounded-xl hover:bg-gray-700 transition"
+              >
                 Google Maps
               </a>
             </div>
@@ -207,10 +254,16 @@ function EventMarkers({ visible, events = [], selectedEventId }) {
       const key = `${lat},${lng}`;
       if (cityMap[key]) return;
 
-      fetch(`${API_BASE}/api/geocode/reverse?lat=${lat}&lon=${lng}&addressdetails=1`)
+      fetch(
+        `${API_BASE}/api/geocode/reverse?lat=${lat}&lon=${lng}&addressdetails=1`
+      )
         .then(res => res.json())
-        .then(data => setCityMap(prev => ({ ...prev, [key]: data.city || 'Unknown' })))
-        .catch(() => setCityMap(prev => ({ ...prev, [key]: 'Unknown' })));
+        .then(data =>
+          setCityMap(prev => ({ ...prev, [key]: data.city || 'Unknown' }))
+        )
+        .catch(() =>
+          setCityMap(prev => ({ ...prev, [key]: 'Unknown' }))
+        );
     });
   }, [events, cityMap]);
 
@@ -231,32 +284,53 @@ function EventMarkers({ visible, events = [], selectedEventId }) {
 
     const icon = event.image
       ? L.divIcon({
-          html: `<div style="width:36px;height:36px;border-radius:8px;overflow:hidden;border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,0.4);">
-               <img src="${event.image}" style="width:100%;height:100%;object-fit:cover;" />
-             </div>`,
-          iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36],
+          html: `<div style="
+                 width:36px;height:36px;border-radius:8px;overflow:hidden;
+                 border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,0.4);
+               ">
+                 <img src="${event.image}" style="width:100%;height:100%;object-fit:cover;" />
+               </div>`,
+          iconSize: [36, 36],
+          iconAnchor: [18, 36],
+          popupAnchor: [0, -36],
         })
       : L.divIcon({
-          html: `<div style="background-color:#3B82F6;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:bold;border:2px solid white;box-shadow:0 0 3px rgba(0,0,0,0.3);">
-               ${getInitials(event.title)}
-             </div>`,
-          iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36],className: 'custom-div-icon',
+          html: `<div style="
+                 background-color:#3B82F6;width:36px;height:36px;border-radius:8px;
+                 display:flex;align-items:center;justify-content:center;
+                 color:white;font-size:14px;font-weight:bold;
+                 border:2px solid white;box-shadow:0 0 3px rgba(0,0,0,0.3);
+               ">
+                 ${getInitials(event.title)}
+               </div>`,
+          iconSize: [36, 36],
+          iconAnchor: [18, 36],
+          popupAnchor: [0, -36],
+          className: 'custom-div-icon',
         });
 
     return (
-      <Marker key={id} position={[lat, lng]} icon={icon}
-              ref={ref => ref && (markerRefs.current[id] = ref)}>
-        <Popup 
-        minWidth={280} 
-        maxWidth={320}
-        onOpen={() => {
-          map.flyTo([lat, lng], 15, { duration: 0.5 });
-        }}
+      <Marker
+        key={id}
+        position={[lat, lng]}
+        icon={icon}
+        ref={ref => ref && (markerRefs.current[id] = ref)}
+      >
+        <Popup
+          minWidth={280}
+          maxWidth={320}
+          onOpen={() => {
+            map.flyTo([lat, lng], 15, { duration: 0.5 });
+          }}
         >
           <div className="backdrop-blur-sm bg-black/60 rounded-2xl p-4 shadow-xl text-white space-y-4">
             <div className="flex gap-3 items-center">
               {event.image ? (
-                <img src={event.image} alt={event.title} className="w-14 h-14 rounded-lg object-cover border border-white shadow" />
+                <img
+                  src={event.image}
+                  alt={event.title}
+                  className="w-14 h-14 rounded-lg object-cover border border-white shadow"
+                />
               ) : (
                 <div className="w-14 h-14 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow border border-white">
                   {getInitials(event.title)}
@@ -266,10 +340,16 @@ function EventMarkers({ visible, events = [], selectedEventId }) {
                 <h2 className="text-base font-semibold">{event.title}</h2>
                 <div className="flex items-center gap-1 text-white/70">
                   <span>🕒</span>
-                  <span>{new Date(event.date).toLocaleString('en-US', {
-                    year: 'numeric', month: 'short', day: 'numeric',
-                    hour: 'numeric', minute: '2-digit', hour12: true,
-                  })}</span>
+                  <span>
+                    {new Date(event.date).toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true,
+                    })}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1 text-white/70">
                   <span>📍</span>
@@ -277,15 +357,35 @@ function EventMarkers({ visible, events = [], selectedEventId }) {
                 </div>
               </div>
             </div>
+
             {event.ticketUrl && (
-              <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
-                 className="block w-full text-center bg-white text-black font-semibold py-2 rounded-xl hover:bg-gray-200">
+              <a
+                href={event.ticketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center bg-white text-black font-semibold py-2 rounded-xl hover:bg-gray-200"
+              >
                 Buy Ticket
               </a>
             )}
+
             <div className="flex gap-2">
-              <a href={`http://maps.apple.com/?daddr=${lat},${lng}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center bg-gray-800 text-white py-2 rounded-xl hover:bg-gray-700">Apple Maps</a>
-              <a href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center bg-gray-800 text-white py-2 rounded-xl hover:bg-gray-700">Google Maps</a>
+              <a
+                href={`http://maps.apple.com/?daddr=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-gray-800 text-white py-2 rounded-xl hover:bg-gray-700 transition"
+              >
+                Apple Maps
+              </a>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-gray-800 text-white py-2 rounded-xl hover:bg-gray-700 transition"
+              >
+                Google Maps
+              </a>
             </div>
           </div>
         </Popup>
@@ -295,9 +395,14 @@ function EventMarkers({ visible, events = [], selectedEventId }) {
 }
 
 function MapView({
-  events, showEvents, setShowEvents,
-  showFriends, setShowFriends,
-  selectedEventId, friends, selectedFriendId
+  events,
+  showEvents,
+  setShowEvents,
+  showFriends,
+  setShowFriends,
+  selectedEventId,
+  friends,
+  selectedFriendId,
 }) {
   const { userLocation } = useLocationStore();
   const center = userLocation
@@ -307,16 +412,29 @@ function MapView({
   return (
     <div className="w-full h-full relative">
       <div className="absolute top-4 left-4 z-[999] space-x-2">
-        <button onClick={() => setShowEvents(prev => !prev)} className={`${showEvents ? 'bg-blue-500 text-white' : 'bg-white text-black hover:bg-gray-300'} px-4 py-2 rounded-md shadow`}>
+        <button
+          onClick={() => setShowEvents(prev => !prev)}
+          className={`${
+            showEvents ? 'bg-blue-500 text-white' : 'bg-white text-black hover:bg-gray-300'
+          } px-4 py-2 rounded-md shadow`}
+        >
           Events
         </button>
-        <button onClick={() => setShowFriends(prev => !prev)} className={`${showFriends ? 'bg-blue-500 text-white' : 'bg-white text-black hover:bg-gray-300'} px-4 py-2 rounded-md shadow`}>
+        <button
+          onClick={() => setShowFriends(prev => !prev)}
+          className={`${
+            showFriends ? 'bg-blue-500 text-white' : 'bg-white text-black hover:bg-gray-300'
+          } px-4 py-2 rounded-md shadow`}
+        >
           Friends
         </button>
       </div>
 
       <MapContainer center={center} zoom={13} scrollWheelZoom className="w-full h-full z-0">
-        <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer
+          attribution="&copy; OpenStreetMap contributors"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
         <MapResizeFix />
         <UserMarker />
         <LocationMarker />
@@ -326,6 +444,5 @@ function MapView({
     </div>
   );
 }
-
 
 export default MapView;

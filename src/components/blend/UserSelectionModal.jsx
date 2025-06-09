@@ -14,9 +14,9 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
     
     try {
       const url = `${API_BASE}/api/users/search?q=${encodeURIComponent(query)}`;
-      console.log('🔍 Fetching users from:', url);
-      console.log('🌐 Current origin:', window.location.origin);
-      console.log('🔧 API_BASE:', API_BASE);
+      console.log('Fetching users from:', url);
+      console.log('Current origin:', window.location.origin);
+      console.log('API_BASE:', API_BASE);
       
       const res = await fetch(url, {
         credentials: 'include',
@@ -25,20 +25,20 @@ export default function UserSelectionModal({ onClose, onSelectUser }) {
         },
       });
       
-      console.log('📡 Response status:', res.status);
-      console.log('📡 Response headers:', Object.fromEntries(res.headers.entries()));
+      console.log('Response status:', res.status);
+      console.log('Response headers:', Object.fromEntries(res.headers.entries()));
       
       if (!res.ok) {
         const errorText = await res.text();
-        console.error('❌ Error response:', errorText);
+        console.error('Error response:', errorText);
         throw new Error(`HTTP ${res.status}: ${res.statusText} - ${errorText}`);
       }
       
       const userData = await res.json();
-      console.log('✅ Users data received:', userData);
+      console.log('Users data received:', userData);
       setUsers(userData);
     } catch (err) {
-      console.error('❌ Failed to search users:', err);
+      console.error('Failed to search users:', err);
       setError(`Failed to load users: ${err.message}`);
     } finally {
       setLoading(false);

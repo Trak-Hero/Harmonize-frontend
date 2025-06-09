@@ -10,7 +10,6 @@ import { fetchTopArtists } from '../api/spotify';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-/* ---------- helpers ---------- */
 function computeBlend(userAData, userBData, userAName, userBName) {
   const artistsA = userAData.items;
   const artistsB = userBData.items;
@@ -18,13 +17,11 @@ function computeBlend(userAData, userBData, userAName, userBName) {
   const artistMapA = new Map(artistsA.map((a) => [a.id, a]));
   const artistMapB = new Map(artistsB.map((b) => [b.id, b]));
 
-  // 1. Common artists
   const commonArtistIds = artistsA
     .map((a) => a.id)
     .filter((id) => artistMapB.has(id));
   const commonArtists = commonArtistIds.map((id) => artistMapA.get(id));
 
-  // 2. Genre analysis
   const allGenresA = artistsA.flatMap((a) => a.genres);
   const allGenresB = artistsB.flatMap((b) => b.genres);
 
@@ -35,7 +32,6 @@ function computeBlend(userAData, userBData, userAName, userBName) {
   const uniqueGenresA = [...genreSetA].filter((g) => !genreSetB.has(g));
   const uniqueGenresB = [...genreSetB].filter((g) => !genreSetA.has(g));
 
-  // 3. Popularity similarity
   const popularityDiffs = commonArtistIds.map((id) => {
     const a = artistMapA.get(id).popularity ?? 50;
     const b = artistMapB.get(id).popularity ?? 50;
@@ -45,7 +41,6 @@ function computeBlend(userAData, userBData, userAName, userBName) {
     ? popularityDiffs.reduce((sum, d) => sum + d, 0) / popularityDiffs.length
     : 100;
 
-  // 4. Scores
   const artistScore =
     (commonArtistIds.length / Math.min(artistsA.length, artistsB.length)) * 100;
   const genreScore =
@@ -88,15 +83,13 @@ function computeBlend(userAData, userBData, userAName, userBName) {
   };
 }
 
-/** Create a mock "friend" dataset from the current user's data */
 function generateFriendMockData(yourData, selectedUser = null) {
   return {
     items: yourData.items.map((artist, idx) => {
-      // Use user ID to create consistent but different results per user
       const seed = selectedUser?._id?.slice(-2) || '00';
       const seedNum = parseInt(seed, 16) || 1;
       
-      const sharedArtist = (idx + seedNum) % 5 === 0; // Vary based on user
+      const sharedArtist = (idx + seedNum) % 5 === 0;
       const sharedGenre = (idx + seedNum) % 3 !== 0;
 
       const newGenres = sharedGenre
@@ -113,7 +106,6 @@ function generateFriendMockData(yourData, selectedUser = null) {
   };
 }
 
-/* ---------- component ---------- */
 export default function BlendPage() {
   const [blendData, setBlendData] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
@@ -122,12 +114,10 @@ export default function BlendPage() {
   const [error, setError] = useState('');
   const [searchParams] = useSearchParams();
 
-  /** Fetch data & compute blend */
   const loadBlend = async (targetUser = null) => {
     setLoading(true);
-    setError(''); // Clear any previous errors
+    setError('');
     try {
-      // Current user's artists
       const userData = await fetchTopArtists();
 
       let friendData;
@@ -147,19 +137,17 @@ export default function BlendPage() {
           friendData = await res.json();
           friendName = targetUser.displayName;
           
-          console.log('Friend data fetched:', friendData); // Debug log
+          console.log('Friend data fetched:', friendData); 
         } catch (fetchError) {
           console.warn('Could not fetch user data:', fetchError);
-          // Only fall back to mock if user explicitly hasn't connected Spotify
           if (fetchError.message.includes('404') || fetchError.message.includes('Spotify not connected')) {
             friendData = generateFriendMockData(userData, targetUser);
             friendName = `${targetUser.displayName} (Mock Data)`;
           } else {
-            throw fetchError; // Re-throw other errors
+            throw fetchError; 
           }
         }
       } else {
-        // Default mock data
         friendData = generateFriendMockData(userData);
         friendName = 'Sample User';
       }
@@ -169,19 +157,16 @@ export default function BlendPage() {
       setSelectedUser(targetUser);
     } catch (err) {
       console.error('Error computing blend', err);
-      // Set error state instead of silently failing
       setError('Failed to load blend data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  /* initial load with URL parameter support */
   useEffect(() => {
     const userId = searchParams.get('user');
     
     if (userId) {
-      // Find the user and load their blend
       fetch(`${API_BASE}/api/users/${userId}`, { credentials: 'include' })
         .then(r => r.ok ? r.json() : null)
         .then(user => {
@@ -202,13 +187,11 @@ export default function BlendPage() {
     }
   }, [searchParams]);
 
-  /* handle selecting a different user */
   const handleSelectUser = (user) => {
     setShowUserModal(false);
     loadBlend(user);
   };
 
-  /* ---------- render ---------- */
   if (error) {
     return (
       <div className="flex-1 px-6 md:px-12 py-3 space-y-10 bg-gradient-to-b from-slate-900 via-black to-slate-950 text-white">
@@ -233,7 +216,6 @@ export default function BlendPage() {
   return (
     <div className="flex-1 px-6 md:px-12 py-3 space-y-10 bg-gradient-to-b from-slate-900 via-black to-slate-950 text-white">
       <div className="flex-1 px-12 py-8 space-y-8 overflow-auto">
-        {/* Header + user picker */}
         <div className="flex justify-between items-start">
           <BlendHeader selectedUser={selectedUser} />
           <button
@@ -246,7 +228,6 @@ export default function BlendPage() {
           </button>
         </div>
 
-        {/* Main cards */}
         <TasteScoreCard
           score={blendData.tasteMatch}
           userA={blendData.userA}
@@ -259,7 +240,6 @@ export default function BlendPage() {
           <DifferencesCard differences={blendData.differences} />
         </div>
 
-        {/* User selector modal */}
         {showUserModal && (
           <UserSelectionModal
             onClose={() => setShowUserModal(false)}

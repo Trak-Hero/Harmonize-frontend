@@ -7,7 +7,7 @@ export default function LogoutButton({ className = "", children = "Log Out" }) {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/'); // Redirect to home page after logout
+    navigate('/'); 
   };
 
   return (
@@ -20,7 +20,6 @@ export default function LogoutButton({ className = "", children = "Log Out" }) {
   );
 }
 
-// Alternative: Custom hook if you prefer to handle logout logic yourself
 export function useLogout() {
   const logout = useAuthStore(state => state.logout);
   const navigate = useNavigate();

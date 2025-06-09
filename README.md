@@ -4,32 +4,68 @@
 
 ![ITeam Photo](https://hackmd.io/_uploads/H1fyF3I1ll.jpg)
 
+## Contents
+- [Live URLs](#dev-urls)
+- [Project Overview](#project-description)
+- [Onboarding Instructions](#important-sign-uponboarding-instructions)
+- [Architecture](#architecture)
+- [API Endpoints](#api-endpoints)
+- [Data Models](#data-models)
+- [Setup](#setup)
+- [Deployment](#deployment)
+- [Authors](#authors)
+
 ## Dev URLS
 
-[Frontend](https://project-music-and-memories-umzm.onrender.com/discover)
+[Frontend](https://project-music-and-memories-umzm.onrender.com/discover)  
 [API Server](https://project-music-and-memories-api.onrender.com/)
 
 ## Project Description
-Harmonize is a social music discovery platform where users can discover new music, express their taste through customizable profiles, and connect with other listeners. Our goal was to make the experience of finding new music feel more personal, expressive, and socially engaging.
+**Harmonize** is a social music discovery platform where users can:
 
-<img width="1512" alt="Screenshot 2025-06-08 at 3 03 42 PM" src="https://github.com/user-attachments/assets/4df9a868-24b9-4b34-badc-789d8bf6caea" />
-<img width="1512" alt="Screenshot 2025-06-08 at 3 04 15 PM" src="https://github.com/user-attachments/assets/d8846edc-8ef0-41e5-afc5-31d63adeb767" />
-<img width="1512" alt="Screenshot 2025-06-08 at 3 04 33 PM" src="https://github.com/user-attachments/assets/526dc814-0cfa-4978-8ab3-52f704ddd98b" />
-<img width="1507" alt="Screenshot 2025-06-08 at 3 05 21 PM" src="https://github.com/user-attachments/assets/04b895e3-dba9-4fe1-ba9f-cd0504ba3469" />
-<img width="1509" alt="Screenshot 2025-06-08 at 3 05 43 PM" src="https://github.com/user-attachments/assets/fce174a3-7d93-41e2-8442-7ce66cb95584" />
+- Discover new tracks through personalized feeds
+
+- Express their music taste with customizable profile tiles
+
+- Connect with other listeners via shared interests and interactive map views
+
+Our goal is to make the experience of finding music more **personal, expressive, and socially engaging.**
+
+### UI Highlights
+- Discovery Page
+<img width="1512" alt="Discovery Page" src="https://github.com/user-attachments/assets/4df9a868-24b9-4b34-badc-789d8bf6caea" />
+
+- Home Page
+<img width="1512" alt="Home Page" src="https://github.com/user-attachments/assets/d8846edc-8ef0-41e5-afc5-31d63adeb767" />
+
+- Map Page
+<img width="1512" alt="Map Page" src="https://github.com/user-attachments/assets/526dc814-0cfa-4978-8ab3-52f704ddd98b" />
+
+- Blend Mode Comparison
+<img width="1507" alt="Blend Mode" src="https://github.com/user-attachments/assets/04b895e3-dba9-4fe1-ba9f-cd0504ba3469" />
+
+- Galaxy Mode (Taste Clustering)
+<img width="1509" alt="Galaxy Mode" src="https://github.com/user-attachments/assets/fce174a3-7d93-41e2-8442-7ce66cb95584" />
 
 ## IMPORTANT!! SIGN UP/ONBOARDING INSTRUCTIONS
 
-1. To sign up with our account, click Sign Up and fill in your Name, Username, Email, and Password. Once done, you need to click Connect to spotify (see second instructions).
-2. To connect to Spotify, we need you to send the email you use to log in to spotify to one of our developers. We will add you to our list of verified spotify users for our applications. This must be done as we must be a registered company in order to use the full production version of Spotify's API application. At this stage, we still need to manually add users due to us not being a company.
-3. Once complete, we recommend you to go edit your profile by adding a bio and a profile picture in your Profile page. We also suggest you to add tiles to your spaces which can be toggled under your Profile page. When you click edit or delete a tile, you need to click on "Edit" or "delete" over the tile, and press enter one more time or move the tile to enter the Edit or Delete mode. 
-4. If you want to see friends, we have a list of user accounts you can test. Search up any of these names in the list in the Friend's page search bar: ["Trak", "Shisui", "Giselle", "Rachael", "Evelyn"].
-5. If you want to see your friend's location, you need to go to the map page and allow location access.
-6. Have fun playing around with our application!
+1. **Create an Account**  
+   To sign up with our account, click **Sign Up** and fill in your Name, Username, Email, and Password. Once done, you need to click Connect to spotify (see instruction #2).
+2. **Connect to Spotify**  
+   Due to Spotify's production API restrictions, we still need to manually add users due to us not being a company.
+   !! **Send the email** you use to log in to spotify to one of our developers so we can authorize your account.
+3. **Personalize Your Account**  
+   After signing in, navigate to your **Profile page** to:
+   - Add a bio and a profile picture
+   - Add tiles to your spaces which can be toggled under your Profile page.
+> Note: When you click edit or delete a tile, you need to click on "Edit" or "delete" over the tile, and press **Enter** one more time or move the tile to enter the Edit or Delete mode. 
+4. **Connect with Friends**  
+  If you want to see friends, we have a list of user accounts you can test. Search up any of these names in the list in the Friend's page search bar: ["Trak", "Shisui", "Giselle", "Rachael", "Evelyn"].
+6. **Find Friends & Events on Map**  
+  Navigate to the Map page and allow location access.
+> Note: You’ll only see friends who’ve shared their location.
 
-
-Reverberate is a music discovery social media platform that connects listeners with emerging artists, and with each other. It is a platform that allows music lovers to explore fresh, undiscovered tracks while engaging with a diverse community of users and supporting new artists.
-
+**That’s it!** You’re ready to harmonize, discover fresh tracks, and connect with the music-loving community. Enjoy our app!
 
 ## Architecture
 
@@ -37,7 +73,7 @@ Reverberate is a music discovery social media platform that connects listeners w
 
 Framework to use: React + Vite
 Styling: Tailwind CSS + CSS Modules (custom gradients and glassmorphism)
-State Managament: Zustand
+State Management: Zustand
 Router: React Router
 Map: Mapbox/Leaflet
 
@@ -46,8 +82,8 @@ Map: Mapbox/Leaflet
 - Artist Profile (Mruno Bars) - Shisui
 - Friends Page (Passport-style Cards) - Evelyn
 - Discover Page (Home Page) (Explore page) - Rachael
-- Event / Artists Map View - Giselle
-- Blend Mode comparison view (Graphs/Charts) - TBD
+- Event & Friends Map View - Giselle
+- Blend Mode comparison view (Graphs/Charts) - Giselle
 
 ### Front-end: *reverberate-api* 
 
@@ -115,7 +151,7 @@ Database: MongoDB (via Mongoose)
 ### Events
 - `GET /events` - Get all events
 - `POST /events` - Create event
-- `GET /ticketmaster/events` - Get Ticketmaster events by location
+- `GET /ticketmaster/events?lat=...&lng=...&radius=...` - Get Ticketmaster events by location (coordinates)
 
 ### Tiles (Dashboard)
 - `GET /tiles` - Get user's tiles
@@ -126,7 +162,6 @@ Database: MongoDB (via Mongoose)
 
 ### Utilities
 - `GET /geocode/reverse` - Reverse geocoding (lat/lng to city)
-- `GET /blend/:user1/:user2` - Generate music taste comparison
 
 ## Data Models
 
@@ -303,33 +338,51 @@ Database: MongoDB (via Mongoose)
 
 ## Setup
 
-TODO: how to get the project dev environment up and running, npm install etc
+These steps get your dev environment running smoothly:
 
 ### Clone the repo
+```bash
 git clone https://github.com/dartmouth-cs52-25s/project-music-and-memories.git
 cd project-music-and-memories
+```
+
+### Clone the backend repo
+```bash
+git clone https://github.com/dartmouth-cs52-25s/project-music-and-memories-api.git
+cd project-music-and-memories-api
+```
 
 ### Install dependencies
+```bash
 npm install
-npm install react-router-dom tailwindcss postcss autoprefixer zustand
+npm install @dnd-kit/core @dnd-kit/modifiers @dnd-kit/sortable @emotion/react @emotion/styled @mui/icons-material @mui/material @mui/styled-engine-sc @phosphor-icons/react @react-three/drei @react-three/fiber axios chart.js connect-mongo d3 d3-cloud express-session framer-motion leaflet lucide-react ngeohash react react-chartjs-2 react-dom react-grid-layout react-leaflet react-markdown react-resizable react-router-dom react-simple-maps shadcn styled-components three zustand
+```
 
 ### Setup backend
-npm install express mongoose dotenv cors
+```bash
+npm install axios bcrypt chart.js cookie-session cors dotenv express mongoose ngeohash node-fetch react-chartjs-2 spotify-buddylist spotify-preview-finder spotify-web-api-node uuid
+```
+
 
 ### Start servers in dev mode
+#### Frontend
+```bash
 npm run dev
+```
+#### Backend
+```bash
+npm start
+```
+
+> ⚠**Note**: Spotify login **only works on the deployed website** due to OAuth redirect URI restrictions. Running the project locally will not allow login, and features like friends, blend mode, and personalized data will not function.
 
 ## Deployment
-
-TODO: how to deploy the project
 
 - **Frontend**: Deployed via [Render](https://render.com), auto-deployed on push to `main` branch.
 - **Backend**: Also hosted on Render with environment variables set securely.
 - **Database**: MongoDB Atlas for managed NoSQL persistence.
 
 ## Authors
-
-TODO: list of authors
 
 - Trak (Purin) Prateepmanowong
 - Shisui Torii

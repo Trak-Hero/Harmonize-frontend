@@ -4,7 +4,7 @@ import './ArtistProfile.css';
 import { FlagBannerFoldIcon } from '@phosphor-icons/react';
 
 export default function ArtistProfile() {
-  const { id } = useParams();                        // Spotify artist ID
+  const { id } = useParams();                     
   const baseURL = import.meta.env.VITE_API_BASE_URL;
   const me      = '682bf5ec57acfd1e97d85d8e';
 
@@ -27,11 +27,9 @@ export default function ArtistProfile() {
   const pick = (...urls) => urls.find(Boolean);
 
 
-  // ───────────────────────────────────────────────
   useEffect(() => {
     setLoading(true);
 
-    // ---- FALLBACK DATA WHEN SPOTIFY LACKS INFO ----
   const fallbackTracks = [
     { id:'1', name:'The Less I Know the Better', popularity:88,
       album:{images:[{url:'/fallback-cover.jpg'}]} },
@@ -45,7 +43,6 @@ export default function ArtistProfile() {
 
     (async () => {
       try {
-        // 1️⃣  fetch from Spotify direct endpoint first
         let res   = await fetch(`${baseURL}/artists/spotify/${id}`);
         let data;
 
@@ -53,7 +50,6 @@ export default function ArtistProfile() {
           data = await res.json();
           setIsSpotify(true);
         } else {
-          // 2️⃣  fallback to Mongo artist doc (if exists)
           res = await fetch(`${baseURL}/artists/${id}`);
           if (!res.ok) throw new Error('Artist not found');
           data = await res.json();
@@ -74,7 +70,6 @@ export default function ArtistProfile() {
     })();
   }, [id, baseURL]);
 
-  // ---- FOLLOW / UNFOLLOW HANDLER (Mongo artists only) ----
   const canFollow = !isSpotify && Array.isArray(artist?.followers);
 
   const toggleFollow = async () => {
@@ -98,13 +93,11 @@ export default function ArtistProfile() {
     }
   };
 
-  // ---- SHARE ----
   const share = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true); setTimeout(() => setCopied(false), 1500);
   };
 
-  // ---- BIO EDIT ----
   const startEditing  = () => { if (canFollow) setIsEditing(true); };
   const cancelEditing = () => { setIsEditing(false); setEditedBio(artist.bio||''); };
 
@@ -158,11 +151,9 @@ export default function ArtistProfile() {
     }
   };
 
-  // ---- LOADING STATES ----
   if (loading)  return <div className="loading">Loading…</div>;
   if (!artist)  return <div className="loading">Artist not found</div>;
 
-  // ---- COVER GRID (albums or track covers) ----
   const covers =
     artist.albums?.length
       ? artist.albums.slice(0,4).map(a=>({
@@ -179,7 +170,6 @@ export default function ArtistProfile() {
   return (
     <div style={{overflowY:'auto',maxHeight:'100vh'}}>
       <div className="artist-page">
-        {/* LEFT COLUMN */}
         <section className="artist-left">
           <div className="artist-name">{artist.artistName || artist.name}</div>
 
@@ -189,7 +179,6 @@ export default function ArtistProfile() {
               : `${(artist.followers ?? 0).toLocaleString()} Spotify Followers`}
           </div>
 
-          {/* ACTION BUTTONS */}
           <div className="action-buttons">
             {canFollow && (
               <button className="btn-primary" onClick={toggleFollow}>
@@ -217,9 +206,7 @@ export default function ArtistProfile() {
           />
         </section>
 
-        {/* CENTER COLUMN */}
         <section className="artist-main">
-          {/* ABOUT */}
           <div className="about-card glass">
             <h2>About Me</h2>
             {canFollow && (
@@ -256,7 +243,6 @@ export default function ArtistProfile() {
             )}
           </div>
 
-          {/* POPULAR SONGS */}
           {!!artist.topTracks?.length && (
             <div className="songs-card glass">
               <h3>Most Popular Songs</h3>
@@ -277,7 +263,6 @@ export default function ArtistProfile() {
             </div>
           )}
 
-          {/* ALBUM GRID */}
           {!!covers.length && (
             <div className="albums-section glass">
               <h3>Albums</h3>

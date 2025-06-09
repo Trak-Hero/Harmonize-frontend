@@ -8,22 +8,21 @@ export default function GenreCloud({ histogram, unlistened }) {
   useEffect(() => {
     if (!histogram) return;
 
-    // Merge listened and unlistened genre data
     const data = [
       ...Object.entries(histogram).map(([g, c]) => ({
         text: g,
-        size: 18 + Math.sqrt(c) * 6,   // 🔼 was 12 + √c * 4
+        size: 18 + Math.sqrt(c) * 6,  
         listened: true,
       })),
       ...unlistened.map(g => ({
         text: g,
-        size: 14,                      // 🔼 was 12
+        size: 14,                     
         listened: false,
       })),
     ];
 
     const layout = cloud()
-      .size([window.innerWidth * 0.95, 600]) // 🔼 wider + taller
+      .size([window.innerWidth * 0.95, 600]) 
       .words(data)
       .padding(6)
       .rotate(() => 0)

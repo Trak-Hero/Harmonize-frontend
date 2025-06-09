@@ -13,12 +13,13 @@ import useLocationStore from '../../state/locationStore';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 const distance = (lat1, lon1, lat2, lon2) => {
-  const r = 6371;
+  const r = 3958.8; // milesss
   const p = Math.PI / 180;
   const a =
     0.5 -
     Math.cos((lat2 - lat1) * p) / 2 +
-    Math.cos(lat1 * p) * Math.cos(lat2 * p) * (1 - Math.cos((lon2 - lon1) * p)) / 2;
+    Math.cos(lat1 * p) * Math.cos(lat2 * p) *
+    (1 - Math.cos((lon2 - lon1) * p)) / 2;
   return 2 * r * Math.asin(Math.sqrt(a));
 };
 
@@ -114,7 +115,7 @@ const EventCard = ({ event, onSelect }) => {
           {/* Distance */}
           {eventDistance && (
             <div className="inline-flex items-center px-3 py-1.5 mb-4 rounded-full bg-blue-500/20 border border-blue-400/30 text-xs text-blue-300 font-medium">
-              {eventDistance} km away
+              {eventDistance} miles away
             </div>
           )}
 
@@ -213,7 +214,7 @@ const EventCard = ({ event, onSelect }) => {
             {event.title}
           </h3>
           <p className="text-sm text-gray-700 truncate whitespace-normal break-words leading-tight">
-            {eventDistance && <span className="text-green-600 font-medium">{eventDistance} km</span>}
+            {eventDistance && <span className="text-green-600 font-medium">{eventDistance} mi</span>}
             {eventDistance && ' • '}
             {formattedDate}
           </p>

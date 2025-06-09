@@ -6,12 +6,10 @@ export default function TasteScoreCard({ score, userA, userB }) {
   const [bubblesVisible, setBubblesVisible] = useState(false);
 
   useEffect(() => {
-    // Start bubble animation first
     const bubbleTimer = setTimeout(() => {
       setBubblesVisible(true);
     }, 200);
 
-    // Then start score animation
     const scoreTimer = setTimeout(() => {
       let start = 0;
       const duration = 1000;
@@ -26,14 +24,13 @@ export default function TasteScoreCard({ score, userA, userB }) {
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
-          // Trigger pop effect when done
           setPop(true);
           setTimeout(() => setPop(false), 300);
         }
       };
 
       requestAnimationFrame(animate);
-    }, 800); // Start after bubbles have slid in
+    }, 800);
 
     return () => {
       clearTimeout(bubbleTimer);
@@ -43,7 +40,6 @@ export default function TasteScoreCard({ score, userA, userB }) {
 
   return (
     <div className="relative w-full max-w-3xl mx-auto mt-4">
-      {/* Left user bubble - slides in from left with bounce */}
       <div 
         className={`absolute -left-24 top-1/2 -translate-y-1/2 z-20 px-6 py-2 rounded-2xl text-white text-2xl font-serif font-semibold shadow-inner border border-gray-300 bg-gradient-to-br from-[#2d2d2d] to-[#555] backdrop-blur-md transition-all duration-700 ease-out ${
           bubblesVisible 
@@ -57,7 +53,6 @@ export default function TasteScoreCard({ score, userA, userB }) {
         {userA.name}
       </div>
 
-      {/* Right user bubble - slides in from right with bounce */}
       <div 
         className={`absolute -right-24 top-1/2 -translate-y-1/2 z-20 px-6 py-2 rounded-2xl text-white text-2xl font-serif font-semibold shadow-inner border border-gray-300 bg-gradient-to-br from-[#2d2d2d] to-[#555] backdrop-blur-md transition-all duration-700 ease-out ${
           bubblesVisible 
@@ -71,7 +66,6 @@ export default function TasteScoreCard({ score, userA, userB }) {
         {userB.name}
       </div>
 
-      {/* Score card - fades in after bubbles */}
       <div
         className={`relative z-10 rounded-2xl px-10 py-14 text-center shadow-2xl bg-cover bg-center bg-no-repeat transition-all duration-500 ease-out ${
           bubblesVisible 

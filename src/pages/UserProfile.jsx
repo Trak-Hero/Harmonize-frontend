@@ -24,12 +24,10 @@ const breakpoints = { xxs: 0, xs: 480, sm: 768, md: 996, lg: 1200 };
 const cols        = { xxs: 1, xs: 2, sm: 4,  md: 8,  lg: 12 };
 
 export default function UserProfile() {
-  /* ─────────────────────────────────── state & stores ────────────────────────────────── */
   const {
     user: authUser,
     isLoading: authLoading,
     hasCheckedSession,
-    // We no longer trust API_BASE here; it comes in as undefined in production.
     API_BASE
   } = useAuthStore();
 
@@ -52,25 +50,20 @@ export default function UserProfile() {
     setCurrentUserId
   } = useProfileStore();
 
-  // Spotify data from /api/me/spotify
   const [spotifyData,    setSpotifyData]   = useState(null);
   const [spotifyLoading, setSpotifyLoading] = useState(false);
 
-  // "appRecent" = data from GET /api/recent
   const [appRecent, setAppRecent] = useState([]);
 
-  // User profile data with followers/following counts
   const [userProfile, setUserProfile] = useState(null);
 
   const [activeTab,  setActiveTab]  = useState('recent');
   const [showEditor, setShowEditor] = useState(false);
 
-  // ─── HERE IS THE CRUCIAL FIX ───
-  // Instead of using `API_BASE` (which was undefined), pull the Vite env var DIRECTLY:
+ 
   const API = import.meta.env.VITE_API_BASE_URL || '';
   console.log('[UserProfile] API is:', API);
 
-  /* ────────────────────────────────── 1) load tiles ────────────────────────────────── */
   useEffect(() => {
     if (!hasCheckedSession || authLoading) return;
     if (!authUser) return;
@@ -89,13 +82,11 @@ export default function UserProfile() {
     setCurrentUserId
   ]);
 
-  /* ────────────────────────────────── 1.5) load user profile data with followers/following ────────────────────────────────── */
   useEffect(() => {
     if (!hasCheckedSession || authLoading) return;
     if (!authUser) return;
     if (!targetUserId) return;
 
-    // Fetch user profile data to get followers and following counts
     fetch(`${API}/api/users/${targetUserId}`, { credentials: 'include' })
       .then((res) => {
         if (!res.ok) {
@@ -114,13 +105,11 @@ export default function UserProfile() {
       });
   }, [hasCheckedSession, authLoading, authUser, targetUserId, API]);
 
-  /* ────────────────────────────────── 2) load "app‐recent" from your own API ────────────────────────────────── */
   useEffect(() => {
     if (!hasCheckedSession || authLoading) return;
     if (!authUser) return;
     if (!targetUserId) return;
   
-    // Fix: Use the correct endpoint path
     fetch(`${API}/api/recent`, { credentials: 'include' })
       .then((res) => {
         if (!res.ok) {
@@ -138,14 +127,12 @@ export default function UserProfile() {
       });
   }, [hasCheckedSession, authLoading, authUser, targetUserId, API]);
 
-  /* ────────────────────────────────── 3) load Spotify (owner only, once) ────────────────────────────────── */
   const loadSpotify = useCallback(async () => {
     if (!isOwner) return;
     if (spotifyLoading) return;
 
     setSpotifyLoading(true);
     try {
-      // → ALWAYS prefix with `${API}` so we don't accidentally land on React's HTML
       const res = await withTokenRefresh(
         () => fetch(`${API}/api/me/spotify`, { credentials: 'include' }),
         () => fetch(`${API}/auth/refresh`,   { credentials: 'include' })
@@ -197,11 +184,10 @@ export default function UserProfile() {
   useEffect(() => {
     if (!hasCheckedSession || !authUser) return;
     if (!isOwner) return;
-    if (spotifyData !== null) return; // already fetched once
+    if (spotifyData !== null) return;
     loadSpotify();
   }, [hasCheckedSession, authUser, isOwner, spotifyData, loadSpotify]);
 
-  /* ────────────────────────────────── 4) add‐tile handler ────────────────────────────────── */
   const handleAddTile = useCallback(
     (tileData = {}) => {
       if (!targetUserId) {
@@ -222,7 +208,6 @@ export default function UserProfile() {
     [targetUserId, addTempTile, setEditorOpen]
   );
 
-  /* ────────────────────────────────── 5) loading & redirect logic ────────────────────────────────── */
   if (!hasCheckedSession || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-lg">
@@ -261,7 +246,6 @@ export default function UserProfile() {
     );
   }
 
-  /* ────────────────────────────────── 6) actual render ────────────────────────────────── */
   const layoutItems = Array.isArray(tiles)
     ? tiles.map((t) => ({
         i:    t._id || t.id,
@@ -276,15 +260,12 @@ export default function UserProfile() {
     ? tiles.find((t) => (t._id || t.id) === editingTileId)
     : null;
 
-  // Choose which "recent" list to show:
-  // • If SpotifyData.recent has items, show that
-  // • Otherwise fall back to appRecent (from GET /api/recent)
+
   const effectiveRecent =
     Array.isArray(spotifyData?.recent) && spotifyData.recent.length > 0
       ? spotifyData.recent
       : appRecent;
 
-  // Get followers and following counts from userProfile or fall back to authUser
   const profileData = userProfile || authUser;
   const followersCount = profileData?.followers?.length ?? 0;
   const followingCount = profileData?.following?.length ?? 0;
@@ -292,9 +273,7 @@ export default function UserProfile() {
   return (
     <>
       {activeTab === 'recent' ? (
-        /* Recent tab - Constrained width layout */
         <div className="max-w-screen-xl mx-auto px-6 py-12">
-          {/* Profile Header */}
           <header className="space-y-3 flex items-center gap-6 mb-6">
             {authUser.avatar && (
               <img
@@ -325,7 +304,6 @@ export default function UserProfile() {
             </div>
           </header>
 
-          {/* Tab selector */}
           <nav className="flex gap-3 mb-6">
             {['recent', 'space'].map((tab) => (
               <button
@@ -342,7 +320,6 @@ export default function UserProfile() {
             ))}
           </nav>
 
-          {/* Recent content */}
           <div className="grid grid-cols-12 gap-6">
             <section className="col-span-12 lg:col-span-8 flex flex-col gap-6">
               {spotifyLoading ? (
@@ -381,11 +358,8 @@ export default function UserProfile() {
           </div>
         </div>
       ) : (
-        /* Space tab - Full viewport width */
         <div className="min-h-screen w-full">
-          {/* Header and tabs with constrained width */}
           <div className="max-w-screen-xl mx-auto px-6 py-12">
-            {/* Profile Header */}
             <header className="space-y-3 flex items-center gap-6 mb-6">
               {authUser.avatar && (
                 <img
@@ -416,7 +390,6 @@ export default function UserProfile() {
               </div>
             </header>
 
-            {/* Tab selector */}
             <nav className="flex gap-3 mb-6">
               {['recent', 'space'].map((tab) => (
                 <button
@@ -433,7 +406,6 @@ export default function UserProfile() {
               ))}
             </nav>
 
-            {/* TilePicker */}
             {isOwner && (
               <div className="mb-8 flex justify-center">
                 <TilePicker onAdd={handleAddTile} />
@@ -441,7 +413,6 @@ export default function UserProfile() {
             )}
           </div>
 
-          {/* Full-width tile grid */}
           <div className="w-full px-6">
             {tilesLoading ? (
               <div className="text-center py-8 text-white/60">
@@ -490,13 +461,11 @@ export default function UserProfile() {
         </div>
       )}
 
-      {/* ──────────────── modal editors ──────────────── */}
       {editorOpen && isOwner && <TileEditor tile={tileBeingEdited} />}
       {showEditor && isOwner && <ProfileEditor onClose={() => setShowEditor(false)} />}
     </>
   );
 }
 
-/* utility classname */
 const card =
   'rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-lg p-6';

@@ -13,7 +13,6 @@ export default function FriendSearch({ onClose }) {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
 
-  /* ───────── Search users ───────── */
   const search = async () => {
     if (!query.trim()) return;
     setLoading(true); setError('');
@@ -22,7 +21,7 @@ export default function FriendSearch({ onClose }) {
       const url  = `${API}/api/users/search?q=${encodeURIComponent(query)}`;
       const res  = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();               // [{ _id, username, displayName, avatar }]
+      const data = await res.json();   
       setResults(data);
     } catch (e) {
       console.error('[FriendSearchModal] search failed:', e);
@@ -32,20 +31,17 @@ export default function FriendSearch({ onClose }) {
     }
   };
 
-  /* ───────── Select friend ───────── */
   const pickFriend = (user) => {
-    addFriendToStore(user);                        // keep a local cache
-    navigate(`/friends/${user._id}`);              // go to FriendProfile
+    addFriendToStore(user);                  
+    navigate(`/friends/${user._id}`);          
     onClose();
   };
 
-  /* ───────── Render ───────── */
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-zinc-900 w-full max-w-xl rounded-xl p-6 space-y-4">
         <h2 className="text-2xl font-bold text-white">Find Friends</h2>
 
-        {/* input + button */}
         <div className="flex gap-2">
           <input
             className="flex-1 px-4 py-2 rounded bg-zinc-800 text-white"
@@ -62,14 +58,12 @@ export default function FriendSearch({ onClose }) {
           </button>
         </div>
 
-        {/* status messages */}
         {loading && <p className="text-white">Searching…</p>}
         {error   && <p className="text-red-400">{error}</p>}
         {!loading && !results.length && !error && (
           <p className="text-white/60">No results yet – try a search.</p>
         )}
 
-        {/* results */}
         <ul className="max-h-64 overflow-y-auto space-y-2">
           {results.map((u) => (
             <li
@@ -92,7 +86,6 @@ export default function FriendSearch({ onClose }) {
           ))}
         </ul>
 
-        {/* footer */}
         <div className="text-right">
           <button
             onClick={onClose}

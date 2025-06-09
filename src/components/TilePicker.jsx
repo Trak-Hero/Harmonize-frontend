@@ -20,7 +20,6 @@ const TilePicker = ({ onAdd }) => {
     } else if (type === 'song') {
       setShowSongModal(true);
     } else if (type === 'text') {
-      // Create text tile with default content and open editor immediately
       const tempId = addTempTile({ 
         type: 'text', 
         content: '',
@@ -28,7 +27,6 @@ const TilePicker = ({ onAdd }) => {
       });
       setEditorOpen(true, tempId);
     } else if (type === 'picture') {
-      // Create picture tile with empty bgImage and open editor immediately
       const tempId = addTempTile({ 
         type: 'picture', 
         bgImage: '',
@@ -36,7 +34,6 @@ const TilePicker = ({ onAdd }) => {
       });
       setEditorOpen(true, tempId);
     } else {
-      // For other types (spacer), create normally
       add({ type, userId: userId });
     }
   };

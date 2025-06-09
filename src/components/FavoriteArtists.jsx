@@ -1,4 +1,3 @@
-// src/components/FavoriteArtists.jsx
 import React from 'react';
 
 const FavoriteArtists = ({ artists = [] }) => {
@@ -16,7 +15,6 @@ const FavoriteArtists = ({ artists = [] }) => {
       <h2 className="text-xl font-bold mb-3">Favorite Artists</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {artists.map((artist) => {
-          // Each artist object from /api/me/spotify now has `artist.image` (not `artist.images`)
           const imgUrl = artist.image || '';
           const name   = artist.name || 'Unknown Artist';
 

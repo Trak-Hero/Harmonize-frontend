@@ -15,15 +15,12 @@ const RecentlyPlayed = ({ recent = [] }) => {
       <h2 className="text-xl font-bold mb-3">Recently Played</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {recent.map((item, idx) => {
-          // Your API may return `item` itself as the track or `{ track: {...} }`.
-          // Adjust as needed. Here we assume `item.track` is the actual track object.
+         
           const track = item.track ?? item;
 
-          // Safe-access `album` (might be undefined)
           const albumImages = track.album?.images ?? [];
           const imageUrl = albumImages[0]?.url ?? '';
 
-          // Safe-access `track.name` and `track.artists` (can be undefined in some cases)
 
           const trackName = track.name ?? 'Unknown Title';
           const artistList = Array.isArray(track.artists)

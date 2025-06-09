@@ -7,7 +7,6 @@ export default function CommonArtistsCard({ artists }) {
 
   const visibleArtists = showAll ? artists : artists.slice(0, 4);
 
-  // Initial staggered reveal animation
   useEffect(() => {
     const initialCount = Math.min(4, artists.length);
     let currentCount = 0;
@@ -16,16 +15,14 @@ export default function CommonArtistsCard({ artists }) {
       if (currentCount < initialCount) {
         setVisibleCount(currentCount + 1);
         currentCount++;
-        setTimeout(revealNextArtist, 150); // Stagger by 150ms
+        setTimeout(revealNextArtist, 150);
       }
     };
 
-    // Start after a brief delay
     const timer = setTimeout(revealNextArtist, 300);
     return () => clearTimeout(timer);
   }, [artists.length]);
 
-  // Handle show more/less expansion
   useEffect(() => {
     if (showAll && visibleCount <= 4) {
       setIsExpanding(true);
@@ -35,7 +32,7 @@ export default function CommonArtistsCard({ artists }) {
         if (currentCount < artists.length) {
           setVisibleCount(currentCount + 1);
           currentCount++;
-          setTimeout(revealNextArtist, 100); // Faster reveal for expansion
+          setTimeout(revealNextArtist, 100);
         } else {
           setIsExpanding(false);
         }
@@ -50,7 +47,6 @@ export default function CommonArtistsCard({ artists }) {
 
   return (
     <div className="relative p-6 rounded-2xl text-white shadow-xl bg-gradient-to-br from-green-700 via-emerald-500 to-orange-400 transform transition-all duration-500 hover:scale-105">
-      {/* Animated header */}
       <h2 className="text-2xl font-afacad font-semibold mb-4 opacity-0 animate-fade-in-up" 
           style={{ animationDelay: '0ms', animationFillMode: 'forwards' }}>
         Common Artists
@@ -79,7 +75,6 @@ export default function CommonArtistsCard({ artists }) {
                 alt={a.name}
                 className="w-24 h-24 object-cover rounded-2xl border-2 border-white/30 shadow-md transition-transform duration-300 hover:scale-110"
               />
-              {/* Subtle shine effect on hover */}
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
             </div>
             <span className="mt-2 text-white font-medium text-sm transition-all duration-200 hover:text-blue-100">
@@ -105,7 +100,6 @@ export default function CommonArtistsCard({ artists }) {
         </div>
     )}
 
-      {/* Custom CSS for fade-in-up animation */}
       <style jsx>{`
         @keyframes fade-in-up {
           from {
