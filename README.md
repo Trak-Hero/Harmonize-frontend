@@ -358,89 +358,10 @@ npm install
 npm install @dnd-kit/core @dnd-kit/modifiers @dnd-kit/sortable @emotion/react @emotion/styled @mui/icons-material @mui/material @mui/styled-engine-sc @phosphor-icons/react @react-three/drei @react-three/fiber axios chart.js connect-mongo d3 d3-cloud express-session framer-motion leaflet lucide-react ngeohash react react-chartjs-2 react-dom react-grid-layout react-leaflet react-markdown react-resizable react-router-dom react-simple-maps shadcn styled-components three zustand
 ```
 
-Core React & Build Tools
-   react - React library
-   react-dom - React DOM renderer
-   vite - Build tool and dev server
-   @vitejs/plugin-react - Vite React plugin
-UI Framework & Components
-   @mui/material - Material-UI React components
-   @mui/icons-material - Material-UI icons
-   @mui/styled-engine-sc - Styled-components engine for MUI
-   @emotion/react - CSS-in-JS library
-   @emotion/styled - Styled components for Emotion
-   styled-components - CSS-in-JS styling
-   lucide-react - Beautiful React icons
-   @phosphor-icons/react - Phosphor icon family
-Drag & Drop
-   @dnd-kit/core - Drag and drop toolkit core
-   @dnd-kit/modifiers - Drag and drop modifiers
-   @dnd-kit/sortable - Sortable drag and drop
-   Layout & Grid
-   react-grid-layout - Draggable and resizable grid layout
-   react-resizable - Resizable components
-3D Graphics & Visualization
-   @react-three/fiber - React renderer for Three.js
-   @react-three/drei - Useful helpers for React Three Fiber
-   three - 3D graphics library
-   chart.js - Chart library
-   react-chartjs-2 - React wrapper for Chart.js
-   d3 - Data visualization library
-   d3-cloud - Word cloud layout
-Maps & Location
-   leaflet - Interactive maps library
-   react-leaflet - React components for Leaflet
-   react-simple-maps - Simple map components
-   ngeohash - Geohash encoding/decoding
-Animation & Motion
-   framer-motion - Animation library for React
-Routing & Navigation
-   react-router-dom - React routing library
-State Management
-   zustand - Small, fast state management
-HTTP & Session
-   axios - HTTP client
-   express-session - Session middleware
-   connect-mongo - MongoDB session store
-Content & Text
-   react-markdown - Markdown component for React
-   shadcn - UI component library
-Development & Linting
-   eslint - JavaScript linter
-   @eslint/js - ESLint JavaScript config
-   eslint-plugin-react-hooks - React Hooks ESLint rules
-   eslint-plugin-react-refresh - React Refresh ESLint plugin
-   globals - Global variables for ESLint
-   @types/react - TypeScript definitions for React
-   @types/react-dom - TypeScript definitions for React DOM
-
 ### Setup backend
 ```bash
 npm install axios bcrypt chart.js cookie-session cors dotenv express mongoose ngeohash node-fetch react-chartjs-2 spotify-buddylist spotify-preview-finder spotify-web-api-node uuid
 ```
-
-Core Framework & Database
-   express - Web application framework
-   mongoose - MongoDB object modeling
-   cors - Cross-Origin Resource Sharing middleware
-   dotenv - Environment variable loader
-   Authentication & Security
-   bcrypt - Password hashing
-   cookie-session - Session management with cookies
-   uuid - Unique identifier generation
-External API Integration
-   axios - HTTP client for API requests
-   node-fetch - Fetch API implementation for Node.js
-   spotify-web-api-node - Spotify Web API wrapper
-   spotify-preview-finder - Find Spotify track previews
-   spotify-buddylist - Spotify social features
-Utilities
-   ngeohash - Geohash encoding/decoding for location services
-Frontend/Visualization (if used in backend)
-   chart.js - Chart library
-   react-chartjs-2 - React wrapper for Chart.js
-Development Tools
-   nodemon - Auto-restart server during development
 
 
 ### Start servers in dev mode
