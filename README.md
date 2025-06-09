@@ -346,6 +346,12 @@ git clone https://github.com/dartmouth-cs52-25s/project-music-and-memories.git
 cd project-music-and-memories
 ```
 
+### Clone the backend repo
+```bash
+git clone https://github.com/dartmouth-cs52-25s/project-music-and-memories-api.git
+cd project-music-and-memories-api
+```
+
 ### Install dependencies
 ```bash
 npm install
@@ -354,13 +360,20 @@ npm install react-router-dom tailwindcss postcss autoprefixer zustand lodash lea
 
 ### Setup backend
 ```bash
-npm install express mongoose dotenv cors
+npm install express mongoose dotenv cors cookie-session bcrypt uuid ngeohash axios node-fetch spotify-web-api-node
 ```
 
 ### Start servers in dev mode
+#### Frontend
 ```bash
 npm run dev
 ```
+#### Backend
+```bash
+npm start
+```
+
+> ⚠**Note**: Spotify login **only works on the deployed website** due to OAuth redirect URI restrictions. Running the project locally will not allow login, and features like friends, blend mode, and personalized data will not function.
 
 ## Deployment
 
