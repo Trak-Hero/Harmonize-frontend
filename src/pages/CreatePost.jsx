@@ -231,14 +231,14 @@ const CreatePost = () => {
             className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400"
           />
 
-          <textarea
+          {/* <textarea
             name="caption"
             placeholder="Add a caption..."
             value={formData.caption}
             onChange={handleChange}
             rows="3"
             className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400 resize-none"
-          />
+          /> */}
 
           {formData.spotifyTrackId && (
             <div className="text-sm p-2 rounded bg-gray-800">
