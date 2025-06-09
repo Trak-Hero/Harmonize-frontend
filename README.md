@@ -162,7 +162,6 @@ Database: MongoDB (via Mongoose)
 
 ### Utilities
 - `GET /geocode/reverse` - Reverse geocoding (lat/lng to city)
-- `GET /blend/:user1/:user2` - Generate music taste comparison
 
 ## Data Models
 
@@ -342,18 +341,26 @@ Database: MongoDB (via Mongoose)
 These steps get your dev environment running smoothly:
 
 ### Clone the repo
+```bash
 git clone https://github.com/dartmouth-cs52-25s/project-music-and-memories.git
 cd project-music-and-memories
+```
 
 ### Install dependencies
+```bash
 npm install
-npm install react-router-dom tailwindcss postcss autoprefixer zustand
+npm install react-router-dom tailwindcss postcss autoprefixer zustand lodash
+```
 
 ### Setup backend
+```bash
 npm install express mongoose dotenv cors
+```
 
 ### Start servers in dev mode
+```bash
 npm run dev
+```
 
 ## Deployment
 
