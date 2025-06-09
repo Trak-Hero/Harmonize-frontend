@@ -24,7 +24,6 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
     setLikeCount(item.likes || 0);
   }, [item.likes]);
 
-
   // auto-play the audio when card becomes visible
   useEffect(() => {
     if (audioRef.current && item.previewUrl && !audioError) {
@@ -146,6 +145,32 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
     }
   };
 
+  // function to open artist's Spotify page
+  const openArtistSpotify = () => {
+    if (!item.artist) {
+      console.error('No artist information available');
+      return;
+    }
+
+    // construct search URL for the artist on Spotify
+    const artistSearchUrl = `https://open.spotify.com/search/${encodeURIComponent(item.artist)}/artists`;
+    
+    // for mobile devices, try the Spotify app protocol first
+    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      // Try to open in Spotify app using search
+      const spotifyAppUrl = `spotify:search:${encodeURIComponent(item.artist)}`;
+      window.location.href = spotifyAppUrl;
+      
+      // fallback to web version after a short delay if app didn't open
+      setTimeout(() => {
+        window.open(artistSearchUrl, '_blank');
+      }, 2000);
+    } else {
+      // for desktop, open in web browser
+      window.open(artistSearchUrl, '_blank');
+    }
+  };
+
   // function to handle like/unlike action
   const handleLike = async () => {
     if (!currentUser || isLiking) return;
@@ -257,6 +282,15 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
               {('0' + Math.floor(item.duration % 60)).slice(-2)}
             </p>
           )}
+          
+          {/* Caption Section */}
+          {item.caption && (
+            <div className="mt-3 p-3 bg-neutral-800 rounded-lg">
+              <p className="text-sm text-gray-300 leading-relaxed">
+                {item.caption}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Hidden Audio Element for Auto-play */}
@@ -310,6 +344,7 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
                 <span className="text-xs text-gray-500">{getPreviewStatus()}</span>
               </div>
             )}
+        
 
         {/* Action Buttons */}
         <div className="flex justify-between mt-4 text-gray-300 text-sm">
@@ -337,7 +372,12 @@ const MusicCard = ({ item, isVisible, onLike, onUnlike, currentUser }) => {
             )}
           </div>
 
-          <button className="hover:text-pink-400 transition">Follow artist</button>
+          {/* Follow artist button */}
+          <button 
+            onClick={openArtistSpotify}
+            className="hover:text-pink-400 transition">
+              Follow artist
+          </button>
 
           {/* Like button */}
           <button 

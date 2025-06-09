@@ -1,31 +1,35 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 const CreatePost = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     spotifyTrackId: '',
     title: '',
     artist: '',
     genre: '',
+    caption: '',
     coverUrl: '',
     previewUrl:'',
     duration: null,
-    caption: '',
   });
 
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSpotifySearch = async () => {
     if (!searchQuery.trim()) return;
+    setIsSearching(true);
 
     try {
       const res = await fetch(`${API}/api/musicPosts/spotify/search?q=${encodeURIComponent(searchQuery)}&type=track`, {
         method: 'GET',
-        credentials: 'include', // include session cookies
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -60,7 +64,7 @@ const CreatePost = () => {
       spotifyTrackId: track.id,
       title: track.name,
       artist: track.artists?.[0]?.name || '',
-      previewUrl: track.preview_url || '', // This might be null
+      previewUrl: track.preview_url || '',
       coverUrl: track.album?.images?.[0]?.url || '',
       duration: track.duration_ms ? track.duration_ms / 1000 : null,
     }));
@@ -79,6 +83,8 @@ const CreatePost = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     console.log('Submitting form with data:', formData);
 
     // validate required fields
@@ -88,11 +94,10 @@ const CreatePost = () => {
     }
 
     try {
+      setIsSubmitting(true);
       const response = await fetch(`${API}/api/musicPosts`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(formData),
       });
@@ -100,25 +105,19 @@ const CreatePost = () => {
       const result = await response.json();
       console.log('Server response:', result);
 
-      if (!response.ok) throw new Error('Failed to create post');
+      if (!response.ok) throw new Error(result.error || 'Failed to create post');
 
-      alert('Post created successfully!');
+      // set flag for discover page to refresh
+      localStorage.setItem('newPostCreated', 'true');
+      
+      // navigate back to discover page
+      navigate('/discover', { replace: true });
 
-      // reset form data
-      setFormData({
-        spotifyTrackId: '',
-        title: '',
-        artist: '',
-        genre: '',
-        coverUrl: '',
-        previewUrl:'',
-        duration: null,
-        caption: '',
-      });
-      setIsPreviewing(false);
     } catch (err) {
       console.error(err);
       alert(`Error: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -146,7 +145,7 @@ const CreatePost = () => {
               placeholder="Search a song on Spotify"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSpotifySearch()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSpotifySearch()}
               className="w-full px-3 py-2 rounded bg-gray-800 text-white placeholder-gray-400"
             />
             <button
@@ -249,6 +248,11 @@ const CreatePost = () => {
               <p className="text-gray-400">
                 Preview: {formData.previewUrl ? 'Available' : 'Not available'}
               </p>
+              {formData.caption && (
+                <p className="text-gray-400 mt-1">
+                  Caption: "{formData.caption}"
+                </p>
+              )}
             </div>
           )}
 
@@ -297,8 +301,17 @@ const CreatePost = () => {
               </audio>
             </div>
           ) : (
-            <p className="text-sm text-yellow-400">No preview available for this track</p>
+            <p className="text-sm text-yellow-400">No audio preview available</p>
           )}
+
+          {/* Caption Preview
+          {formData.caption && (
+            <div className="mt-3 p-3 bg-neutral-800 rounded-lg">
+              <p className="text-sm text-gray-300 leading-relaxed">
+                {formData.caption}
+              </p>
+            </div>
+          )} */}
 
           <div className="flex justify-between gap-4 mt-4">
             <button
@@ -309,9 +322,14 @@ const CreatePost = () => {
             </button>
             <button
               onClick={handleSubmit}
-              className="w-1/2 bg-white text-black hover:bg-gray-200 py-2 px-4 rounded transition"
-            >
-              Post
+              disabled={isSubmitting}
+              className={`w-1/2 py-2 px-4 rounded transition ${
+                isSubmitting
+                  ? 'bg-gray-600 cursor-not-allowed text-gray-400'
+                  : 'bg-green-500 text-white hover:bg-green-600'
+              }`}
+              >
+              {isSubmitting ? 'Posting...' : 'Post'}
             </button>
           </div>
         </div>
