@@ -349,7 +349,7 @@ cd project-music-and-memories
 ### Install dependencies
 ```bash
 npm install
-npm install react-router-dom tailwindcss postcss autoprefixer zustand lodash
+npm install react-router-dom tailwindcss postcss autoprefixer zustand lodash leaflet react-leaflet
 ```
 
 ### Setup backend
